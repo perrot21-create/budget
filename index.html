@@ -112,7 +112,7 @@ tr.tsol td:last-child,tr.tcum td:last-child{box-shadow:inset 0 2px 0 var(--bl),i
 tr.tcum td{box-shadow:inset 0 2px 0 var(--pos),inset 0 -2px 0 var(--pos)}
 tr.tcum td.nm{color:var(--pos);box-shadow:inset 2px 0 0 var(--pos),inset 0 2px 0 var(--pos),inset 0 -2px 0 var(--pos),3px 0 0 var(--syn-sep)}
 tr.tcum td:last-child{box-shadow:inset 0 2px 0 var(--pos),inset 0 -2px 0 var(--pos),inset -2px 0 0 var(--pos)}
-th[data-mo]{text-align:left;font-weight:800;padding:4px 6px}th[data-mo] .tg{padding:0 4px 0 0;font-size:var(--fs-md)}
+th[data-mo]{text-align:left;font-weight:800;padding:4px 6px}th[data-mo] .tg{padding:0 4px 0 0;font-size:var(--fs-md)}th.ga .tg{color:inherit;padding:0 6px 0 0}
 .ar{color:var(--mute);margin-right:4px}
 .vs{position:sticky;height:0;width:0;z-index:6;pointer-events:none}
 .vs i{position:absolute;top:0;left:0;width:3px;background:var(--mute)}
@@ -196,7 +196,7 @@ td.pc{position:relative}td.pc .pb{position:absolute;left:8px;right:8px;bottom:3p
 .mb.wide{max-width:900px;width:calc(100% - 32px);max-height:88vh;overflow:auto}.mb.wide .mh{display:flex;justify-content:space-between;align-items:center;gap:12px}.mb.wide h2{margin:0;font-size:1.1em}.mb.wide .tw2{display:block;overflow:auto;margin:10px 0 12px}
 button{transition:background .15s,box-shadow .15s}button:hover:not(.on):not(:disabled){box-shadow:0 1px 4px rgba(16,24,40,.14)}
 :root{--antint:color-mix(in srgb,var(--ink) 9%,transparent)}
-thead th.ga[colspan="4"]{text-align:center;vertical-align:middle;padding-top:9px;padding-bottom:9px;background:var(--accent)!important;color:var(--onacc)!important;border-radius:10px 10px 0 0;font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:var(--fs-sm)}
+thead th.ga[colspan]{text-align:center;vertical-align:middle;padding-top:9px;padding-bottom:9px;background:var(--accent)!important;color:var(--onacc)!important;border-radius:10px 10px 0 0;font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:var(--fs-sm)}
 tr.sec.k-rev td{background:var(--sec-rev)!important;color:var(--sec-rev-t,var(--ink))}tr.sec.k-dep td{background:var(--sec-dep)!important;color:var(--sec-dep-t,var(--ink))}tr.sec.k-syn td{background:var(--syn-sec)!important}
 td.mp input,td.mi input{background:transparent!important}td.ga input{background:color-mix(in srgb,var(--ptc) 22%,var(--surface))!important}
 .sbox span{color:var(--ink);font-size:var(--fs-md);font-weight:600}
@@ -567,7 +567,7 @@ const PAL=["#2a9d8f","#e76f51","#6c8ebf","#e9a23b","#9b6bcb","#d6567a","#5aa469"
 const cco=id=>{const c=S.cats.find(x=>x.id===id);if(!c)return"var(--mute)";if(!c.color)c.color=PAL[S.cats.indexOf(c)%PAL.length];return c.color};
 const dot=id=>id&&S.cats.some(c=>c.id===id)?`<i class="cd" style="background:${cco(id)}"></i>`:"";
 const sortAll=()=>{const c=(a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"});S.cats.sort(c);S.cats.forEach(x=>x.subs.sort(c));(S.tiers||[]).sort(c)};sortAll();
-let CM={},CL={},T="dash",AI=S.acc[0].id,F={p:false,n:true},EID=null,Y=Math.max(2026,new Date().getFullYear()),V="b";
+let CM={},CL={},T="dash",AI=S.acc[0].id,F={p:false,n:true},EID=null,Y=Math.max(2026,new Date().getFullYear()),V="b",CA=false;
 const dfr=d=>d.slice(8)+"/"+d.slice(5,7)+"/"+d.slice(0,4);
 const today=()=>{const t=new Date();return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")};
 
@@ -875,14 +875,14 @@ function drawBud(first){
   const A={};
   S.tx.forEach(t=>{if(!t.cat||+t.date.slice(0,4)!==Y)return;const k=t.cat+":"+(t.sub||""),m=+t.date.slice(5,7)-1;(A[k]=A[k]||Array(12).fill(0))[m]+=kindOf(t.cat)==="rev"?t.v:-t.v});
   const B=(k,m)=>(S.budget[Y+"|"+k]||[])[m]||0,R=(k,m)=>(A[k]||[])[m]||0,E=(k,m,kd)=>(kd==="rev"?1:-1)*(R(k,m)-B(k,m));
-  const cmc=m=>m%2?" mp":" mi",M=[...Array(12).keys()],fe=n=>f(n)+"\u202f€",fm=n=>n?fe(n):"–",fx=n=>n>0?"+"+fe(n):fm(n),sg=n=>n>0?"pos":n<0?"neg":"",ng=n=>n>0?"pos":n<0?"neg":"",no=()=>"";
-  const nc=1+M.reduce((s,m)=>s+(CM[m]?3:1),0)+4;
+  const cmc=m=>m%2?" mp":" mi",M=[...Array(12).keys()],fe=n=>f(n)+"\u202f€",fm=n=>n?fe(n):"–",fx=n=>{n=Math.round(n);return n>0?"+"+fe(n):fm(n)},sg=n=>n>0?"pos":n<0?"neg":"",ng=n=>n>0?"pos":n<0?"neg":"",no=()=>"";
+  const nc=1+M.reduce((s,m)=>s+(CM[m]?3:1),0)+(CA?4:2);
   const L=[];
   const nrm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
   const secStyle=()=>"";
   const fcOf=l=>{const c=S.cats.find(x=>x.id===(l.hdr?l.id:(l.key||"").split(":")[0]));if(!c)return"";if(l.hdr||!l.cid)return c.fc||"";const sid=l.key.split(":")[1],sb=sid&&c.subs.find(x=>x.id===sid);return sb&&sb.fc||""};
   const nmc=(l,t)=>{const h=hx(fcOf(l));return h?`<span style="color:${h}">${t}</span>`:t};
-  const secRow=(cls,label,st)=>`<tr class="${cls}"${st?` style="${st}"`:""}><td class="nm">${label}</td>${M.map(m=>`<td class="g${cmc(m)}${m===11&&!CM[m]?" pd":""}"></td>${CM[m]?`<td colspan="2" class="${cmc(m)}${m===11?" pd":""}"></td>`:""}`).join("")}<td class="g ga"></td><td colspan="3"></td></tr>`;
+  const secRow=(cls,label,st)=>`<tr class="${cls}"${st?` style="${st}"`:""}><td class="nm">${label}</td>${M.map(m=>`<td class="g${cmc(m)}${m===11&&!CM[m]?" pd":""}"></td>${CM[m]?`<td colspan="2" class="${cmc(m)}${m===11?" pd":""}"></td>`:""}`).join("")}<td class="g ga"></td>${CA?'<td colspan="3"></td>':"<td></td>"}</tr>`;
   for(const kd of ["rev","dep"]){L.push({sec:kd});let ci=1;for(const c of S.cats.filter(c=>c.kind===kd)){
     if(c.subs.length){L.push({hdr:1,ca:ci++%2,id:c.id,name:c.name,kd,keys:[...c.subs.map(s=>c.id+":"+s.id),c.id+":"]});
       c.subs.forEach(s=>L.push({key:c.id+":"+s.id,name:s.name,kd,ind:1,cid:c.id}));L.push({key:c.id+":",name:"Sans sous-catégorie",kd,ind:1,cid:c.id})}
@@ -890,7 +890,7 @@ function drawBud(first){
   const cw=S.colw||{},wrap=$("#bt"),avail=Math.max(0,wrap.clientWidth-2);
   const need=Math.max(Math.round("Solde cumulé".length*9.8)+20,S.tx.length?Math.round("Classement par tiers".length*9.2)+20:0,...L.filter(l=>!l.sec&&!(l.cid&&CL[l.cid])).map(l=>Math.round(l.name.length*7.4)+(l.ind?36:0)+(l.hdr?24:0)+(l.ind?0:14)+20));
   const NM=cw.n||Math.min(380,Math.max(150,need)),SP=26;
-  const cols=["n"];M.forEach(m=>{cols.push("b"+m);if(CM[m])cols.push("r"+m,"e"+m)});cols.push("ab","ar","ae","ap");
+  const cols=["n"];M.forEach(m=>{cols.push("b"+m);if(CM[m])cols.push("r"+m,"e"+m)});cols.push("ab");if(CA)cols.push("ar","ae");cols.push("ap");
   const auto=cols.filter(k=>k!=="n"&&k!=="sp"&&!cw[k]),fixed=cols.reduce((s,k)=>s+(k==="n"?NM:k==="sp"?SP:(cw[k]||0)),0);
   const aw=Math.max(92,Math.floor((avail-fixed)/Math.max(1,auto.length)));
   const W=k=>k==="n"?NM:k==="sp"?SP:(cw[k]||aw);
@@ -901,9 +901,9 @@ function drawBud(first){
     M.forEach(m=>{const b=fb(m),r=fr(m),e=fe(m);tb+=b;tr+=r;te+=e;
       h+=inp?`<td class="g${cmc(m)}">${inp(m)}</td>`:`<td class="g ${cb(b)||"bl"}${cmc(m)}">${fm(b)}</td>`;
       if(CM[m])h+=`<td class="v ri ${cb(r)}${dep&&r>b?" over":""}${cmc(m)}">${fm(r)}</td><td class="v ${sg(e)}${cmc(m)}">${fx(e)}</td>`});
-    return h+`<td class="g ga tt ${cb(tb)||"bl"}">${ak?`<input data-ak="${ak}" data-v="${tb}" style="width:calc(100% - 24px)" value="${tb?f(tb)+"\u202f€":""}" aria-label="Total annuel">`:fm(tb)}${extra||""}</td><td class="v ri tt ${cb(tr)}${dep&&tr>tb?" over":""}">${fm(tr)}</td><td class="v tt ${sg(te)}">${fx(te)}</td><td class="v tt pc${dep&&tb>0&&tr>tb?" over":""}">${tb>0?Math.round(tr/tb*100)+" %":""}${pb}</td></tr>`};
-  let h=`<table style="width:${cols.reduce((s,k)=>s+W(k),0)}px;table-layout:fixed"><colgroup>${cols.map(k=>`<col data-c="${k}" style="width:${W(k)}px">`).join("")}</colgroup><thead><tr><th class="nm" rowspan="2">${rz("n")}</th>${M.map(m=>`<th class="g${cmc(m)}" data-mo="${m}" colspan="${CM[m]?3:1}"><span class="mst" style="left:${NM+8}px"><button class="tg" data-tm="${m}" aria-expanded="${!!CM[m]}" aria-label="Ouvrir ou fermer ${MOIS[m]}">${CM[m]?"▾":"▸"}</button>${MOIS[m]}</span></th>`).join("")}<th class="g ga" colspan="4">Cumul annuel</th></tr>
-  <tr>${M.map(m=>`<th class="g sh${cmc(m)}">Budget${rz("b"+m)}</th>${CM[m]?`<th class="sh v rl${cmc(m)}">Réel${rz("r"+m)}</th><th class="sh v${cmc(m)}">Écart${rz("e"+m)}</th>`:""}`).join("")}<th class="g ga sh">Budget${rz("ab")}</th><th class="sh v rl">Réel${rz("ar")}</th><th class="sh v">Écart${rz("ae")}</th><th class="sh v">% réalisé${rz("ap")}</th></tr></thead><tbody>`;
+    return h+`<td class="g ga tt ${cb(tb)||"bl"}">${ak?`<input data-ak="${ak}" data-v="${tb}" style="width:calc(100% - 24px)" value="${tb?f(tb)+"\u202f€":""}" aria-label="Total annuel">`:fm(tb)}${extra||""}</td>${CA?`<td class="v ri tt ${cb(tr)}${dep&&tr>tb?" over":""}">${fm(tr)}</td><td class="v tt ${sg(te)}">${fx(te)}</td>`:""}<td class="v tt pc${dep&&tb>0&&tr>tb?" over":""}">${tb>0?Math.round(tr/tb*100)+" %":""}${pb}</td></tr>`};
+  let h=`<table style="width:${cols.reduce((s,k)=>s+W(k),0)}px;table-layout:fixed"><colgroup>${cols.map(k=>`<col data-c="${k}" style="width:${W(k)}px">`).join("")}</colgroup><thead><tr><th class="nm" rowspan="2">${rz("n")}</th>${M.map(m=>`<th class="g${cmc(m)}" data-mo="${m}" colspan="${CM[m]?3:1}"><span class="mst" style="left:${NM+8}px"><button class="tg" data-tm="${m}" aria-expanded="${!!CM[m]}" aria-label="Ouvrir ou fermer ${MOIS[m]}">${CM[m]?"▾":"▸"}</button>${MOIS[m]}</span></th>`).join("")}<th class="g ga" colspan="${CA?4:2}"><button class="tg" data-ca="1" aria-expanded="${CA}" title="${CA?"Replier":"Afficher Réel et Écart"}" aria-label="Afficher ou masquer Réel et Écart du cumul annuel">${CA?"▾":"▸"}</button>Cumul annuel</th></tr>
+  <tr>${M.map(m=>`<th class="g sh${cmc(m)}">Budget${rz("b"+m)}</th>${CM[m]?`<th class="sh v rl${cmc(m)}">Réel${rz("r"+m)}</th><th class="sh v${cmc(m)}">Écart${rz("e"+m)}</th>`:""}`).join("")}<th class="g ga sh">Budget${rz("ab")}</th>${CA?`<th class="sh v rl">Réel${rz("ar")}</th><th class="sh v">Écart${rz("ae")}</th>`:""}<th class="sh v">% réalisé${rz("ap")}</th></tr></thead><tbody>`;
   for(const l of L){
     if(l.cid&&CL[l.cid])continue;
     if(l.sec){h+=secRow("sec k-"+l.sec,l.sec==="rev"?"Revenus":"Dépenses",secStyle(l.sec));continue}
@@ -932,8 +932,8 @@ function drawBud(first){
   const cY=chain(Y,bs,rs),op=cY.op,rcum=cY.rc,run=cY.endB;carry=op[0];
   const TT={};S.tx.forEach(t=>{if(+t.date.slice(0,4)!==Y)return;const k=t.tier||"",m=+t.date.slice(5,7)-1;(TT[k]=TT[k]||Array(12).fill(0))[m]+=t.v});
   const tl=Object.keys(TT).map(k=>({n:k?(S.tiers.find(x=>x.id===k)||{name:"Tiers supprimé"}).name:"Sans tiers",v:TT[k],t:TT[k].reduce((a,b)=>a+b,0)})).sort((a,b)=>a.t-b.t);
-  const tiersRows=tl.length?secRow("sec k-syn tier","Classement par tiers")+tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td><td class="v"></td><td class="v"></td><td class="v"></td></tr>`).join(""):"";
-  const rowB=(name,cls,v,ann,rv)=>`<tr class="${cls}"><td class="nm">${name}</td>${M.map(m=>`<td class="g ${ng(v[m])}${cmc(m)}">${fe(Math.round(v[m]))}</td>${CM[m]?(rv?`<td class="v ri ${ng(rv[m])}${cmc(m)}">${fe(rv[m])}</td><td class="v ${ng(rv[m]-v[m])}${cmc(m)}">${fe(rv[m]-v[m])}</td>`:`<td class="v${cmc(m)}"></td><td class="v${cmc(m)}"></td>`):""}`).join("")}<td class="g ga tt ${ng(ann)}">${fe(Math.round(ann))}</td>${rv?`<td class="v ri tt ${ng(rv[11])}">${fe(rv[11])}</td><td class="v tt ${ng(rv[11]-ann)}">${fe(rv[11]-ann)}</td><td class="v"></td>`:'<td class="v"></td><td class="v"></td><td class="v"></td>'}</tr>`;
+  const tiersRows=tl.length?secRow("sec k-syn tier","Classement par tiers")+tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td>${CA?`<td class="v"></td><td class="v"></td>`:""}<td class="v"></td></tr>`).join(""):"";
+  const rowB=(name,cls,v,ann,rv)=>`<tr class="${cls}"><td class="nm">${name}</td>${M.map(m=>`<td class="g ${ng(v[m])}${cmc(m)}">${fe(Math.round(v[m]))}</td>${CM[m]?(rv?`<td class="v ri ${ng(rv[m])}${cmc(m)}">${fe(rv[m])}</td><td class="v ${ng(rv[m]-v[m])}${cmc(m)}">${fe(Math.round(rv[m]-v[m]))}</td>`:`<td class="v${cmc(m)}"></td><td class="v${cmc(m)}"></td>`):""}`).join("")}<td class="g ga tt ${ng(ann)}">${fe(Math.round(ann))}</td>${CA?(rv?`<td class="v ri tt ${ng(rv[11])}">${fe(rv[11])}</td><td class="v tt ${ng(rv[11]-ann)}">${fe(Math.round(rv[11]-ann))}</td><td class="v"></td>`:'<td class="v"></td><td class="v"></td><td class="v"></td>'):'<td class="v"></td>'}</tr>`;
   h+=secRow("sec k-syn","Synthèse")
    +row("Total revenus","tot trev k-syn",m=>rb[m],m=>ra[m],m=>ra[m]-rb[m],no)
    +row("Total dépenses","tot tdep k-syn",m=>db[m],m=>da[m],m=>db[m]-da[m],no)
@@ -1067,6 +1067,7 @@ document.addEventListener("click",async e=>{
   else if(x=g("[data-tcr]")){S.ink="";save();applyInk();const c=$("#tcol");if(c)c.value="#1d4ed8"}
   else if(x=g("[data-rw]")){S.colw={};save();drawBud()}
   else if(x=g("[data-go]")){const n=new Date();if(Y!==n.getFullYear()){Y=Math.max(2026,n.getFullYear());CM[n.getMonth()]=true;draw()}else goMonth()}
+  else if(x=g("[data-ca]")){CA=!CA;drawBud()}
   else if(x=g("[data-tm]")){const d=x.dataset.tm;if(d==="all-open")for(let m=0;m<12;m++)CM[m]=true;else if(d==="all-close")CM={};else CM[+d]=!CM[+d];drawBud();if(d==="all-open"||d==="all-close"||!CM[+d])$("#bt").scrollLeft=0;else goMonth(+d)}
   else if(x=g("[data-fill]")){const k=Y+"|"+x.dataset.fill,a=S.budget[k]||Array(12).fill(0);S.budget[k]=Array(12).fill(a[0]||0);save();drawBud()}
   else if(x=g("[data-del]")){const[t,a,b]=x.dataset.del.split(":");
