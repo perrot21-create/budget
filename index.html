@@ -517,8 +517,8 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 .prn{border-left:3px solid var(--accent);padding:6px 10px;margin:0 0 12px;color:var(--mute);font-size:var(--fs-md)}
 
 /* Dernières opérations : lignes colorées selon le compte */
-.lt.dlast tbody tr.ta td,.lt.dlast tbody tr.ta:nth-child(even) td{background:var(--ac2)}
-.dlast tr.ta,.dlast tr.ta:nth-child(even){background:var(--ac2)}
+.lt.dlast tbody tr.ta td,.lt.dlast tbody tr.ta:nth-child(even) td,.lt.mcat tbody tr.ta td,.lt.mcat tbody tr.ta:nth-child(even) td{background:color-mix(in srgb,var(--ac1) 50%,var(--ac2))}
+.dlast tr.ta,.dlast tr.ta:nth-child(even){background:color-mix(in srgb,var(--ac1) 50%,var(--ac2))}
 .mb.sm{max-height:calc(100vh - 24px);overflow-y:auto}
 .sw2{display:flex;align-items:center;gap:14px;padding:8px 4px;cursor:pointer;position:relative}
 .sw2 input{position:absolute;opacity:0;width:1px;height:1px}
@@ -607,10 +607,10 @@ function showCatOps(cid,per){
   const tot=ops.reduce((s,t)=>s-t.v,0);
   const pl=per==="m"?cap(new Date(yr,mo,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"})):"Cumul "+yr;
   let py=yr;
-  const rows=ops.map(t=>{const s2=c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier),ac=S.acc.find(x=>x.id===t.acc),dd=dco(t.date,py);py=+t.date.slice(0,4);
-    return `<tr><td title="${dfr(t.date)}">${dd}</td><td>${ac?esc(ac.name):""}</td><td>${ti?esc(ti.name):""}</td><td>${s2?esc(s2.name):""}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td><td class="c" title="${t.p?"Pointée":"Non pointée"}"><span aria-hidden="true">${t.p?"✓":"○"}</span><span class="vh">${t.p?"Pointée":"Non pointée"}</span></td></tr>`}).join("");
+  const rows=ops.map(t=>{const s2=c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier),ac=S.acc.find(x=>x.id===t.acc),ai=S.acc.findIndex(x=>x.id===t.acc),dd=dco(t.date,py);py=+t.date.slice(0,4);
+    return `<tr class="${ai>=0?"ta t"+ai:""}"><td title="${dfr(t.date)}">${dd}</td><td>${ac?esc(ac.name):""}</td><td>${ti?esc(ti.name):""}</td><td>${s2?esc(s2.name):""}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td><td class="c" title="${t.p?"Pointée":"Non pointée"}"><span aria-hidden="true">${t.p?"✓":"○"}</span><span class="vh">${t.p?"Pointée":"Non pointée"}</span></td></tr>`}).join("");
   const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
-  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Opérations ${esc(c.name)}"><div class="mh"><h2>${dot(cid)}${esc(c.name)} · ${esc(pl)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${ops.length} opération(s), tous comptes · Total : <b>${eur2(tot)}</b></p>${ops.length?`<div class="tw2"><table class="lt" aria-label="Opérations de la catégorie ${esc(c.name)}"><thead><tr><th>Date</th><th>Compte</th><th>Tiers</th><th>Sous-catégorie</th><th class="r">Montant</th><th class="c">Pointée</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="empty">Aucune opération sur cette période.</p>`}<div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Opérations ${esc(c.name)}"><div class="mh"><h2>${dot(cid)}${esc(c.name)} · ${esc(pl)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${ops.length} opération(s), tous comptes · Total : <b>${eur2(tot)}</b></p>${ops.length?`<div class="tw2"><table class="lt mcat" aria-label="Opérations de la catégorie ${esc(c.name)}"><thead><tr><th>Date</th><th>Compte</th><th>Tiers</th><th>Sous-catégorie</th><th class="r">Montant</th><th class="c">Pointée</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="empty">Aucune opération sur cette période.</p>`}<div><button class="primary" data-r="0">Fermer</button></div></div>`;
   const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
   o.onclick=e=>{if(e.target===o||e.target.closest("[data-r]"))end()};
   o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button")],f=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f.focus()}}};
