@@ -40,6 +40,17 @@
 .pq-a{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .pq-x{display:flex;gap:4px}.pq-x button{min-width:34px;min-height:34px;padding:0;border-color:transparent;background:transparent;color:var(--mute)}.pq-x button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}.pq-x [data-pq-del]:hover{color:var(--neg);border-color:var(--neg)}
 @media(max-width:600px){.pq-r{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"d a x" "m m m"}.pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m}.pq-seg{max-width:none}}
+/* Demi-écran : tout rentre dans la largeur, sans défilement horizontal */
+.pq-bd{white-space:normal}.pq-g>*,.pq-m,.pq-c,.pq-kc,.pq-f,.fbar>*{min-width:0}
+@media(max-width:1100px){
+.pq-k{gap:10px}.pq-kc{padding:12px 14px}.pq-kc b{font-size:clamp(1.2rem,3.2vw,1.6rem)}
+.pq-cs{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.pq-c{padding:14px 16px;min-height:0;gap:6px}.pq-ch b{font-size:1.1rem}.pq-cv{font-size:clamp(1.5rem,3.6vw,2rem)}.pq-c .sub{font-size:var(--fs-md)}
+.pq-ac{gap:6px}.pq-ac button{padding:5px 10px;font-size:var(--fs-sm)}
+.pq-r{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"d a x" "m m m";gap:4px 10px;padding:8px 10px}.pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m}
+.pq-g{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.fbar input[type=search]{flex:1 1 140px}.fbar select{flex:1 1 130px;min-width:0}
+}
 `;document.head.appendChild(s)})();
 
 /* ---------- Prêts entre proches (v2) : données isolées (S.prets), jamais lues par les comptes, budgets ou soldes ---------- */
