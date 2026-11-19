@@ -3,7 +3,7 @@
    Les données sont rangées dans S.actions : sauvegarde, fichier partagé et annulation incluses. */
 (function(){
 "use strict";
-var J=false,MAN=false,SETO=false,PCT=10,EXP={};
+var J=false,MAN=false,SETO=false,PCT=10,EXP={},SORT="new";
 var DEF=[{min:500,max:1000,fee:1.9},{min:1000,max:2000,fee:2.9},{min:2000,max:4000,fee:3.8}];
 var $=function(i){return document.getElementById(i)};
 function A(){if(!S.actions||!Array.isArray(S.actions.hist))S.actions={hist:[],last:null,cfg:null};return S.actions}
@@ -15,14 +15,9 @@ function sorted(c){return c.tiers.slice().sort(function(a,b){return a.min-b.min}
 function fee(m,c){c=c||cfg();var T=sorted(c);for(var i=0;i<T.length;i++){if(m>=T[i].min&&m<=T[i].max)return T[i].fee}return null}
 /* Texte de la tranche de frais appliquée à un montant */
 function trTxt(m){var T=sorted(cfg());for(var i=0;i<T.length;i++){if(m>=T[i].min&&m<=T[i].max)return"tranche "+eur(T[i].min)+" à "+eur(T[i].max)}return""}
-/* Montant exact : aucun arrondi à 2 décimales (seules les erreurs de calcul informatique au-delà de 8 décimales sont éliminées) */
-function ex(n){
-  var s=(Math.round(n*1e8)/1e8).toFixed(8).replace(/0+$/,""),neg=s.charAt(0)==="-";if(neg)s=s.slice(1);
-  var d=s.split("."),dec=d[1]||"";while(dec.length<2)dec+="0";
-  return(neg?"−":"")+d[0].replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f")+","+dec+"\u00a0€"
-}
 /* TTF : calculée à l'achat, uniquement sur le montant total de l'achat (hors frais).
-   Elle s'ajoute au coût de l'achat, sauf si la vente a lieu le même jour. Aucune TTF sur la vente. */
+   Elle s'ajoute au coût de l'achat, sauf si la vente a lieu le même jour. Aucune TTF sur la vente.
+   Les calculs gardent la valeur exacte ; l'affichage est arrondi à 2 décimales (eur2). */
 function res(o,c){
   c=c||cfg();
   var tot=o.q*o.pa,fa=fee(tot,c)||0,ta=o.j?0:tot*c.ttf,ca=tot+fa+ta,vb=o.q*o.pv,fv=fee(vb,c)||0,net=vb-fv,g=net-ca,be=null;
@@ -45,7 +40,7 @@ function msg(m){
 }
 function hint(){
   var T=sorted(cfg()),tr=T.length?T.map(function(t){return"de "+eur(t.min)+" à "+eur(t.max)+" : "+eur2(t.fee)}).join(" · "):"aucune tranche définie";
-  return"Frais par tranche du total de l’opération ("+tr+"). TTF de "+ttfTxt()+" calculée à l’achat sur le montant total de l’achat, hors frais, et ajoutée au coût de l’achat si la vente n’a pas lieu le même jour. Taux de rentabilité = gain net ÷ coût total de l’achat."
+  return"Frais par tranche du total de l’opération ("+tr+"). Les mêmes frais s’appliquent à l’achat et à la revente. Si deux tranches se touchent à la même valeur, la tranche la plus basse s’applique. TTF de "+ttfTxt()+" calculée à l’achat sur le montant total de l’achat, hors frais, et ajoutée au coût de l’achat si la vente n’a pas lieu le même jour. Taux de rentabilité = gain net ÷ coût total de l’achat. Les opérations déjà enregistrées conservent leurs montants d’origine."
 }
 function note(id,t){var e=$(id);e.hidden=!t;e.textContent=t||""}
 
@@ -62,11 +57,20 @@ var CSS=[
 '#acw .axb strong{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}',
 '#acw .axb.pos{background:color-mix(in srgb,var(--pos) 16%,var(--surface))}',
 '#acw .axb.neg{background:color-mix(in srgb,var(--neg) 16%,var(--surface))}',
-/* Achat et Revente côte à côte */
-'#acw .axcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:28px 56px;align-items:start;margin-bottom:28px}',
-'#acw .axcols>section{margin-bottom:0}',
-'#acw .axg{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}',
-'#acw .axf{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}',
+/* À gauche : Achat puis Revente ; à droite : Opérations enregistrées, de la hauteur des deux blocs réunis */
+'#acw .axmain{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:stretch;margin-bottom:28px}',
+'#acw .axleft{display:flex;flex-direction:column;gap:28px;min-width:0}',
+'#acw .axleft>section,#acw .axops{margin-bottom:0}',
+'#acw .axops{position:relative;min-width:0;padding:0;min-height:320px}',
+'#acw .axopi{position:absolute;inset:0;display:flex;flex-direction:column;padding:var(--sp,20px);overflow:hidden}',
+'#acw .axopb{flex:1 1 auto;min-height:0;overflow:auto}',
+'#acw .axoph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}',
+'#acw .axoph h2{margin:0}',
+'#acw .axoph select{height:40px;min-width:0;max-width:100%}',
+/* champs alignés : toutes les cases d’une même ligne ont leur contrôle à la même hauteur */
+'#acw .axg{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px;align-items:end}',
+'#acw .axf{display:flex;flex-direction:column;justify-content:flex-end;gap:4px;min-width:0;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}',
+'#acw .axf>span{min-height:2.7em;display:flex;align-items:flex-end;line-height:1.25}',
 '#acw .axin{width:100%;height:42px;font-size:var(--fs-lg);font-weight:700;text-align:right;background:var(--ain);border:2px solid var(--ainb);color:var(--ink)}',
 '#acw .axin.alr{border-color:var(--neg);box-shadow:0 0 0 1px var(--neg)}',
 '#acw .axin.lk{background:var(--alk);border:1px solid var(--line);cursor:not-allowed;user-select:none;-webkit-user-select:none}',
@@ -77,9 +81,9 @@ var CSS=[
 '#acw .axr dd{margin:0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}',
 '#acw .axr.tt dd{font-weight:700}',
 '#acw .axtr{margin-left:6px;font-size:var(--fs-sm);font-weight:400;color:var(--mute)}',
-'#acw .axs{display:inline-flex;align-self:flex-start;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}',
-'#acw .axs button{border:0;border-radius:0;height:42px;padding:0 18px}',
-'#acw .axs.sm button{padding:0 14px}',
+'#acw .axs{display:flex;width:100%;align-self:stretch;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}',
+'#acw .axs button{flex:1 1 0;min-width:0;border:0;border-radius:0;height:42px;padding:0 4px}',
+'#acw .axs button+button{border-left:1px solid var(--line)}',
 '#acw .axs button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}',
 '#acw .axn{color:var(--neg);margin:10px 0 0;font-size:var(--fs-md)}',
 '#acw .axsc .tg{color:var(--accent);font-weight:600;text-decoration:underline}',
@@ -101,23 +105,24 @@ var CSS=[
 '#acw .axh td.act [data-ax-del]:hover{color:var(--neg);border-color:var(--neg)}',
 '#acw .axt tbody tr td{background:none}',
 '#acw .axt td{padding:4px 6px;vertical-align:middle}#acw .axt input{min-width:110px}',
-'@media(max-width:760px){#acw .axres{gap:8px}#acw .axb{padding:8px 10px}#acw .axb small{font-size:var(--fs-sm)}#acw .axb strong{font-size:1.05rem}#acw .axhr{display:none}#acw .axbar button{flex:1 1 100%}}'
+'#acw .axt tr.axttf td{border-top:2px solid var(--line);font-weight:600}',
+'@media(max-width:1100px){#acw .axhq,#acw .axhr{display:none}}',
+'@media(max-width:760px){#acw .axres{gap:8px}#acw .axb{padding:8px 10px}#acw .axb small{font-size:var(--fs-sm)}#acw .axb strong{font-size:1.05rem}#acw .axbar button{flex:1 1 100%}}',
+'@media(max-width:640px){#acw .axmain{grid-template-columns:1fr}#acw .axops{min-height:0}#acw .axopi{position:static;max-height:75vh}}'
 ].join("");
 
 function html(){
   return '<div id="acw"><h2 class="vh">Calculatrice d’actions</h2>'
   +'<div class="axtop"><button type="button" id="ax_setb" aria-expanded="false" aria-controls="ax_set">⚙ Réglages</button></div>'
   +'<section id="ax_set" hidden><h2>Réglages des frais</h2>'
-  +'<p class="sub">Modifiez les tranches de frais et la TTF en cas de changement d’opérateur. Les mêmes frais s’appliquent à l’achat et à la revente, selon le total de l’opération. Si deux tranches se touchent à la même valeur, la tranche la plus basse s’applique. Les tranches sont triées automatiquement par montant « de ». Les opérations déjà enregistrées conservent leurs montants d’origine.</p>'
   +'<div class="tw2"><table class="lt axt"><thead><tr><th>Total de l’opération : de (€)</th><th>à (€)</th><th>Frais (€)</th><th></th></tr></thead><tbody id="ax_tb"></tbody></table></div>'
   +'<div class="axbar" style="margin-top:10px"><button type="button" id="ax_tadd">Ajouter une tranche</button><button type="button" id="ax_tdef">Valeurs d’origine</button></div>'
-  +'<div class="axg" style="margin-top:14px"><label class="axf"><span>TTF (en %) sur l’achat, si la vente n’a pas lieu le même jour</span><input class="axin" id="ax_ttf" inputmode="decimal" autocomplete="off"></label></div>'
   +'<p class="axn" id="ax_ns" hidden></p></section>'
   +'<div class="axres" id="ax_res" role="group" aria-label="Résultat de la simulation">'
   +'<div class="axb" id="ax_bg"><small>Gain ou perte net</small><strong id="ax_g">–</strong></div>'
   +'<div class="axb" id="ax_bt"><small>Taux de rentabilité</small><strong id="ax_tx">–</strong></div>'
   +'<div class="axb"><small>Prix de vente à l’équilibre</small><strong id="ax_be">–</strong></div></div>'
-  +'<div class="axcols">'
+  +'<div class="axmain"><div class="axleft">'
   +'<section><h2>Achat</h2><div class="axg">'
   +'<label class="axf"><span>Nombre d’actions</span><input class="axin" id="ax_q" inputmode="numeric" autocomplete="off" placeholder="0"></label>'
   +'<label class="axf"><span>Prix d’achat brut par action (€)</span><input class="axin" id="ax_pa" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
@@ -126,17 +131,21 @@ function html(){
   +'<p class="axn" id="ax_na" hidden></p></section>'
   +'<section><h2>Revente</h2><div class="axg">'
   +'<label class="axf"><span>Prix de vente simulé par action (€)</span><input class="axin" id="ax_pv" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
-  +'<div class="axf"><span id="ax_lp">Hausse sur le prix d’achat</span><div class="axs sm" role="group" aria-labelledby="ax_lp"><button type="button" data-ax-pct="5" aria-pressed="false">+5 %</button><button type="button" data-ax-pct="10" aria-pressed="true">+10 %</button><button type="button" data-ax-pct="20" aria-pressed="false">+20 %</button></div></div>'
+  +'<div class="axf"><span id="ax_lp">Hausse sur le prix d’achat</span><div class="axs" role="group" aria-labelledby="ax_lp"><button type="button" data-ax-pct="5" aria-pressed="false">+5 %</button><button type="button" data-ax-pct="10" aria-pressed="true">+10 %</button><button type="button" data-ax-pct="20" aria-pressed="false">+20 %</button></div></div>'
   +'<div class="axf"><span id="ax_lj">Revente le jour même (pas de TTF)</span><div class="axs" role="group" aria-labelledby="ax_lj"><button type="button" id="ax_oui" aria-pressed="false">Oui</button><button type="button" id="ax_non" aria-pressed="true">Non</button></div></div></div>'
   +'<dl class="axd"><div class="axr"><dt>Total de vente brut</dt><dd id="ax_vb">–</dd></div><div class="axr"><dt>Frais de vente<span class="axtr" id="ax_fvt"></span></dt><dd id="ax_fv">–</dd></div><div class="axr tt"><dt>Net encaissé</dt><dd id="ax_net">–</dd></div></dl>'
   +'<p class="axn" id="ax_nv" hidden></p>'
   +'<h3>Scénarios de revente</h3><div class="tw2"><table class="lt axsc" aria-label="Scénarios de revente"><thead><tr><th>Hausse</th><th class="r">Prix de vente</th><th class="r">Gain net</th><th class="r">Rentabilité</th></tr></thead><tbody id="ax_sc"></tbody></table></div></section>'
   +'</div>'
-  +'<details class="axdet"><summary>ⓘ Comment c’est calculé</summary><p class="sub" id="ax_hint"></p></details>'
-  +'<section><h2>Opérations enregistrées</h2><div class="axbar"><button type="button" class="primary" id="ax_save">Enregistrer cette opération</button></div>'
-  +'<p class="axn" id="ax_nh" hidden></p><p class="sub axtot" id="ax_sum"></p><div id="ax_hl"></div>'
+  +'<section class="axops"><div class="axopi"><div class="axoph"><h2>Opérations enregistrées</h2>'
+  +'<select id="ax_sort" aria-label="Trier ou filtrer les opérations"><option value="new">Plus récentes d’abord</option><option value="old">Plus anciennes d’abord</option><option value="gd">Gain décroissant</option><option value="ga">Gain croissant</option><option value="pos">Gains seulement</option><option value="neg">Pertes seulement</option></select></div>'
+  +'<div class="axbar"><button type="button" class="primary" id="ax_save">Enregistrer cette opération</button></div>'
+  +'<p class="axn" id="ax_nh" hidden></p><p class="sub axtot" id="ax_sum"></p>'
+  +'<div class="axopb"><div id="ax_hl"></div>'
   +'<div class="axbar axfoot" id="ax_foot" hidden><button type="button" class="danger" id="ax_clear">Tout effacer</button></div>'
-  +'<p class="sub" style="margin:12px 0 0">Les montants enregistrés sont exacts, sans arrondi. Vos saisies sont rappelées à la prochaine ouverture. L’historique (30 opérations maximum) fait partie de vos données : il est inclus dans la sauvegarde et dans le fichier partagé.</p></section></div>'
+  +'<p class="sub" style="margin:12px 0 0">Les montants sont affichés avec 2 décimales ; les calculs conservent la valeur exacte. Vos saisies sont rappelées à la prochaine ouverture. L’historique (30 opérations maximum) fait partie de vos données : il est inclus dans la sauvegarde et dans le fichier partagé.</p></div></div></section>'
+  +'</div>'
+  +'<details class="axdet"><summary>ⓘ Comment c’est calculé</summary><p class="sub" id="ax_hint"></p></details></div>'
 }
 
 function scen(o){
@@ -181,29 +190,38 @@ function hist(){
   var H=A().hist,hl=$("ax_hl");
   $("ax_foot").hidden=!H.length;
   if(!H.length){$("ax_sum").textContent="";hl.innerHTML='<p class="sub">Aucune opération enregistrée pour l’instant.</p>';return}
-  var tot=Math.round(H.reduce(function(s,o){return s+(o.r||res(o)).g},0)*1e8)/1e8;
-  $("ax_sum").innerHTML='<b>'+H.length+'</b> opération(s) · gain cumulé <b class="'+cl(tot)+'">'+(tot>0?"+":"")+ex(tot)+'</b>';
-  hl.innerHTML='<div class="tw2"><table class="lt axh" aria-label="Opérations enregistrées"><thead><tr><th>Date</th><th class="r">Qté</th><th class="r">Achat</th><th class="r">Vente</th><th class="r">Gain</th><th class="r axhr">Rentabilité</th><th><span class="vh">Actions</span></th></tr></thead>'
-  +H.map(function(o){
+  var g=function(o){return(o.r||res(o)).g},L=H.slice();
+  if(SORT==="old")L.reverse();
+  else if(SORT==="gd")L.sort(function(a,b){return g(b)-g(a)});
+  else if(SORT==="ga")L.sort(function(a,b){return g(a)-g(b)});
+  else if(SORT==="pos")L=L.filter(function(o){return g(o)>0});
+  else if(SORT==="neg")L=L.filter(function(o){return g(o)<0});
+  var tot=Math.round(L.reduce(function(s,o){return s+g(o)},0)*1e8)/1e8;
+  $("ax_sum").innerHTML='<b>'+L.length+'</b>'+(L.length<H.length?' sur '+H.length:'')+' opération(s) · gain cumulé <b class="'+cl(tot)+'">'+(tot>0?"+":"")+eur2(tot)+'</b>';
+  if(!L.length){hl.innerHTML='<p class="sub">Aucune opération ne correspond à ce filtre.</p>';return}
+  hl.innerHTML='<div class="tw2"><table class="lt axh" aria-label="Opérations enregistrées"><thead><tr><th>Date</th><th class="r axhq">Qté</th><th class="r">Achat</th><th class="r">Vente</th><th class="r">Gain</th><th class="r axhr">Rentabilité</th><th><span class="vh">Actions</span></th></tr></thead>'
+  +L.map(function(o){
     var r=o.r||res(o),c=cl(r.g),op=!!EXP[o.id],d=new Date(o.at).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
     /* Opérations enregistrées avant ce changement (TTF sur la vente) : affichage d'origine conservé */
     var nw=r.ta!==undefined;
-    var achat=nw?'Achat : '+ex(r.tot)+' + frais '+ex(r.fa)+' + TTF '+ex(r.ta)+' = <b>'+ex(r.ca)+'</b>':'Achat : '+ex(r.tot)+' + frais '+ex(r.fa)+' = <b>'+ex(r.ca)+'</b>';
-    var vente=nw?'Vente : '+ex(r.vb)+' − frais '+ex(r.fv)+' = <b>'+ex(r.net)+'</b>':'Vente : '+ex(r.vb)+' − frais '+ex(r.fv)+' − TTF '+ex(r.t)+' = <b>'+ex(r.net)+'</b>';
+    var achat=nw?'Achat : '+eur2(r.tot)+' + frais '+eur2(r.fa)+' + TTF '+eur2(r.ta)+' = <b>'+eur2(r.ca)+'</b>':'Achat : '+eur2(r.tot)+' + frais '+eur2(r.fa)+' = <b>'+eur2(r.ca)+'</b>';
+    var vente=nw?'Vente : '+eur2(r.vb)+' − frais '+eur2(r.fv)+' = <b>'+eur2(r.net)+'</b>':'Vente : '+eur2(r.vb)+' − frais '+eur2(r.fv)+' − TTF '+eur2(r.t)+' = <b>'+eur2(r.net)+'</b>';
     return'<tbody><tr><td><button type="button" class="tg" data-ax-tg="'+o.id+'" aria-expanded="'+op+'" aria-label="Afficher le détail du calcul">'+(op?"▾":"▸")+'</button>'+d+(o.j?' <span class="sub">· même jour</span>':'')+'</td>'
-      +'<td class="r">'+o.q+'</td><td class="r">'+ex(o.pa)+'</td><td class="r">'+ex(o.pv)+'</td>'
-      +'<td class="r '+c+'"><b>'+(r.g>0?"+":"")+ex(r.g)+'</b></td><td class="r axhr '+c+'">'+pct(r.taux)+'</td>'
+      +'<td class="r axhq">'+o.q+'</td><td class="r">'+eur2(o.pa)+'</td><td class="r">'+eur2(o.pv)+'</td>'
+      +'<td class="r '+c+'"><b>'+(r.g>0?"+":"")+eur2(r.g)+'</b></td><td class="r axhr '+c+'">'+pct(r.taux)+'</td>'
       +'<td class="act"><button type="button" data-ax-load="'+o.id+'" aria-label="Recharger dans le calculateur" title="Recharger dans le calculateur">↺</button><button type="button" data-ax-del="'+o.id+'" aria-label="Supprimer" title="Supprimer">✕</button></td></tr>'
-      +'<tr class="axdt"'+(op?'':' hidden')+'><td colspan="7"><div>'+achat+'</div><div>'+vente+'</div><div>Rentabilité <b>'+pct(r.taux)+'</b> · revente le jour même : '+(o.j?"oui":"non")+'</div></td></tr></tbody>'
+      +'<tr class="axdt"'+(op?'':' hidden')+'><td colspan="7"><div>'+o.q+' action(s) · achat '+eur2(o.pa)+' · vente '+eur2(o.pv)+'</div><div>'+achat+'</div><div>'+vente+'</div><div>Rentabilité <b>'+pct(r.taux)+'</b> · revente le jour même : '+(o.j?"oui":"non")+'</div></td></tr></tbody>'
   }).join("")+'</table></div>';
 }
 function tierRows(){
-  $("ax_tb").innerHTML=cfg().tiers.map(function(t,i){
+  var rows=cfg().tiers.map(function(t,i){
     var inp=function(k,v,l){return'<td><input class="axin" data-ax-t="'+i+':'+k+'" inputmode="decimal" autocomplete="off" value="'+ns(v)+'" aria-label="Tranche '+(i+1)+' : '+l+'"></td>'};
     return'<tr data-ax-r="'+i+'">'+inp("min",t.min,"de (€)")+inp("max",t.max,"à (€)")+inp("fee",t.fee,"frais (€)")+'<td><button type="button" data-ax-tdel="'+i+'" aria-label="Supprimer la tranche '+(i+1)+'">✕</button></td></tr>'
       +'<tr class="axerr" data-ax-e="'+i+'" hidden><td colspan="4" class="warn" role="alert"></td></tr>'
   }).join("")||'<tr><td colspan="4" class="sub">Aucune tranche : aucun frais n’est appliqué.</td></tr>';
-  $("ax_ttf").value=ns(cfg().ttf*100);
+  /* la TTF fait partie du tableau des frais */
+  rows+='<tr class="axttf"><td colspan="2">TTF sur l’achat (en %), sauf revente le jour même</td><td><input class="axin" id="ax_ttf" inputmode="decimal" autocomplete="off" value="'+ns(cfg().ttf*100)+'" aria-label="TTF en pourcentage"></td><td></td></tr>';
+  $("ax_tb").innerHTML=rows;
 }
 /* Lecture des tranches saisies, avec le message d'erreur de chaque ligne fautive */
 function collect(){
@@ -235,6 +253,7 @@ function render(){
   if(!$("axsty")){var s=document.createElement("style");s.id="axsty";s.textContent=CSS;document.head.appendChild(s)}
   $("app").innerHTML=html();setTop();
   $("ax_set").hidden=!SETO;$("ax_setb").setAttribute("aria-expanded",String(SETO));tierRows();
+  $("ax_sort").value=SORT;
   var L=A().last;J=false;MAN=false;PCT=10;
   if(L){$("ax_q").value=L.q?ns(L.q):"";$("ax_pa").value=L.pa?ns(L.pa):"";MAN=!!L.man;if(L.pct>0)PCT=L.pct;if(MAN)$("ax_pv").value=L.pv?ns(L.pv):"";J=!!L.j}
   $("ax_oui").setAttribute("aria-pressed",String(J));$("ax_non").setAttribute("aria-pressed",String(!J));
@@ -280,7 +299,8 @@ document.addEventListener("keydown",function(e){
 document.addEventListener("change",function(e){
   if(!inAct(e))return;
   var t=e.target;
-  if(t.hasAttribute&&t.hasAttribute("data-ax-t"))tiersChanged();
+  if(t.id==="ax_sort"){SORT=t.value;hist()}
+  else if(t.hasAttribute&&t.hasAttribute("data-ax-t"))tiersChanged();
   else if(t.id==="ax_ttf"){
     var v=parse(t.value);
     if(!isFinite(v)||v<0||v>100){note("ax_ns","La TTF doit être un pourcentage entre 0 et 100.");return}
