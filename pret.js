@@ -127,6 +127,12 @@ html.pq-lock,html.pq-lock body{overflow:hidden}
 .pq-cs .pq-cv{font-size:clamp(1.3rem,2.2vw,1.9rem)}
 .pq-cs .pq-c0{align-items:center;justify-content:center;border-style:dashed;border-left-width:1px;background:transparent;color:var(--mute);text-align:center;font-weight:600}
 .pq-cs .pq-c0:hover{color:var(--ink);border-color:var(--accent);box-shadow:none}
+/* 4 couleurs de fond, une par carré (bleu, violet, ambre, turquoise) */
+.pq-cs .pq-c:not(.pq-c0):nth-child(4n+1){background:color-mix(in srgb,#3b82f6 16%,var(--surface))}
+.pq-cs .pq-c:not(.pq-c0):nth-child(4n+2){background:color-mix(in srgb,#a855f7 16%,var(--surface))}
+.pq-cs .pq-c:not(.pq-c0):nth-child(4n+3){background:color-mix(in srgb,#f59e0b 18%,var(--surface))}
+.pq-cs .pq-c:not(.pq-c0):nth-child(4n){background:color-mix(in srgb,#14b8a6 16%,var(--surface))}
+.pq-cs .pq-c:not(.pq-c0) .pq-mn>summary,.pq-cs .pq-c:not(.pq-c0) .pq-bd:not(.late):not(.soon){background:color-mix(in srgb,var(--surface) 70%,transparent)}
 .pq-cs .pq-c:nth-child(odd) .pq-mm{left:calc(100% + 4px);right:auto;bottom:0;top:auto}
 .pq-cs .pq-c:nth-child(even) .pq-mm{right:calc(100% + 4px);left:auto;bottom:0;top:auto}
 .pq-pgr{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:10px;color:var(--mute)}
