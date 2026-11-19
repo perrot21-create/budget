@@ -1,6 +1,6 @@
 /* pret.js — onglet « Prêts entre proches » (JS + CSS). À charger dans index.html avec : <script src="pret.js"></script> */
 (()=>{if(document.getElementById("pq-css"))return;const s=document.createElement("style");s.id="pq-css";s.textContent=`
-/* Prêts entre proches (v3 — mise en page compacte) */
+/* Prêts entre proches (v4 — « Par proche » en 4 carrés) */
 .pq-info{margin:0 0 14px;color:var(--mute);font-size:var(--fs-md)}.pq-info p{margin:6px 0 0;border-left:3px solid var(--accent);padding-left:10px}
 
 /* KPI : une seule barre horizontale */
@@ -53,14 +53,8 @@
 .pq-ac{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:auto;padding-top:4px}.pq-ac button{padding:4px 10px;font-size:var(--fs-sm)}
 .pq-c .sub{font-size:var(--fs-md);line-height:1.3}.pq-c .pb2{height:8px;margin:2px 0;border-radius:4px}
 
-/* Carte soldée : une seule ligne compacte */
-.pq-cz{grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:7px 14px}
-.pq-cz b{font-size:1rem;font-weight:700}
-.pq-cz .pq-ac{margin:0 0 0 auto;padding:0}
-
 /* Menu « ⋯ » */
 .pq-mn{position:relative;margin-left:auto;flex:none}
-.pq-cz .pq-mn{margin-left:0}
 .pq-mn>summary{list-style:none;cursor:pointer;padding:4px 10px;font-size:var(--fs-sm);font-weight:700;border:1px solid var(--line);border-radius:var(--rb,8px);background:var(--surface);color:var(--mute);line-height:1.4;user-select:none}
 .pq-mn>summary::-webkit-details-marker{display:none}
 .pq-mn>summary:hover,.pq-mn[open]>summary{color:var(--ink);border-color:var(--accent)}
@@ -110,14 +104,11 @@ html.pq-lock,html.pq-lock body{overflow:hidden}
 .pq-cols>.pq-pn:last-child{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .pq-cols>.pq-pn:last-child>*{flex:none}
 .pq-cols>.pq-pn:last-child>#pqhl{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
-.pq-c:not(.pq-cz) .pq-mm{right:calc(100% + 4px);bottom:0}
-.pq-cz .pq-mm{bottom:auto;top:calc(100% + 4px)}
 }
 /* Demi-écran : tout rentre dans la largeur, sans défilement horizontal */
 @media(max-width:1100px){
 .pq-kc{padding:10px 14px}.pq-kc b{font-size:clamp(1.1rem,3.2vw,1.4rem)}
-.pq-cs{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.pq-c{padding:10px 10px;gap:3px}.pq-ch{flex-wrap:wrap;gap:2px}.pq-ch b{font-size:var(--fs-lg);overflow-wrap:anywhere}.pq-ch .pq-bd{display:none}.pq-cv{font-size:clamp(1.05rem,2.4vw,1.5rem)}.pq-c .sub{font-size:var(--fs-sm)}
+.pq-c{padding:10px 10px;gap:3px}.pq-ch{flex-wrap:wrap;gap:2px}.pq-ch b{font-size:var(--fs-lg);overflow-wrap:anywhere}.pq-cv{font-size:clamp(1.05rem,2.4vw,1.5rem)}.pq-c .sub{font-size:var(--fs-sm)}
 .pq-ac{gap:4px}.pq-ac button{padding:3px 6px;font-size:.72rem;flex:1 1 auto}.pq-mn>summary{padding:3px 8px}
 .pq-g{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 .fbar input[type=search]{flex:1 1 140px}.fbar select{flex:1 1 130px;min-width:0}
@@ -128,12 +119,29 @@ html.pq-lock,html.pq-lock body{overflow:hidden}
 .pq-g .pq-wr,.pq-g .pq-n{grid-column:1/-1}
 .pq-m{grid-template-columns:minmax(0,1fr) auto}.pq-m .pq-nc{grid-column:1/-1}
 }
-@media(max-width:560px){.pq-cs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Par proche : 4 carrés (grille 2×2), un proche par carré */
+.pq-cs{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(170px,auto);align-items:stretch;gap:14px}
+.pq-cs .pq-c{padding:14px 16px;gap:6px;justify-content:flex-start;min-height:0}
+.pq-cs .pq-c .pq-ch .pq-bd{display:inline-block}
+.pq-cs .pq-cv{font-size:clamp(1.3rem,2.2vw,1.9rem)}
+.pq-cs .pq-c0{align-items:center;justify-content:center;border-style:dashed;border-left-width:1px;background:transparent;color:var(--mute);text-align:center;font-weight:600}
+.pq-cs .pq-c0:hover{color:var(--ink);border-color:var(--accent);box-shadow:none}
+.pq-cs .pq-c:nth-child(odd) .pq-mm{left:calc(100% + 4px);right:auto;bottom:0;top:auto}
+.pq-cs .pq-c:nth-child(even) .pq-mm{right:calc(100% + 4px);left:auto;bottom:0;top:auto}
+.pq-pgr{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:10px;color:var(--mute)}
+.pq-pgr:empty{display:none}
+.pq-pgr button{min-width:36px}
+@media(min-width:1101px){
+ #pqc{flex:1 1 0;min-height:0;overflow:visible;align-content:stretch;grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);padding-right:0}
+ .pq-lc>.pq-pn:nth-child(2){overflow:visible;min-height:400px}
+ .pq-lc>.pq-pn:nth-child(2)>.pq-pgr{flex:none}
+}
 `;document.head.appendChild(s)})();
 
-/* ---------- Prêts entre proches (v3) : données isolées (S.prets), jamais lues par les comptes, budgets ou soldes ---------- */
+/* ---------- Prêts entre proches (v4) : données isolées (S.prets), jamais lues par les comptes, budgets ou soldes ---------- */
 const PRT={pret:{l:"J’ai prêté",s:1,out:1,w:"prêt de ma part"},recu:{l:"On m’a remboursé",s:-1,out:0,w:"remboursement reçu"},emp:{l:"J’ai emprunté",s:-1,out:0,w:"emprunt auprès de toi"},rendu:{l:"J’ai remboursé",s:1,out:1,w:"remboursement versé"}};
-let PQO=false,PQE=null,PQP=null,PQH=true,PQF={q:"",t:"",w:""};
+let PQO=false,PQE=null,PQP=null,PQH=true,PQG=0,PQF={q:"",t:"",w:""};
 const PR=()=>S.prets&&Array.isArray(S.prets.ops)?S.prets:{ops:[]};
 const prAcc=id=>{if(!id)return"—";if(id==="esp")return"Espèces";if(id==="aut")return"Autre";const a=S.acc.find(x=>x.id===id);return a?a.name:"Compte supprimé"};
 const prKey=n=>String(n).trim().toLocaleLowerCase("fr");
@@ -159,14 +167,17 @@ const pqMenu=(k,z)=>`<details class="pq-mn"><summary aria-label="Plus d’action
 function pqCards(){
   const G=prGroups(),open=G.filter(g=>g.bal).sort((a,b)=>Math.abs(b.bal)-Math.abs(a.bal)),done=G.filter(g=>!g.bal).sort((a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"})),shown=PQH?open:[...open,...done];
   const card=g=>{const z=!g.bal,p=g.bal>0,k=esc(g.key),cur=PQF.w===g.key?' aria-current="true"':"";
-    if(z)return `<article class="pq-c pq-cz z" data-pq-card="${k}"${cur}><b>${esc(g.name)}</b><span class="pq-bd">Soldé</span><span class="sub">${g.n} op. · dernière : ${ago(g.last)}</span><div class="pq-ac"><button data-pq-add="${k}:pret">+ Prêt</button>${pqMenu(k,true)}</div></article>`;
+    if(z)return `<article class="pq-c z" data-pq-card="${k}"${cur}><div class="pq-ch"><b>${esc(g.name)}</b><span class="pq-bd">Soldé</span></div><div class="pq-cv">${eur2(0)}</div><div class="sub">Compte soldé</div><div class="sub">${g.n} op. · dernière : ${ago(g.last)}</div><div class="pq-ac"><button data-pq-add="${k}:pret">+ Prêt</button>${pqMenu(k,true)}</div></article>`;
     return `<article class="pq-c ${p?"p":"n"}" data-pq-card="${k}"${cur}><div class="pq-ch"><b>${esc(g.name)}</b><span class="pq-bd">${g.n} op.</span></div>
     <div class="pq-cv">${eur2(Math.abs(g.bal))}</div><div class="sub">${p?esc(g.name)+" me doit cette somme":"Je dois cette somme à "+esc(g.name)}</div>
     ${g.pct!==null?`<div class="pb2" role="img" aria-label="${g.pct} % remboursé"><i style="width:${g.pct}%"></i></div><div class="sub">${g.pct} % déjà remboursé</div>`:""}
     <div class="sub pq-ln"><span>Dernière op. : ${ago(g.last)}</span>${g.due?pqDue(g.due):""}</div>
     <div class="pq-ac"><button data-pq-add="${k}:pret">+ Prêt</button><button data-pq-add="${k}:rep">+ Remboursement</button><button data-pq-solde="${k}">Solder</button>${pqMenu(k,false)}</div></article>`};
   const el=$("#pqc");if(!el)return;
-  el.innerHTML=shown.length?shown.map(card).join(""):(G.length?`<p class="empty">Tous les comptes sont soldés.</p>`:`<div class="pq-empty"><p>Aucune opération pour l’instant. Notez ici ce que vous prêtez, empruntez ou remboursez à vos proches.</p><button class="primary" data-pq-new>Ajouter mon premier prêt</button></div>`)}
+  const pages=Math.max(1,Math.ceil(shown.length/4));PQG=Math.min(Math.max(PQG,0),pages-1);
+  const pg=shown.slice(PQG*4,PQG*4+4),pad=shown.length?Array(4-pg.length).fill(`<div class="pq-c pq-c0" data-pq-new role="button" tabindex="0">+ Ajouter un proche</div>`).join(""):"";
+  el.innerHTML=shown.length?pg.map(card).join("")+pad:(G.length?`<p class="empty">Tous les comptes sont soldés.</p>`:`<div class="pq-empty"><p>Aucune opération pour l’instant. Notez ici ce que vous prêtez, empruntez ou remboursez à vos proches.</p><button class="primary" data-pq-new>Ajouter mon premier prêt</button></div>`);
+  const pgr=$("#pqpg");if(pgr)pgr.innerHTML=pages>1?`<button data-pq-pg="-1" ${PQG===0?"disabled":""} aria-label="Page précédente">‹</button><span>${PQG+1} / ${pages}</span><button data-pq-pg="1" ${PQG>=pages-1?"disabled":""} aria-label="Page suivante">›</button>`:""}
 function pqMark(){document.querySelectorAll("[data-pq-card]").forEach(c=>{c.dataset.pqCard===PQF.w?c.setAttribute("aria-current","true"):c.removeAttribute("aria-current")});const s=$("#pqw");if(s)s.value=PQF.w}
 function pqHist(){const el=$("#pqhl");if(!el)return;const{list,bal}=pqRows(),G=prGroups();
   const tot=list.reduce((s,o)=>s+(PRT[o.k].out?-o.v:o.v),0);
@@ -201,7 +212,7 @@ function drawPre(){
   <details class="pq-info"><summary>ℹ Cet onglet est indépendant</summary><p>Ce que vous y saisissez n’apparaît dans aucun compte, budget, solde ou graphique du reste de la page. Il est simplement conservé avec vos autres données (sauvegarde et fichier partagé). « Payé via » est une simple information.</p></details>
   <div class="pq-k"><div class="pq-kc p"><span class="sub">On me doit · ${dueG.length} pers.</span><b class="pos">${eur2(due)}</b></div><div class="pq-kc n"><span class="sub">Je dois · ${oweG.length} pers.</span><b class="neg">${eur2(owe)}</b></div><div class="pq-kc"><span class="sub">Solde net · ${G.length} proche(s)</span><b class="${net>0?"pos":net<0?"neg":""}">${pqSg(net)}</b></div></div>
   <div class="pq-cols"><div class="pq-lc"><section class="pq-pn pq-fs${showF?" open":""}"><div class="pq-fh"><h2>${ed?"Modifier l’opération":"Nouvelle opération"}</h2>${ed?"":`<button class="primary" data-pq-new aria-expanded="${!!showF}">${showF?"Fermer":"+ Nouvelle opération"}</button>`}</div>${form}</section>
-   <section class="pq-pn"><div class="pq-fh"><h2>Par proche</h2>${G.some(g=>!g.bal)?`<label class="chip"><input type="checkbox" id="pqhd"${PQH?" checked":""}>Masquer les soldés</label>`:""}</div><div class="pq-cs" id="pqc"></div></section></div>
+   <section class="pq-pn"><div class="pq-fh"><h2>Par proche</h2>${G.some(g=>!g.bal)?`<label class="chip"><input type="checkbox" id="pqhd"${PQH?" checked":""}>Masquer les soldés</label>`:""}</div><div class="pq-cs" id="pqc"></div><div class="pq-pgr" id="pqpg"></div></section></div>
    <section class="pq-pn"><div class="pq-fh"><h2>Historique</h2><button data-pq-csv>⬇ Export CSV</button></div>
     <div class="fbar"><input id="pqq" type="search" placeholder="Rechercher (nom, note, montant…)" value="${esc(PQF.q)}" aria-label="Rechercher">
     <select id="pqt" aria-label="Sens"><option value="">Entrées et sorties</option><option value="out"${PQF.t==="out"?" selected":""}>Sorties</option><option value="in"${PQF.t==="in"?" selected":""}>Entrées</option></select>
@@ -226,11 +237,12 @@ document.addEventListener("submit",e=>{const fm=e.target;if(fm.id!=="pqf")return
   else{P.ops.push({id:uid(),...o});PQP={who:o.who,k:o.k,ac:o.ac,date:o.date,v:"",note:"",due:""};PQO=true;toast("Opération ajoutée",undoTo(sn));save();drawPre();const a=$("#pqf");a&&a.elements.a.focus()}});
 document.addEventListener("input",e=>{if(e.target.id==="pqq"){PQF.q=e.target.value;pqHist()}});
 document.addEventListener("change",e=>{const t=e.target;
-  if(t.id==="pqt"){PQF.t=t.value;pqHist()}else if(t.id==="pqw"){PQF.w=t.value;pqMark();pqHist()}else if(t.id==="pqhd"){PQH=t.checked;pqCards()}});
+  if(t.id==="pqt"){PQF.t=t.value;pqHist()}else if(t.id==="pqw"){PQF.w=t.value;pqMark();pqHist()}else if(t.id==="pqhd"){PQH=t.checked;PQG=0;pqCards()}});
 document.addEventListener("click",async e=>{if(T!=="pre")return;const g=s=>e.target.closest(s),gk=a=>{const v=a.split(":");return v.slice(0,-1).join(":")};let x;
   /* ferme les menus « ⋯ » ouverts quand on clique ailleurs */
   document.querySelectorAll(".pq-mn[open]").forEach(d=>{if(!d.contains(e.target))d.removeAttribute("open")});
   if(x=g("[data-pq-new]")){const op=!(PQO||PQE||PQP);PQO=op;PQE=null;PQP=null;drawPre();if(op){const w=$("#pqf");w&&w.elements.w.focus()}}
+  else if(x=g("[data-pq-pg]")){PQG+=parseInt(x.dataset.pqPg,10);pqCards()}
   else if(x=g("[data-pq-out],[data-pq-rep]")){x.parentElement.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===x));pqSync(x.closest("form"))}
   else if(x=g("[data-pq-who]")){const fm=x.closest("form");fm.elements.w.value=x.dataset.pqWho;fm.elements.a.focus()}
   else if(x=g("[data-pq-cancel]")){PQE=null;PQP=null;PQO=false;drawPre()}
