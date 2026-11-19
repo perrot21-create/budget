@@ -21,13 +21,13 @@
 .pq-g .pq-n{grid-column:1/-1}.pq-g label[hidden]{display:none}
 .pq-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pq-chip{border-radius:999px;padding:4px 12px}
 .pq-bt{display:flex;gap:8px;flex-wrap:wrap}
-.pq-cs{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
-.pq-c{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--rc2,12px);background:var(--bg);cursor:pointer}
+.pq-cs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:18px}
+.pq-c{display:flex;flex-direction:column;gap:10px;padding:22px 26px;min-height:230px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--rc2,12px);background:var(--bg);cursor:pointer}
 .pq-c.p{border-left-color:var(--pos)}.pq-c.n{border-left-color:var(--neg)}.pq-c.z{opacity:.75}
 .pq-c:hover{box-shadow:var(--sh)}.pq-c[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px}
-.pq-ch{display:flex;justify-content:space-between;gap:8px;align-items:center}.pq-ch b{font-size:var(--fs-lg)}
-.pq-cv{font-size:var(--fs-xl);font-weight:800;font-variant-numeric:tabular-nums}.pq-c.p .pq-cv{color:var(--pos)}.pq-c.n .pq-cv{color:var(--neg)}
-.pq-ac{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.pq-ac button{padding:3px 10px;font-size:var(--fs-sm)}
+.pq-ch{display:flex;justify-content:space-between;gap:8px;align-items:center}.pq-ch b{font-size:1.35rem;font-weight:800}
+.pq-cv{font-size:clamp(2rem,5vw,2.8rem);line-height:1.1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.pq-c.p .pq-cv{color:var(--pos)}.pq-c.n .pq-cv{color:var(--neg)}
+.pq-ac{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px}.pq-ac button{padding:8px 14px;font-size:var(--fs-md)}.pq-c .sub{font-size:var(--fs-lg)}.pq-c .pb2{height:10px;border-radius:5px}
 .pq-bd{display:inline-block;width:fit-content;padding:1px 9px;border-radius:999px;border:1px solid var(--line);font-size:var(--fs-sm);color:var(--mute);white-space:nowrap}
 .pq-bd.late{border-color:var(--neg);color:var(--neg);font-weight:700}.pq-bd.soon{border-color:#e9a23b;color:color-mix(in srgb,#e9a23b 75%,var(--ink));font-weight:700}
 .pq-bd.o{color:var(--neg);border-color:var(--neg)}.pq-bd.i{color:var(--pos);border-color:var(--pos)}
