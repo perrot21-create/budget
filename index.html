@@ -1395,58 +1395,6 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-abod
   if(!await ask("Supprimer cet abonnement du suivi ?","Supprimer"))return;
   const sn=snap();S.abo=aboList().filter(x=>x.id!==b.dataset.abodel);save();drawAbo();toast("Abonnement supprimé",undoTo(sn))});
 
-/* ---------- Prêts entre proches : données isolées (S.prets), jamais lues par les comptes, budgets ou soldes ---------- */
-const PRT={pret:{l:"J’ai prêté",s:1,out:1},recu:{l:"On m’a remboursé",s:-1,out:0},emp:{l:"J’ai emprunté",s:-1,out:0},rendu:{l:"J’ai remboursé",s:1,out:1}};
-let PREID=null,PRF="";
-const PR=()=>S.prets&&Array.isArray(S.prets.ops)?S.prets:{ops:[]};
-const prAcc=id=>{if(!id)return"—";if(id==="esp")return"Espèces";if(id==="aut")return"Autre";const a=S.acc.find(x=>x.id===id);return a?a.name:"Compte supprimé"};
-const prKey=n=>String(n).trim().toLocaleLowerCase("fr");
-function prGroups(){const m=new Map();PR().ops.forEach(o=>{const k=prKey(o.who);if(!m.has(k))m.set(k,{key:k,name:o.who,bal:0,n:0});const g=m.get(k);g.bal+=PRT[o.k].s*o.v;g.n++});
-  m.forEach(g=>{g.bal=Math.round(g.bal*100)/100});return[...m.values()].sort((a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"}))}
-function drawPre(){
-  const ops=PR().ops,G=prGroups(),ed=PREID&&ops.find(o=>o.id===PREID),e=ed||{who:"",k:"pret",date:today(),v:"",note:"",ac:""};
-  if(PREID&&!ed)PREID=null;
-  if(PRF&&!G.some(g=>g.key===PRF))PRF="";
-  const due=G.reduce((a,g)=>a+(g.bal>0?g.bal:0),0),owe=G.reduce((a,g)=>a+(g.bal<0?-g.bal:0),0),net=due-owe;
-  const cards=G.map(g=>{const t=g.bal>0?`<span class="v pos">${eur2(g.bal)}</span><span class="sub">${esc(g.name)} me doit cette somme</span>`:g.bal<0?`<span class="v neg">${eur2(-g.bal)}</span><span class="sub">Je dois cette somme à ${esc(g.name)}</span>`:`<span class="v">Soldé</span><span class="sub">Rien à rembourser de part et d’autre</span>`;
-    return`<div class="prc"><b>${esc(g.name)}</b>${t}<div class="ac">${g.bal?`<button data-prs="${esc(g.key)}">Solder</button>`:""}<button data-prf="${esc(g.key)}">Historique</button><button data-prr="${esc(g.key)}">Renommer</button></div></div>`}).join("");
-  const list=ops.filter(o=>!PRF||prKey(o.who)===PRF).slice().sort((a,b)=>b.date.localeCompare(a.date)||0);
-  const rows=list.map(o=>{const t=PRT[o.k];return`<tr><td>${dfr(o.date)}</td><td>${esc(o.who)}</td><td>${t.l}</td><td>${esc(prAcc(o.ac))}</td><td>${esc(o.note||"")}</td><td class="a ${t.out?"neg":"pos"}">${t.out?"−":"+"}${eur2(o.v)}</td><td class="act"><button data-pre="${o.id}" aria-label="Modifier">✎</button><button data-prdel="${o.id}" aria-label="Supprimer">✕</button></td></tr>`}).join("");
-  $("#app").innerHTML=`<h2 class="vh">Prêts entre proches</h2>
-  <p class="prn">Cet onglet est indépendant : ce que vous y saisissez n’apparaît dans aucun compte, budget, solde ou graphique du reste de la page. Il est simplement conservé avec vos autres données (sauvegarde et fichier partagé).</p>
-  <section><h2>Synthèse</h2><div class="prk"><div><div class="sub">On me doit</div><div class="big pos">${eur2(due)}</div></div><div><div class="sub">Je dois</div><div class="big neg">${eur2(owe)}</div></div><div><div class="sub">Solde net</div><div class="big ${net>0?"pos":net<0?"neg":""}">${net>0?"+":net<0?"−":""}${eur2(Math.abs(net))}</div></div></div></section>
-  <section><h2>${ed?"Modifier l’opération":"Nouvelle opération"}</h2>
-  <form id="prf"><label class="lw">Proche<input name="w" list="prn" maxlength="40" required value="${esc(e.who)}" placeholder="Nom" autocomplete="off"></label>
-  <datalist id="prn">${G.map(g=>`<option value="${esc(g.name)}">`).join("")}</datalist>
-  <label class="lt">Type<select name="k">${Object.entries(PRT).map(([k,t])=>`<option value="${k}"${k===e.k?" selected":""}>${t.l}</option>`).join("")}</select></label>
-  <label class="lc">Compte utilisé<select name="c"><option value="">— Non précisé —</option>${S.acc.map(a=>`<option value="${esc(a.id)}"${a.id===e.ac?" selected":""}>${esc(a.name)}</option>`).join("")}<option value="esp"${e.ac==="esp"?" selected":""}>Espèces</option><option value="aut"${e.ac==="aut"?" selected":""}>Autre</option></select></label>
-  <label class="ld">Date<input type="date" name="d" required value="${esc(e.date)}"></label>
-  <label class="la">Montant (€)<input name="a" inputmode="decimal" required value="${e.v===""?"":String(e.v).replace(".",",")}" placeholder="0,00"></label>
-  <label class="ln">Note (facultatif)<input name="n" maxlength="120" value="${esc(e.note||"")}" placeholder="Motif, mode de paiement…"></label>
-  <div class="bt"><button class="primary">${ed?"Enregistrer":"Ajouter"}</button>${ed?'<button type="button" data-prc="1">Annuler</button>':""}</div></form></section>
-  <section><h2>Par proche</h2>${G.length?`<div class="prp">${cards}</div>`:`<p class="empty">Aucune opération pour l’instant. Ajoutez un prêt, un emprunt ou un remboursement ci-dessus.</p>`}</section>
-  <section><div class="row2" style="align-items:center;margin-bottom:8px"><h2 style="margin:0">Historique</h2>${G.length?`<label class="sub">Afficher <select id="prfil" aria-label="Filtrer par proche"><option value="">Tous les proches</option>${G.map(g=>`<option value="${esc(g.key)}"${g.key===PRF?" selected":""}>${esc(g.name)}</option>`).join("")}</select></label>`:""}</div>
-  ${rows?`<div class="tw2"><table class="ot prt"><thead><tr><th>Date</th><th>Proche</th><th>Type</th><th>Compte</th><th>Note</th><th style="text-align:right">Montant</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><p class="sub">− : argent sorti de chez moi · + : argent reçu</p>`:`<p class="empty">Rien à afficher.</p>`}</section>`;
-}
-document.addEventListener("submit",e=>{const fm=e.target;if(fm.id!=="prf")return;
-  const who0=fm.elements.w.value.trim(),amt=parseFloat(fm.elements.a.value.replace(/\s/g,"").replace(",","."));
-  if(!who0||!(amt>0)){toast("Indiquez un proche et un montant supérieur à 0");return}
-  const P=PR(),ex=P.ops.find(o=>prKey(o.who)===prKey(who0)),o={who:ex?ex.who:who0,k:fm.elements.k.value,ac:fm.elements.c.value,date:fm.elements.d.value||today(),v:Math.round(amt*100)/100,note:fm.elements.n.value.trim()};
-  const sn=snap();S.prets=P;
-  if(PREID&&P.ops.some(x=>x.id===PREID)){Object.assign(P.ops.find(x=>x.id===PREID),o);toast("Opération modifiée",undoTo(sn))}else{P.ops.push({id:uid(),...o});toast("Opération ajoutée",undoTo(sn))}
-  PREID=null;save();drawPre()});
-document.addEventListener("change",e=>{if(e.target.id==="prfil"){PRF=e.target.value;drawPre()}});
-document.addEventListener("click",async e=>{if(T!=="pre")return;const g=s=>e.target.closest(s);let x;
-  if(x=g("[data-pre]")){PREID=x.dataset.pre;drawPre();$("#prf").scrollIntoView({block:"center"})}
-  else if(x=g("[data-prc]")){PREID=null;drawPre()}
-  else if(x=g("[data-prdel]")){const sn=snap(),P=PR();S.prets=P;P.ops=P.ops.filter(o=>o.id!==x.dataset.prdel);if(PREID===x.dataset.prdel)PREID=null;save();drawPre();toast("Opération supprimée",undoTo(sn))}
-  else if(x=g("[data-prf]")){PRF=PRF===x.dataset.prf?"":x.dataset.prf;drawPre();$("#prfil")&&$("#prfil").scrollIntoView({block:"center"})}
-  else if(x=g("[data-prs]")){const gr=prGroups().find(z=>z.key===x.dataset.prs);if(!gr||!gr.bal)return;
-    if(await ask(`Enregistrer un remboursement de ${eur2(Math.abs(gr.bal))} ${gr.bal>0?"reçu de":"versé à"} ${gr.name} pour solder le compte ?`,"Enregistrer")){const sn=snap(),P=PR();S.prets=P;P.ops.push({id:uid(),who:gr.name,k:gr.bal>0?"recu":"rendu",date:today(),v:Math.abs(gr.bal),note:"Solde"});save();drawPre();toast("Compte soldé",undoTo(sn))}}
-  else if(x=g("[data-prr]")){const gr=prGroups().find(z=>z.key===x.dataset.prr);if(!gr)return;const n=await askText("Nouveau nom :",gr.name,"Renommer");
-    if(n){const sn=snap(),P=PR();S.prets=P;P.ops.forEach(o=>{if(prKey(o.who)===gr.key)o.who=n});PRF="";save();drawPre();toast("Proche renommé",undoTo(sn))}}
-});
-
 new MutationObserver(()=>document.querySelectorAll("#app th:not([scope])").forEach(h=>h.setAttribute("scope",h.closest("thead")?"col":"row"))).observe(document.getElementById("app"),{childList:true,subtree:true});
 draw();
 /* Plein écran : les navigateurs l'imposent après un geste de l'utilisateur ; on le demande donc dès le 1er clic ou la 1re touche, à chaque ouverture */
