@@ -95,6 +95,24 @@
 .pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m;column-gap:12px}
 /* Largeur : celle du conteneur de la page (alignée sur le titre et les autres onglets) */
 .pq-root{width:100%}
+/* Plein écran : page verrouillée à la hauteur de la fenêtre, blocs fixes, défilement interne */
+@media(min-width:1101px){
+html.pq-lock,html.pq-lock body{overflow:hidden}
+.pq-root{display:flex;flex-direction:column;min-height:0}
+.pq-root>*{flex:none}
+.pq-root>.pq-cols{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
+.pq-lc{min-height:0;height:100%}
+.pq-lc>.pq-pn{overflow:auto;min-height:0}
+.pq-lc>.pq-pn:first-child{flex:0 1 auto}
+.pq-lc>.pq-pn:nth-child(2){flex:1 1 0;display:flex;flex-direction:column;overflow:hidden}
+.pq-lc>.pq-pn:nth-child(2) .pq-fh{flex:none}
+#pqc{flex:1 1 0;min-height:0;overflow-y:auto;align-content:start;padding-right:4px}
+.pq-cols>.pq-pn:last-child{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.pq-cols>.pq-pn:last-child>*{flex:none}
+.pq-cols>.pq-pn:last-child>#pqhl{flex:1 1 0;min-height:0;overflow-y:auto;padding-right:4px}
+.pq-c:not(.pq-cz) .pq-mm{right:calc(100% + 4px);bottom:0}
+.pq-cz .pq-mm{bottom:auto;top:calc(100% + 4px)}
+}
 /* Demi-écran : tout rentre dans la largeur, sans défilement horizontal */
 @media(max-width:1100px){
 .pq-kc{padding:10px 14px}.pq-kc b{font-size:clamp(1.1rem,3.2vw,1.4rem)}
@@ -233,3 +251,11 @@ document.addEventListener("click",async e=>{if(T!=="pre")return;const g=s=>e.tar
   /* referme le menu « ⋯ » après le choix d'une action */
   if(x&&x.closest){const mn=x.closest(".pq-mn");mn&&mn.removeAttribute("open")}
 });
+
+/* Plein écran : hauteur du bloc = hauteur restante de la fenêtre ; verrouillage du défilement de la page */
+function pqFit(){const r=document.querySelector(".pq-root");if(!r)return;
+  if(innerWidth>1100){const t=r.getBoundingClientRect().top+(window.scrollY||0);r.style.height=Math.max(480,innerHeight-t-24)+"px"}else r.style.height=""}
+addEventListener("resize",pqFit);
+(()=>{const hook=()=>{const a=document.getElementById("app");if(!a)return;
+  new MutationObserver(()=>{const on=!!a.querySelector(".pq-root");document.documentElement.classList.toggle("pq-lock",on);if(on)pqFit()}).observe(a,{childList:true})};
+  document.readyState==="loading"?document.addEventListener("DOMContentLoaded",hook):hook()})();
