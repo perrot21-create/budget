@@ -33,10 +33,10 @@
 .pq-bd.o{color:var(--neg);border-color:var(--neg)}.pq-bd.i{color:var(--pos);border-color:var(--pos)}
 .pq-empty{grid-column:1/-1;text-align:center;padding:18px 8px;color:var(--mute)}
 .pq-l{list-style:none;margin:8px 0 0;padding:0}
-.pq-r{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:4px 14px;align-items:center;padding:10px 12px;border-left:4px solid var(--line)}
+.pq-r{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:4px 14px;align-items:center;padding:7px 12px;border-left:4px solid var(--line)}
 .pq-r.out{border-left-color:var(--neg)}.pq-r.in{border-left-color:var(--pos)}
 .pq-r:nth-child(odd){background:color-mix(in srgb,var(--mute) 7%,var(--surface))}.pq-r:hover{background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
-.pq-d{color:var(--mute);font-size:var(--fs-md)}.pq-m{min-width:0;display:flex;flex-direction:column;gap:2px;align-items:flex-start}.pq-m small{color:var(--mute);font-size:var(--fs-sm);overflow-wrap:anywhere}
+.pq-m{min-width:0;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px 14px;white-space:nowrap}.pq-m>*{flex:0 0 auto}.pq-m .pq-bd{white-space:nowrap}.pq-m b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.pq-m small{color:var(--mute);font-size:var(--fs-sm);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}.pq-m small.pq-nt{flex-shrink:3}
 .pq-a{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .pq-x{display:flex;gap:4px}.pq-x button{min-width:34px;min-height:34px;padding:0;border-color:transparent;background:transparent;color:var(--mute)}.pq-x button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}.pq-x [data-pq-del]:hover{color:var(--neg);border-color:var(--neg)}
 @media(max-width:600px){.pq-r{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"d a x" "m m m"}.pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m}.pq-seg{max-width:none}}
@@ -90,7 +90,7 @@ function pqHist(){const el=$("#pqhl");if(!el)return;const{list,bal}=pqRows();
   const tot=list.reduce((s,o)=>s+(PRT[o.k].out?-o.v:o.v),0);
   el.innerHTML=list.length?`<p class="sub">${list.length} opération(s) · flux net : <b class="${tot>0?"pos":tot<0?"neg":""}">${pqSg(tot)}</b></p><ul class="pq-l">${list.map(o=>{const t=PRT[o.k],out=!!t.out,g=prGroups().find(z=>z.key===prKey(o.who));
     const open=g&&g.bal&&((g.bal>0&&o.k==="pret")||(g.bal<0&&o.k==="emp"));
-    return `<li class="pq-r ${out?"out":"in"}"><span class="pq-d">${dfr(o.date)}</span><div class="pq-m"><b>${esc(o.who)}</b> <span class="pq-bd ${out?"o":"i"}">${out?"▲ Sortie":"▼ Entrée"} · ${t.l}</span>${o.note?`<small>${esc(o.note)}</small>`:""}<small>Payé via : ${esc(prAcc(o.ac))}${PQF.w?` · Solde après : ${pqSg(bal[o.id])}`:""}</small>${open&&o.due?pqDue(o.due):""}</div><span class="pq-a ${out?"neg":"pos"}">${out?"−":"+"}${eur2(o.v)}</span><span class="pq-x"><button data-pq-e="${o.id}" aria-label="Modifier" title="Modifier">✎</button><button data-pq-del="${o.id}" aria-label="Supprimer" title="Supprimer">✕</button></span></li>`}).join("")}</ul>`:`<p class="empty">${PR().ops.length?"Aucune opération avec ces filtres.":"Rien à afficher pour l’instant."}</p>`}
+    return `<li class="pq-r ${out?"out":"in"}"><span class="pq-d">${dfr(o.date)}</span><div class="pq-m"><b>${esc(o.who)}</b> <span class="pq-bd ${out?"o":"i"}">${out?"▲ Sortie":"▼ Entrée"} · ${t.l}</span>${o.note?`<small class="pq-nt" title="${esc(o.note)}">${esc(o.note)}</small>`:""}<small>Payé via : ${esc(prAcc(o.ac))}${PQF.w?` · Solde après : ${pqSg(bal[o.id])}`:""}</small>${open&&o.due?pqDue(o.due):""}</div><span class="pq-a ${out?"neg":"pos"}">${out?"−":"+"}${eur2(o.v)}</span><span class="pq-x"><button data-pq-e="${o.id}" aria-label="Modifier" title="Modifier">✎</button><button data-pq-del="${o.id}" aria-label="Supprimer" title="Supprimer">✕</button></span></li>`}).join("")}</ul>`:`<p class="empty">${PR().ops.length?"Aucune opération avec ces filtres.":"Rien à afficher pour l’instant."}</p>`}
 function drawPre(){
   const P=PR(),ops=P.ops,G=prGroups(),ed=PQE&&ops.find(o=>o.id===PQE);if(PQE&&!ed)PQE=null;
   if(PQF.w&&!G.some(g=>g.key===PQF.w))PQF.w="";
