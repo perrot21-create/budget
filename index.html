@@ -820,7 +820,7 @@ function drawOps(){
   const n0=new Date(),lim=iso(new Date(n0.getFullYear(),n0.getMonth()+1,0)),fc=sum(all.filter(t=>t.date<=lim));
   $("#bal").textContent=eur(b);$("#bal").className="big "+cc(b);
   $("#bp").textContent=eur(sum(P));$("#bp").className="big "+cc(sum(P));$("#bn").textContent=eur(sum(N));$("#bn").className="big "+cc(sum(N));
-  $("#fc").textContent=eur(fc);$("#fc").className="big "+(fc<0?"neg":"bl");
+  $("#fc").textContent=eur(fc);$("#fc").className="big "+cc(fc);
   $("#fc2").textContent="Jusqu’au "+dfr(lim);
   const rv=shown.filter(t=>t.v>0).reduce((s,t)=>s+t.v,0),dp=shown.filter(t=>t.v<0).reduce((s,t)=>s-t.v,0),nt=rv-dp,act=Object.values(FL).some(Boolean);
   $("#fsum").innerHTML=`<b>${shown.length}</b> opération(s) affichée(s)${act?" avec les filtres":""} — Revenus <b>+${eur(rv)}</b>, Dépenses <b>−${eur(dp)}</b>, Total <b class="${cc(nt)}">${eur(nt)}</b>`;
