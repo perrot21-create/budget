@@ -22,12 +22,12 @@
 .pq-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pq-chip{border-radius:999px;padding:4px 12px}
 .pq-bt{display:flex;gap:8px;flex-wrap:wrap}
 .pq-cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;width:100%}
-.pq-c{display:flex;flex-direction:column;gap:10px;padding:22px 26px;min-height:230px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--rc2,12px);background:var(--bg);cursor:pointer}
+.pq-c{display:flex;flex-direction:column;gap:5px;padding:14px 18px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--rc2,12px);background:var(--bg);cursor:pointer}
 .pq-c.p{border-left-color:var(--pos)}.pq-c.n{border-left-color:var(--neg)}.pq-c.z{opacity:.75}
 .pq-c:hover{box-shadow:var(--sh)}.pq-c[aria-current="true"]{outline:2px solid var(--accent);outline-offset:1px}
-.pq-ch{display:flex;justify-content:space-between;gap:8px;align-items:center}.pq-ch b{font-size:1.35rem;font-weight:800}
-.pq-cv{font-size:clamp(2rem,5vw,2.8rem);line-height:1.1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.pq-c.p .pq-cv{color:var(--pos)}.pq-c.n .pq-cv{color:var(--neg)}
-.pq-ac{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px}.pq-ac button{padding:8px 14px;font-size:var(--fs-md)}.pq-c .sub{font-size:var(--fs-lg)}.pq-c .pb2{height:10px;border-radius:5px}
+.pq-ch{display:flex;justify-content:space-between;gap:8px;align-items:center}.pq-ch b{font-size:1.15rem;font-weight:800}
+.pq-cv{font-size:clamp(1.6rem,3.2vw,2.1rem);line-height:1.1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.pq-c.p .pq-cv{color:var(--pos)}.pq-c.n .pq-cv{color:var(--neg)}
+.pq-ac{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}.pq-ac button{padding:4px 10px;font-size:var(--fs-sm)}.pq-c .sub{font-size:var(--fs-md);line-height:1.3}.pq-c .pb2{height:8px;margin:2px 0;border-radius:4px}
 .pq-bd{display:inline-block;width:fit-content;padding:1px 9px;border-radius:999px;border:1px solid var(--line);font-size:var(--fs-sm);color:var(--mute);white-space:nowrap}
 .pq-bd.late{border-color:var(--neg);color:var(--neg);font-weight:700}.pq-bd.soon{border-color:#e9a23b;color:color-mix(in srgb,#e9a23b 75%,var(--ink));font-weight:700}
 .pq-bd.o{color:var(--neg);border-color:var(--neg)}.pq-bd.i{color:var(--pos);border-color:var(--pos)}
@@ -44,13 +44,14 @@
 .pq-bd{white-space:normal}.pq-g>*,.pq-m,.pq-c,.pq-kc,.pq-f,.fbar>*{min-width:0}
 @media(max-width:1100px){
 .pq-k{gap:10px}.pq-kc{padding:12px 14px}.pq-kc b{font-size:clamp(1.2rem,3.2vw,1.6rem)}
-.pq-cs{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
-.pq-c{padding:14px 16px;min-height:0;gap:6px}.pq-ch b{font-size:1.1rem}.pq-cv{font-size:clamp(1.5rem,3.6vw,2rem)}.pq-c .sub{font-size:var(--fs-md)}
-.pq-ac{gap:6px}.pq-ac button{padding:5px 10px;font-size:var(--fs-sm)}
+.pq-cs{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pq-c{padding:10px 10px;gap:3px}.pq-ch{flex-wrap:wrap;gap:2px}.pq-ch b{font-size:var(--fs-lg);overflow-wrap:anywhere}.pq-ch .pq-bd{display:none}.pq-cv{font-size:clamp(1.05rem,2.4vw,1.5rem)}.pq-c .sub{font-size:var(--fs-sm)}
+.pq-ac{gap:4px}.pq-ac button{padding:3px 6px;font-size:.72rem;flex:1 1 auto}
 .pq-r{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"d a x" "m m m";gap:4px 10px;padding:8px 10px}.pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m}
 .pq-g{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
 .fbar input[type=search]{flex:1 1 140px}.fbar select{flex:1 1 130px;min-width:0}
 }
+@media(max-width:560px){.pq-cs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;document.head.appendChild(s)})();
 
 /* ---------- Prêts entre proches (v2) : données isolées (S.prets), jamais lues par les comptes, budgets ou soldes ---------- */
