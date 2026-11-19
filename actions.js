@@ -19,14 +19,16 @@ function ex(n){
   var d=s.split("."),dec=d[1]||"";while(dec.length<2)dec+="0";
   return(neg?"−":"")+d[0].replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f")+","+dec+"\u00a0€"
 }
+/* TTF : calculée à l'achat, uniquement sur le montant total de l'achat (hors frais).
+   Elle s'ajoute au coût de l'achat, sauf si la vente a lieu le même jour. Aucune TTF sur la vente. */
 function res(o,c){
   c=c||cfg();
-  var tot=o.q*o.pa,fa=fee(tot,c)||0,ca=tot+fa,vb=o.q*o.pv,fv=fee(vb,c)||0,t=o.j?0:vb*c.ttf,net=vb-fv-t,g=net-ca,k=1-(o.j?0:c.ttf),be=null;
-  if(o.q>0&&tot>0&&k>0){
+  var tot=o.q*o.pa,fa=fee(tot,c)||0,ta=o.j?0:tot*c.ttf,ca=tot+fa+ta,vb=o.q*o.pv,fv=fee(vb,c)||0,net=vb-fv,g=net-ca,be=null;
+  if(o.q>0&&tot>0){
     var cand=[0];c.tiers.forEach(function(x){if(cand.indexOf(x.fee)<0)cand.push(x.fee)});
-    cand.forEach(function(fx){var p=(ca+fx)/(o.q*k),m=p*o.q,fm=fee(m,c),ok=fx===0?(fm===null||fm===0):fm===fx;if(ok&&(be===null||p<be))be=p});
+    cand.forEach(function(fx){var p=(ca+fx)/o.q,m=p*o.q,fm=fee(m,c),ok=fx===0?(fm===null||fm===0):fm===fx;if(ok&&(be===null||p<be))be=p});
   }
-  return{tot:tot,fa:fa,ca:ca,vb:vb,fv:fv,t:t,net:net,g:g,taux:ca?g/ca*100:0,be:be}
+  return{tot:tot,fa:fa,ta:ta,t:ta,ca:ca,vb:vb,fv:fv,net:net,g:g,taux:ca?g/ca*100:0,be:be}
 }
 function cur(){return{q:pn("ax_q"),pa:pn("ax_pa"),pv:pn("ax_pv"),j:J,man:MAN}}
 function pct(t){return(t>0?"+":"")+t.toFixed(2).replace(".",",")+" %"}
@@ -40,7 +42,7 @@ function msg(m){
 }
 function hint(){
   var T=sorted(cfg()),tr=T.length?T.map(function(t){return"de "+eur(t.min)+" à "+eur(t.max)+" : "+eur2(t.fee)}).join(" · "):"aucune tranche définie";
-  return"Frais par tranche du total de l’opération ("+tr+"). TTF de "+ttfTxt()+" sur le total de vente brut si la sortie n’a pas lieu le même jour. Taux de rentabilité = gain net ÷ coût total de l’achat."
+  return"Frais par tranche du total de l’opération ("+tr+"). TTF de "+ttfTxt()+" calculée à l’achat sur le montant total de l’achat, hors frais, et ajoutée au coût de l’achat si la vente n’a pas lieu le même jour. Taux de rentabilité = gain net ÷ coût total de l’achat."
 }
 function note(id,t){var e=$(id);e.hidden=!t;e.textContent=t||""}
 
@@ -78,18 +80,18 @@ function html(){
   +'<p class="sub">Modifiez les tranches de frais et la TTF en cas de changement d’opérateur. Les mêmes frais s’appliquent à l’achat et à la revente, selon le total de l’opération. Si deux tranches se touchent à la même valeur, la tranche la plus basse s’applique. Les opérations déjà enregistrées conservent leurs montants d’origine.</p>'
   +'<div class="tw2"><table class="lt axt"><thead><tr><th>Total de l’opération : de (€)</th><th>à (€)</th><th>Frais (€)</th><th></th></tr></thead><tbody id="ax_tb"></tbody></table></div>'
   +'<div class="axbar" style="margin-top:10px"><button type="button" id="ax_tadd">Ajouter une tranche</button><button type="button" id="ax_tdef">Valeurs d’origine</button></div>'
-  +'<div class="axg" style="margin-top:14px"><label class="axf"><span>TTF (en %) si la sortie n’a pas lieu le même jour</span><input class="axin" id="ax_ttf" inputmode="decimal" autocomplete="off"></label></div>'
+  +'<div class="axg" style="margin-top:14px"><label class="axf"><span>TTF (en %) sur l’achat, si la vente n’a pas lieu le même jour</span><input class="axin" id="ax_ttf" inputmode="decimal" autocomplete="off"></label></div>'
   +'<p class="axn" id="ax_ns" hidden></p></section>'
   +'<section><h2>Achat</h2><div class="axg">'
   +'<label class="axf"><span>Nombre d’actions</span><input class="axin" id="ax_q" inputmode="numeric" autocomplete="off" placeholder="0"></label>'
   +'<label class="axf"><span>Prix d’achat brut par action (€)</span><input class="axin" id="ax_pa" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
   +'<label class="axf"><span>Total de l’opération (€)</span><input class="axin lk" id="ax_tot" readonly tabindex="-1" aria-readonly="true"></label></div>'
-  +'<dl class="axd"><div class="axr"><dt>Frais d’achat</dt><dd id="ax_fa">–</dd></div><div class="axr tt"><dt>Coût total de l’achat</dt><dd id="ax_ca">–</dd></div></dl>'
+  +'<dl class="axd"><div class="axr"><dt>Frais d’achat</dt><dd id="ax_fa">–</dd></div><div class="axr"><dt id="ax_ttl">TTF</dt><dd id="ax_tf">–</dd></div><div class="axr tt"><dt>Coût total de l’achat</dt><dd id="ax_ca">–</dd></div></dl>'
   +'<p class="axn" id="ax_na" hidden></p></section>'
   +'<section><h2>Revente</h2><div class="axg">'
   +'<label class="axf"><span>Prix de vente simulé par action (€), par défaut achat + 10 %</span><input class="axin" id="ax_pv" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
   +'<div class="axf"><span id="ax_lj">Sortie le même jour</span><div class="axs" role="group" aria-labelledby="ax_lj"><button type="button" id="ax_oui" aria-pressed="false">Oui</button><button type="button" id="ax_non" aria-pressed="true">Non</button></div></div></div>'
-  +'<dl class="axd"><div class="axr"><dt>Total de vente brut</dt><dd id="ax_vb">–</dd></div><div class="axr"><dt>Frais de vente</dt><dd id="ax_fv">–</dd></div><div class="axr"><dt id="ax_ttl">TTF</dt><dd id="ax_tf">–</dd></div><div class="axr tt"><dt>Net encaissé</dt><dd id="ax_net">–</dd></div></dl>'
+  +'<dl class="axd"><div class="axr"><dt>Total de vente brut</dt><dd id="ax_vb">–</dd></div><div class="axr"><dt>Frais de vente</dt><dd id="ax_fv">–</dd></div><div class="axr tt"><dt>Net encaissé</dt><dd id="ax_net">–</dd></div></dl>'
   +'<p class="axn" id="ax_nv" hidden></p>'
   +'<div class="axk"><div class="axb"><small>Taux de rentabilité</small><strong id="ax_tx">–</strong></div><div class="axb"><small>Gain ou perte net</small><strong id="ax_g">–</strong></div><div class="axb"><small>Prix de vente à l’équilibre</small><strong id="ax_be">–</strong></div></div>'
   +'<p class="sub" id="ax_hint" style="margin:14px 0 0"></p></section>'
@@ -102,11 +104,11 @@ function calc(){
   var o=cur(),r=res(o);
   $("ax_ttl").textContent="TTF "+ttfTxt();$("ax_hint").textContent=hint();
   $("ax_fa").textContent=r.tot>0?eur2(r.fa):"–";
+  $("ax_tf").textContent=r.tot>0?(J?"Non applicable (même jour)":eur2(r.ta)):"–";
   $("ax_ca").textContent=r.tot>0?eur2(r.ca):"–";
   note("ax_na",msg(r.tot));
   $("ax_vb").textContent=r.vb>0?eur2(r.vb):"–";
   $("ax_fv").textContent=r.vb>0?eur2(r.fv):"–";
-  $("ax_tf").textContent=r.vb>0?(J?"Non applicable (même jour)":eur2(r.t)):"–";
   $("ax_net").textContent=r.vb>0?eur2(r.net):"–";
   note("ax_nv",msg(r.vb));
   var ok=r.tot>0&&r.vb>0,c=ok?cl(r.g):"";
@@ -126,10 +128,14 @@ function hist(){
   if(!H.length){ul.innerHTML='<li style="border:0;padding:0" class="sub">Aucune opération enregistrée pour l’instant.</li>';return}
   ul.innerHTML=H.map(function(o){
     var r=o.r||res(o),c=cl(r.g),d=new Date(o.at).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+    /* Opérations enregistrées avant ce changement (TTF sur la vente) : affichage d'origine conservé */
+    var nw=r.ta!==undefined;
+    var achat=nw?'Achat : '+ex(r.tot)+' + frais '+ex(r.fa)+' + TTF '+ex(r.ta)+' = <b>'+ex(r.ca)+'</b>':'Achat : '+ex(r.tot)+' + frais '+ex(r.fa)+' = <b>'+ex(r.ca)+'</b>';
+    var vente=nw?'Vente : '+ex(r.vb)+' − frais '+ex(r.fv)+' = <b>'+ex(r.net)+'</b>':'Vente : '+ex(r.vb)+' − frais '+ex(r.fv)+' − TTF '+ex(r.t)+' = <b>'+ex(r.net)+'</b>';
     return '<li><div style="flex:1 1 320px"><div class="d">'+d+' · même jour : '+(o.j?"oui":"non")+'</div>'
       +'<div><b>'+o.q+'</b> action(s) · achat à '+ex(o.pa)+' · vente à '+ex(o.pv)+'</div>'
-      +'<div class="d">Achat : '+ex(r.tot)+' + frais '+ex(r.fa)+' = <b>'+ex(r.ca)+'</b></div>'
-      +'<div class="d">Vente : '+ex(r.vb)+' − frais '+ex(r.fv)+' − TTF '+ex(r.t)+' = <b>'+ex(r.net)+'</b></div>'
+      +'<div class="d">'+achat+'</div>'
+      +'<div class="d">'+vente+'</div>'
       +'<div class="'+c+'">Gain ou perte : <b>'+(r.g>0?"+":"")+ex(r.g)+'</b> · rentabilité <b>'+pct(r.taux)+'</b></div></div>'
       +'<div class="ac"><button type="button" data-ax-load="'+o.id+'">Recharger</button><button type="button" data-ax-del="'+o.id+'">Supprimer</button></div></li>'
   }).join("");
