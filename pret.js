@@ -4,10 +4,10 @@
 .pq-info{margin:0 0 14px;color:var(--mute);font-size:var(--fs-md)}.pq-info p{margin:6px 0 0;border-left:3px solid var(--accent);padding-left:10px}
 
 /* KPI : une seule barre horizontale */
-.pq-k{display:flex;flex-wrap:wrap;margin-bottom:14px;background:var(--surface);box-shadow:var(--sh);border-radius:var(--rc,16px);overflow:hidden}
-.pq-kc{flex:1 1 200px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 18px;border-left:4px solid var(--line);min-width:0}
-.pq-kc.p{border-left-color:var(--pos)}.pq-kc.n{border-left-color:var(--neg)}
-.pq-kc b{font-size:clamp(1.2rem,3vw,1.6rem);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
+.pq-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:24px}
+.pq-kc{display:flex;flex-direction:column;gap:4px;padding:16px 20px;border-radius:var(--rc,16px);background:color-mix(in srgb,var(--mute) 12%,var(--surface));min-width:0}
+.pq-kc.p{background:color-mix(in srgb,var(--pos) 16%,var(--surface))}.pq-kc.n{background:color-mix(in srgb,var(--neg) 14%,var(--surface))}
+.pq-kc b{font-size:clamp(1.3rem,2.4vw,1.8rem);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
 
 /* En-têtes de section */
 .pq-fh{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}.pq-fh h2{margin:0}
@@ -35,9 +35,11 @@
 .pq-bt{display:flex;gap:8px;flex-wrap:wrap}
 
 /* Mise en page 2 colonnes : proches à gauche, historique à droite */
-.pq-cols{display:block}
-.pq-cols>section{min-width:0;margin-bottom:16px}
-@media(min-width:1101px){.pq-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px;align-items:start}}
+.pq-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+.pq-lc{display:flex;flex-direction:column;gap:24px;min-width:0}
+.pq-pn{min-width:0;background:var(--surface);box-shadow:var(--sh);border-radius:var(--rc,16px);padding:24px 28px}
+@media(min-width:1101px){.pq-cols{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
+@media(max-width:1100px){.pq-pn{padding:16px}}
 
 /* Cartes « Par proche » */
 .pq-cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;width:100%;align-items:start}
@@ -91,12 +93,11 @@
 .pq-g>*,.pq-c,.pq-kc,.pq-f,.fbar>*{min-width:0}
 .pq-r{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"d a x" "m m m";gap:4px 10px;padding:8px 10px}
 .pq-d{grid-area:d}.pq-a{grid-area:a}.pq-x{grid-area:x}.pq-m{grid-area:m;column-gap:12px}
-/* Largeur utile : 100 % en demi-écran, 75 % en plein écran (centré) */
-.pq-root{width:100%;margin:0 auto}
-@media(min-width:1101px){.pq-root{width:75%}}
+/* Largeur : celle du conteneur de la page (alignée sur le titre et les autres onglets) */
+.pq-root{width:100%}
 /* Demi-écran : tout rentre dans la largeur, sans défilement horizontal */
 @media(max-width:1100px){
-.pq-kc{padding:8px 12px}.pq-kc b{font-size:clamp(1.1rem,3.2vw,1.4rem)}
+.pq-kc{padding:10px 14px}.pq-kc b{font-size:clamp(1.1rem,3.2vw,1.4rem)}
 .pq-cs{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .pq-c{padding:10px 10px;gap:3px}.pq-ch{flex-wrap:wrap;gap:2px}.pq-ch b{font-size:var(--fs-lg);overflow-wrap:anywhere}.pq-ch .pq-bd{display:none}.pq-cv{font-size:clamp(1.05rem,2.4vw,1.5rem)}.pq-c .sub{font-size:var(--fs-sm)}
 .pq-ac{gap:4px}.pq-ac button{padding:3px 6px;font-size:.72rem;flex:1 1 auto}.pq-mn>summary{padding:3px 8px}
@@ -104,6 +105,7 @@
 .fbar input[type=search]{flex:1 1 140px}.fbar select{flex:1 1 130px;min-width:0}
 }
 @media(max-width:600px){
+.pq-k{grid-template-columns:1fr}
 .pq-seg{max-width:none}
 .pq-g .pq-wr,.pq-g .pq-n{grid-column:1/-1}
 .pq-m{grid-template-columns:minmax(0,1fr) auto}.pq-m .pq-nc{grid-column:1/-1}
@@ -180,10 +182,9 @@ function drawPre(){
   $("#app").innerHTML=`<div class="pq-root"><h2 class="vh">Prêts entre proches</h2>
   <details class="pq-info"><summary>ℹ Cet onglet est indépendant</summary><p>Ce que vous y saisissez n’apparaît dans aucun compte, budget, solde ou graphique du reste de la page. Il est simplement conservé avec vos autres données (sauvegarde et fichier partagé). « Payé via » est une simple information.</p></details>
   <div class="pq-k"><div class="pq-kc p"><span class="sub">On me doit · ${dueG.length} pers.</span><b class="pos">${eur2(due)}</b></div><div class="pq-kc n"><span class="sub">Je dois · ${oweG.length} pers.</span><b class="neg">${eur2(owe)}</b></div><div class="pq-kc"><span class="sub">Solde net · ${G.length} proche(s)</span><b class="${net>0?"pos":net<0?"neg":""}">${pqSg(net)}</b></div></div>
-  <section class="pq-fs${showF?" open":""}"><div class="pq-fh"><h2>${ed?"Modifier l’opération":"Nouvelle opération"}</h2>${ed?"":`<button class="primary" data-pq-new aria-expanded="${!!showF}">${showF?"Fermer":"+ Nouvelle opération"}</button>`}</div>${form}</section>
-  <div class="pq-cols">
-   <section><div class="pq-fh"><h2>Par proche</h2>${G.some(g=>!g.bal)?`<label class="chip"><input type="checkbox" id="pqhd"${PQH?" checked":""}>Masquer les soldés</label>`:""}</div><div class="pq-cs" id="pqc"></div></section>
-   <section><div class="pq-fh"><h2>Historique</h2><button data-pq-csv>⬇ Export CSV</button></div>
+  <div class="pq-cols"><div class="pq-lc"><section class="pq-pn pq-fs${showF?" open":""}"><div class="pq-fh"><h2>${ed?"Modifier l’opération":"Nouvelle opération"}</h2>${ed?"":`<button class="primary" data-pq-new aria-expanded="${!!showF}">${showF?"Fermer":"+ Nouvelle opération"}</button>`}</div>${form}</section>
+   <section class="pq-pn"><div class="pq-fh"><h2>Par proche</h2>${G.some(g=>!g.bal)?`<label class="chip"><input type="checkbox" id="pqhd"${PQH?" checked":""}>Masquer les soldés</label>`:""}</div><div class="pq-cs" id="pqc"></div></section></div>
+   <section class="pq-pn"><div class="pq-fh"><h2>Historique</h2><button data-pq-csv>⬇ Export CSV</button></div>
     <div class="fbar"><input id="pqq" type="search" placeholder="Rechercher (nom, note, montant…)" value="${esc(PQF.q)}" aria-label="Rechercher">
     <select id="pqt" aria-label="Sens"><option value="">Entrées et sorties</option><option value="out"${PQF.t==="out"?" selected":""}>Sorties</option><option value="in"${PQF.t==="in"?" selected":""}>Entrées</option></select>
     <select id="pqw" aria-label="Proche"><option value="">Tous les proches</option>${G.map(g=>`<option value="${esc(g.key)}"${g.key===PQF.w?" selected":""}>${esc(g.name)}</option>`).join("")}</select></div>
