@@ -119,3 +119,228 @@ function html(){
   +'<div class="axbar" style="margin-top:10px"><button type="button" id="ax_tadd">Ajouter une tranche</button><button type="button" id="ax_tdef">Valeurs d’origine</button></div>'
   +'<p class="axn" id="ax_ns" hidden></p></section>'
   +'<div class="axres" id="ax_res" role="group" aria-label="Résultat de la simulation">'
+  +'<div class="axb" id="ax_bg"><small>Gain ou perte net</small><strong id="ax_g">–</strong></div>'
+  +'<div class="axb" id="ax_bt"><small>Taux de rentabilité</small><strong id="ax_tx">–</strong></div>'
+  +'<div class="axb"><small>Prix de vente à l’équilibre</small><strong id="ax_be">–</strong></div></div>'
+  +'<div class="axmain"><div class="axleft">'
+  +'<section><h2>Achat</h2><div class="axg">'
+  +'<label class="axf"><span>Nombre d’actions</span><input class="axin" id="ax_q" inputmode="numeric" autocomplete="off" placeholder="0"></label>'
+  +'<label class="axf"><span>Prix d’achat brut par action (€)</span><input class="axin" id="ax_pa" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
+  +'<label class="axf"><span>Total de l’opération (€)</span><input class="axin lk" id="ax_tot" readonly tabindex="-1" aria-readonly="true"></label></div>'
+  +'<dl class="axd"><div class="axr"><dt>Frais d’achat<span class="axtr" id="ax_fat"></span></dt><dd id="ax_fa">–</dd></div><div class="axr"><dt id="ax_ttl">TTF</dt><dd id="ax_tf">–</dd></div><div class="axr tt"><dt>Coût total de l’achat</dt><dd id="ax_ca">–</dd></div></dl>'
+  +'<p class="axn" id="ax_na" hidden></p></section>'
+  +'<section><h2>Revente</h2><div class="axg">'
+  +'<label class="axf"><span>Prix de vente simulé par action (€)</span><input class="axin" id="ax_pv" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
+  +'<div class="axf"><span id="ax_lp">Hausse sur le prix d’achat</span><div class="axs" role="group" aria-labelledby="ax_lp"><button type="button" data-ax-pct="5" aria-pressed="false">+5 %</button><button type="button" data-ax-pct="10" aria-pressed="true">+10 %</button><button type="button" data-ax-pct="20" aria-pressed="false">+20 %</button></div></div>'
+  +'<div class="axf"><span id="ax_lj">Revente le jour même (pas de TTF)</span><div class="axs" role="group" aria-labelledby="ax_lj"><button type="button" id="ax_oui" aria-pressed="false">Oui</button><button type="button" id="ax_non" aria-pressed="true">Non</button></div></div></div>'
+  +'<dl class="axd"><div class="axr"><dt>Total de vente brut</dt><dd id="ax_vb">–</dd></div><div class="axr"><dt>Frais de vente<span class="axtr" id="ax_fvt"></span></dt><dd id="ax_fv">–</dd></div><div class="axr tt"><dt>Net encaissé</dt><dd id="ax_net">–</dd></div></dl>'
+  +'<p class="axn" id="ax_nv" hidden></p>'
+  +'<h3>Scénarios de revente</h3><div class="tw2"><table class="lt axsc" aria-label="Scénarios de revente"><thead><tr><th>Hausse</th><th class="r">Prix de vente</th><th class="r">Gain net</th><th class="r">Rentabilité</th></tr></thead><tbody id="ax_sc"></tbody></table></div></section>'
+  +'</div>'
+  +'<section class="axops"><div class="axopi"><div class="axoph"><h2>Opérations enregistrées</h2>'
+  +'<select id="ax_sort" aria-label="Trier ou filtrer les opérations"><option value="new">Plus récentes d’abord</option><option value="old">Plus anciennes d’abord</option><option value="gd">Gain décroissant</option><option value="ga">Gain croissant</option><option value="pos">Gains seulement</option><option value="neg">Pertes seulement</option></select></div>'
+  +'<div class="axbar"><button type="button" class="primary" id="ax_save">Enregistrer cette opération</button></div>'
+  +'<p class="axn" id="ax_nh" hidden></p><p class="sub axtot" id="ax_sum"></p>'
+  +'<div class="axopb"><div id="ax_hl"></div>'
+  +'<div class="axbar axfoot" id="ax_foot" hidden><button type="button" class="danger" id="ax_clear">Tout effacer</button></div>'
+  +'<p class="sub" style="margin:12px 0 0">Les montants sont affichés avec 2 décimales ; les calculs conservent la valeur exacte. Vos saisies sont rappelées à la prochaine ouverture. L’historique (30 opérations maximum) fait partie de vos données : il est inclus dans la sauvegarde et dans le fichier partagé.</p></div></div></section>'
+  +'</div>'
+  +'<details class="axdet"><summary>ⓘ Comment c’est calculé</summary><p class="sub" id="ax_hint"></p></details></div>'
+}
+
+function scen(o){
+  var sc=$("ax_sc");
+  if(!(o.q>0&&o.pa>0)){sc.innerHTML='<tr><td colspan="4" class="sub">Renseignez le nombre d’actions et le prix d’achat pour voir les scénarios.</td></tr>';return}
+  sc.innerHTML=[1,2,3].map(function(i){var p=window.tset?tset("act","h"+i,[5,10,20][i-1]):[5,10,20][i-1];
+    var pv=pvOf(o.pa,p),x=res({q:o.q,pa:o.pa,pv:pv,j:o.j}),c=cl(x.g);
+    return'<tr><td><button type="button" class="tg" data-ax-pct="'+p+'" title="Utiliser ce prix de vente">+'+p+' %</button></td><td class="r">'+eur2(pv)+'</td><td class="r '+c+'">'+(x.g>0?"+":"")+eur2(x.g)+'</td><td class="r '+c+'">'+pct(x.taux)+'</td></tr>'
+  }).join("");
+}
+function calc(){
+  var o=cur(),r=res(o),ta=trTxt(r.tot),tv=trTxt(r.vb);
+  $("ax_ttl").textContent="TTF "+ttfTxt();$("ax_hint").textContent=hint();
+  $("ax_fat").textContent=r.tot>0&&ta?"· "+ta:"";
+  $("ax_fa").textContent=r.tot>0?eur2(r.fa):"–";
+  $("ax_tf").textContent=r.tot>0?(J?"Non applicable (même jour)":eur2(r.ta)):"–";
+  $("ax_ca").textContent=r.tot>0?eur2(r.ca):"–";
+  note("ax_na",msg(r.tot));
+  $("ax_vb").textContent=r.vb>0?eur2(r.vb):"–";
+  $("ax_fvt").textContent=r.vb>0&&tv?"· "+tv:"";
+  $("ax_fv").textContent=r.vb>0?eur2(r.fv):"–";
+  $("ax_net").textContent=r.vb>0?eur2(r.net):"–";
+  note("ax_nv",msg(r.vb));
+  var ok=r.tot>0&&r.vb>0,c=ok?cl(r.g):"";
+  $("ax_tx").textContent=ok?pct(r.taux):"–";
+  $("ax_g").textContent=ok?(r.g>0?"+":"")+eur2(r.g):"–";
+  $("ax_be").textContent=r.be!==null?eur2(Math.ceil(r.be*100)/100):"–";
+  $("ax_bg").className="axb "+c;$("ax_bt").className="axb "+c;
+  document.querySelectorAll("#acw .axs [data-ax-pct]").forEach(function(b){b.setAttribute("aria-pressed",String(!MAN&&PCT===+b.getAttribute("data-ax-pct")))});
+  scen(o);
+}
+function majTotal(){
+  var t=pn("ax_q")*pn("ax_pa");$("ax_tot").value=t?t.toFixed(2).replace(".",","):"";
+  if(!MAN){var d=pvOf(pn("ax_pa"),PCT);$("ax_pv").value=d?d.toFixed(2).replace(".",","):""}
+  calc();
+}
+function setJ(v){J=v;$("ax_oui").setAttribute("aria-pressed",String(v));$("ax_non").setAttribute("aria-pressed",String(!v));calc()}
+function setPct(p){PCT=p;MAN=false;majTotal();saveLast()}
+function saveLast(){A().last=cur();save()}
+function setTop(){var h=document.querySelector("header"),w=$("acw");if(h&&w)w.style.setProperty("--axh",h.offsetHeight+"px")}
+function hist(){
+  var H=A().hist,hl=$("ax_hl");
+  $("ax_foot").hidden=!H.length;
+  if(!H.length){$("ax_sum").textContent="";hl.innerHTML='<p class="sub">Aucune opération enregistrée pour l’instant.</p>';return}
+  var g=function(o){return(o.r||res(o)).g},L=H.slice();
+  if(SORT==="old")L.reverse();
+  else if(SORT==="gd")L.sort(function(a,b){return g(b)-g(a)});
+  else if(SORT==="ga")L.sort(function(a,b){return g(a)-g(b)});
+  else if(SORT==="pos")L=L.filter(function(o){return g(o)>0});
+  else if(SORT==="neg")L=L.filter(function(o){return g(o)<0});
+  var tot=Math.round(L.reduce(function(s,o){return s+g(o)},0)*1e8)/1e8;
+  $("ax_sum").innerHTML='<b>'+L.length+'</b>'+(L.length<H.length?' sur '+H.length:'')+' opération(s) · gain cumulé <b class="'+cl(tot)+'">'+(tot>0?"+":"")+eur2(tot)+'</b>';
+  if(!L.length){hl.innerHTML='<p class="sub">Aucune opération ne correspond à ce filtre.</p>';return}
+  hl.innerHTML='<div class="tw2"><table class="lt axh" aria-label="Opérations enregistrées"><thead><tr><th>Date</th><th class="r axhq">Qté</th><th class="r">Achat</th><th class="r">Vente</th><th class="r">Gain</th><th class="r axhr">Rentabilité</th><th><span class="vh">Actions</span></th></tr></thead>'
+  +L.map(function(o){
+    var r=o.r||res(o),c=cl(r.g),op=!!EXP[o.id],d=new Date(o.at).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+    /* Opérations enregistrées avant ce changement (TTF sur la vente) : affichage d'origine conservé */
+    var nw=r.ta!==undefined;
+    var achat=nw?'Achat : '+eur2(r.tot)+' + frais '+eur2(r.fa)+' + TTF '+eur2(r.ta)+' = <b>'+eur2(r.ca)+'</b>':'Achat : '+eur2(r.tot)+' + frais '+eur2(r.fa)+' = <b>'+eur2(r.ca)+'</b>';
+    var vente=nw?'Vente : '+eur2(r.vb)+' − frais '+eur2(r.fv)+' = <b>'+eur2(r.net)+'</b>':'Vente : '+eur2(r.vb)+' − frais '+eur2(r.fv)+' − TTF '+eur2(r.t)+' = <b>'+eur2(r.net)+'</b>';
+    return'<tbody><tr><td><button type="button" class="tg" data-ax-tg="'+o.id+'" aria-expanded="'+op+'" aria-label="Afficher le détail du calcul">'+(op?"▾":"▸")+'</button>'+d+(o.j?' <span class="sub">· même jour</span>':'')+'</td>'
+      +'<td class="r axhq">'+o.q+'</td><td class="r">'+eur2(o.pa)+'</td><td class="r">'+eur2(o.pv)+'</td>'
+      +'<td class="r '+c+'"><b>'+(r.g>0?"+":"")+eur2(r.g)+'</b></td><td class="r axhr '+c+'">'+pct(r.taux)+'</td>'
+      +'<td class="act"><button type="button" data-ax-load="'+o.id+'" aria-label="Recharger dans le calculateur" title="Recharger dans le calculateur">↺</button><button type="button" data-ax-del="'+o.id+'" aria-label="Supprimer" title="Supprimer">✕</button></td></tr>'
+      +'<tr class="axdt"'+(op?'':' hidden')+'><td colspan="7"><div>'+o.q+' action(s) · achat '+eur2(o.pa)+' · vente '+eur2(o.pv)+'</div><div>'+achat+'</div><div>'+vente+'</div><div>Rentabilité <b>'+pct(r.taux)+'</b> · revente le jour même : '+(o.j?"oui":"non")+'</div></td></tr></tbody>'
+  }).join("")+'</table></div>';
+}
+function tierRows(){
+  var rows=cfg().tiers.map(function(t,i){
+    var inp=function(k,v,l){return'<td><input class="axin" data-ax-t="'+i+':'+k+'" inputmode="decimal" autocomplete="off" value="'+ns(v)+'" aria-label="Tranche '+(i+1)+' : '+l+'"></td>'};
+    return'<tr data-ax-r="'+i+'">'+inp("min",t.min,"de (€)")+inp("max",t.max,"à (€)")+inp("fee",t.fee,"frais (€)")+'<td><button type="button" data-ax-tdel="'+i+'" aria-label="Supprimer la tranche '+(i+1)+'">✕</button></td></tr>'
+      +'<tr class="axerr" data-ax-e="'+i+'" hidden><td colspan="4" class="warn" role="alert"></td></tr>'
+  }).join("")||'<tr><td colspan="4" class="sub">Aucune tranche : aucun frais n’est appliqué.</td></tr>';
+  /* la TTF fait partie du tableau des frais */
+  rows+='<tr class="axttf"><td colspan="2">TTF sur l’achat (en %), sauf revente le jour même</td><td><input class="axin" id="ax_ttf" inputmode="decimal" autocomplete="off" value="'+ns(cfg().ttf*100)+'" aria-label="TTF en pourcentage"></td><td></td></tr>';
+  $("ax_tb").innerHTML=rows;
+}
+/* Lecture des tranches saisies, avec le message d'erreur de chaque ligne fautive */
+function collect(){
+  var out=[],errs={},n=0;
+  document.querySelectorAll("#ax_tb tr[data-ax-r]").forEach(function(tr,i){
+    var v=[].map.call(tr.querySelectorAll("input"),function(x){return parse(x.value)});
+    if(v.some(function(x){return !isFinite(x)||x<0})){errs[i]="Saisissez des nombres positifs dans les trois champs.";n++}
+    else if(v[0]>=v[1]){errs[i]="Le montant « de » doit être inférieur au montant « à ».";n++}
+    else out.push({min:v[0],max:v[1],fee:v[2]});
+  });
+  return{out:out,errs:errs,n:n}
+}
+function showErrs(errs){
+  document.querySelectorAll("#ax_tb tr[data-ax-r]").forEach(function(tr,i){
+    var m=errs[i],e=document.querySelector('#ax_tb tr[data-ax-e="'+i+'"]');
+    tr.querySelectorAll("input").forEach(function(x){x.classList.toggle("alr",!!m);if(m)x.setAttribute("aria-invalid","true");else x.removeAttribute("aria-invalid")});
+    if(e){e.hidden=!m;e.firstChild.textContent=m||""}
+  });
+}
+function tiersChanged(){
+  var c=collect();showErrs(c.errs);
+  if(c.n){note("ax_ns","Les changements ne sont pas enregistrés tant que les lignes en rouge ne sont pas corrigées.");return}
+  var s=c.out.slice().sort(function(a,b){return a.min-b.min}),reord=JSON.stringify(s)!==JSON.stringify(c.out);
+  cfg().tiers=s;save();calc();if(reord)tierRows();
+  var ov=false;for(var i=1;i<s.length;i++)if(s[i].min<s[i-1].max)ov=true;
+  note("ax_ns",ov?"Attention : certaines tranches se chevauchent. La tranche la plus basse correspondante s’applique.":"")
+}
+function render(){
+  if(!$("axsty")){var s=document.createElement("style");s.id="axsty";s.textContent=CSS;document.head.appendChild(s)}
+  $("app").innerHTML=html();setTop();
+  $("ax_set").hidden=!SETO;$("ax_setb").setAttribute("aria-expanded",String(SETO));tierRows();
+  $("ax_sort").value=SORT;
+  var L=A().last;J=false;MAN=false;PCT=window.tset?tset("act","h2",10):10;
+  if(L){$("ax_q").value=L.q?ns(L.q):"";$("ax_pa").value=L.pa?ns(L.pa):"";MAN=!!L.man;if(L.pct>0)PCT=L.pct;if(MAN)$("ax_pv").value=L.pv?ns(L.pv):"";J=!!L.j}
+  $("ax_oui").setAttribute("aria-pressed",String(J));$("ax_non").setAttribute("aria-pressed",String(!J));
+  majTotal();hist();
+  /* curseur dans « Nombre d’actions » sur ordinateur (pas sur téléphone : le clavier s’ouvrirait) */
+  if(matchMedia("(pointer:fine)").matches)setTimeout(function(){var q=$("ax_q");if(q&&T==="act")q.focus()},0);
+}
+function saveOp(){
+  var o=cur();
+  if(!(o.q>0&&o.pa>0&&o.pv>0)){note("ax_nh","Renseignez le nombre d’actions, le prix d’achat et le prix de vente avant d’enregistrer.");return}
+  note("ax_nh","");var sn=snap(),a=A();
+  o.r=res(o);o.id=uid();o.at=Date.now();a.hist.unshift(o);a.hist=a.hist.slice(0,+(window.tset?tset("act","max",30):30));save();hist();
+  toast("Opération enregistrée",undoTo(sn));
+}
+
+var nav=$("tabs");
+if(nav&&!nav.querySelector('[data-tab="act"]')){
+  var b=document.createElement("button");b.setAttribute("data-tab","act");b.textContent="Actions";
+  nav.insertBefore(b,nav.querySelector('[data-tab="sav"]'));
+}
+var origDraw=draw;
+window.draw=draw=function(){
+  origDraw();
+  if(T!=="act")return;
+  render();
+  document.title="Actions — Mes comptes et budget";
+  document.querySelector("main").classList.add("narrow");
+  setTimeout(function(){var sr=$("sr");if(sr&&T==="act")sr.textContent="Onglet Actions"},120);
+};
+addEventListener("resize",function(){if(T==="act")setTop()});
+
+function inAct(e){return e.target&&e.target.closest&&e.target.closest("#acw")}
+document.addEventListener("input",function(e){
+  if(!inAct(e))return;
+  var id=e.target.id;
+  if(id==="ax_pv"){MAN=true;calc()}else if(id==="ax_q"||id==="ax_pa")majTotal();else return;
+  saveLast();
+});
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Enter"||!inAct(e)||!/^ax_(q|pa|pv)$/.test(e.target.id))return;
+  e.preventDefault();saveOp();
+});
+document.addEventListener("change",function(e){
+  if(!inAct(e))return;
+  var t=e.target;
+  if(t.id==="ax_sort"){SORT=t.value;hist()}
+  else if(t.hasAttribute&&t.hasAttribute("data-ax-t"))tiersChanged();
+  else if(t.id==="ax_ttf"){
+    var v=parse(t.value);
+    if(!isFinite(v)||v<0||v>100){note("ax_ns","La TTF doit être un pourcentage entre 0 et 100.");return}
+    cfg().ttf=v/100;save();calc();note("ax_ns","");
+  }
+});
+document.addEventListener("click",function(e){
+  if(!inAct(e))return;
+  var t=e.target.closest("button");if(!t)return;
+  if(t.id==="ax_oui"){setJ(true);saveLast()}
+  else if(t.id==="ax_non"){setJ(false);saveLast()}
+  else if(t.hasAttribute("data-ax-pct")){setPct(+t.getAttribute("data-ax-pct"))}
+  else if(t.id==="ax_setb"){SETO=!SETO;$("ax_set").hidden=!SETO;t.setAttribute("aria-expanded",String(SETO))}
+  else if(t.id==="ax_tadd"){var T2=cfg().tiers,hi=T2.length?Math.max.apply(null,T2.map(function(x){return x.max})):0;T2.push({min:hi,max:hi+1000,fee:0});save();tierRows();calc();note("ax_ns","")}
+  else if(t.hasAttribute("data-ax-tdel")){cfg().tiers.splice(+t.getAttribute("data-ax-tdel"),1);save();tierRows();calc();note("ax_ns","")}
+  else if(t.id==="ax_tdef"){
+    ask("Rétablir les tranches de frais et la TTF d’origine (500–1 000 € : 1,90 € · 1 000–2 000 € : 2,90 € · 2 000–4 000 € : 3,80 € · TTF 0,40 %) ?","Remplacer").then(function(ok){
+      if(!ok)return;S.actions.cfg=null;cfg();save();tierRows();calc();note("ax_ns","")
+    });
+  }
+  else if(t.id==="ax_save"){saveOp()}
+  else if(t.hasAttribute("data-ax-tg")){
+    var id=t.getAttribute("data-ax-tg"),row=t.closest("tbody").querySelector(".axdt"),ouv=row.hidden;
+    row.hidden=!ouv;t.setAttribute("aria-expanded",String(ouv));t.textContent=ouv?"▾":"▸";
+    if(ouv)EXP[id]=1;else delete EXP[id];
+  }
+  else if(t.hasAttribute("data-ax-load")){
+    var h=A().hist.filter(function(x){return x.id===t.getAttribute("data-ax-load")})[0];if(!h)return;
+    $("ax_q").value=ns(h.q);$("ax_pa").value=String(h.pa).replace(".",",");$("ax_pv").value=String(h.pv).replace(".",",");MAN=true;setJ(!!h.j);majTotal();saveLast();
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  else if(t.hasAttribute("data-ax-del")){
+    var sn2=snap(),id2=t.getAttribute("data-ax-del");A().hist=A().hist.filter(function(x){return x.id!==id2});delete EXP[id2];save();hist();
+    toast("Opération supprimée",undoTo(sn2));
+  }
+  else if(t.id==="ax_clear"){
+    if(!A().hist.length)return;
+    ask("Effacer toutes les opérations enregistrées dans l’onglet Actions ?","Effacer").then(function(ok){
+      if(!ok)return;var sn3=snap();A().hist=[];EXP={};save();hist();toast("Historique effacé",undoTo(sn3));
+    });
+  }
+});
+})();
