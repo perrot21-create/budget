@@ -1,4 +1,4 @@
-/* reglages.js v2 — Réglages par onglet. À charger APRÈS pret.js : <script src="reglages.js"></script> */
+/* reglages.js v3 — Réglages par onglet. À charger APRÈS pret.js : <script src="reglages.js"></script> */
 (()=>{
 const NM={dash:"Tableau de bord",acc:"Comptes",bud:"Budget annuel",lst:"Tiers et catégories",act:"Actions",pre:"Prêts entre proches",sav:"Sauvegarde"};
 const BEH={
@@ -40,6 +40,9 @@ const AC=()=>{const a=S.actions&&Array.isArray(S.actions.hist)?S.actions:(S.acti
  if(!a.cfg||!Array.isArray(a.cfg.tiers))a.cfg={tiers:[[500,1000,1.9],[1000,2000,2.9],[2000,4000,3.8]].map(([min,max,fee])=>({min,max,fee})),ttf:.004};return a.cfg};
 const fr=v=>String(v).replace(".",",");
 
+/* Curseur du « Tableau du budget » (réutilise les réglages généraux data-us gérés par index.html) */
+const slu=(k,l,a,b,s,v,u)=>`<div class="frow"><span id="ul-${k}">${l}</span><input type="range" data-us="${k}" min="${a}" max="${b}" step="${s}" value="${v}" aria-labelledby="ul-${k}"><span class="sv" id="sv-${k}">${v}${u}</span></div>`;
+
 /* Composants */
 const gu=()=>uiClean(S.ui),
 chk=(t,k,l,d)=>`<label class="chip"><input type="checkbox" data-rt="${t}:${k}"${tset(t,k,d)?" checked":""}>${l}</label>`,
@@ -54,7 +57,11 @@ actB=()=>{const c=AC();return `<h3>Frais par tranche (total de l’opération)</
 function tabPage(t){const B=BEH[t]||{};
  let h=`<section><h2>${NM[t]}</h2><h3>Comportement</h3>`+(B.n||[]).map(([k,l,a,b,d,u])=>num(t,k,l,a,b,d,u)).join("")+((B.c||[]).length?`<div class="modes">${B.c.map(([k,l,d])=>chk(t,k,l,d)).join("")}</div>`:"");
  if(t==="acc")h+=accB()+`<h3>Espacement des colonnes des opérations (px)</h3><div class="cgrid">${cgGet().map((v,i)=>`<label class="crow"><span>${CGL[i]}</span><input type="number" min="0" max="200" data-rcg="${i}" value="${v}" style="width:80px"></label>`).join("")}</div><div class="pvbar"><button data-rcgr>Valeurs par défaut</button></div>`;
- else if(t==="bud")h+=`<div class="pvbar"><button data-rtw>Largeurs de colonnes par défaut</button></div><p class="sub">La couleur de saisie se règle dans Général > Couleurs.</p>`;
+ else if(t==="bud"){const u=gu();h+=`<h3>Tableau du budget</h3>`
+  +slu("vw","Largeur du trait Décembre / Cumul annuel",2,40,2,u.vw||18," px")
+  +slu("rh","Hauteur des lignes",28,52,2,u.rh||36," px")
+  +slu("ib","Intensité des contours des cases de saisie",0,80,5,u.ib===undefined?30:u.ib," %")
+  +`<p class="sub">La couleur du trait Décembre / Cumul annuel, celles des lignes et la couleur de saisie se règlent dans Général > Couleurs.</p><div class="pvbar"><button data-rtw>Largeurs de colonnes par défaut</button></div>`}
  else if(t==="act")h+=actB();
  else if(t==="pre")h+=`<h3>Couleurs des cartes « Par proche »</h3><div class="cgrid">${PC.map((d,i)=>{const v=hx(tset("pre","c"+i,""));return `<div class="crow"><label><input type="color" data-rt="pre:c${i}" value="${v||d}" aria-label="Couleur de la carte ${i+1}"><span>Carte ${i+1}</span></label><button data-rtr="pre:c${i}"${v?"":" disabled"} aria-label="Couleur d’origine">↺</button></div>`}).join("")}</div>`;
  else if(t==="sav")h+=`<div class="frow"><span>Rappel de sauvegarde</span><select data-rt="sav:days" aria-label="Rappel de sauvegarde">${[[7,"Après 7 jours"],[30,"Après 30 jours"],[90,"Après 90 jours"],[0,"Jamais"]].map(([v,l])=>`<option value="${v}"${days()===v?" selected":""}>${l}</option>`).join("")}</select></div><div class="modes"><label class="chip"><input type="checkbox" data-rt="sav:auto"${syGet().mode==="manual"?"":" checked"}>Reconnexion automatique du fichier partagé à l’ouverture</label></div>`;
@@ -88,7 +95,13 @@ const od0=drawSet;
 drawSet=function(){
  const tabs=Object.entries(NM).filter(([k])=>document.querySelector('#tabs [data-tab="'+k+'"]'));
  const nav=`<div class="snav" role="group" aria-label="Onglet à régler">`+[["gen","Général"],...tabs].map(([k,l])=>`<button data-rs="${k}"${RS===k?' class="on" aria-pressed="true"':' aria-pressed="false"'}>${l}</button>`).join("")+`</div>`;
- if(RS==="gen"||!tabs.some(([k])=>k===RS)){od0();takePol();tidy();$("#app").insertAdjacentHTML("afterbegin",nav);return}
+ if(RS==="gen"||!tabs.some(([k])=>k===RS)){
+  /* « Tableau du budget » n'est plus dans Général : il est dans Budget annuel */
+  if(ST==="tableau")ST="themes";
+  od0();takePol();tidy();
+  $("#app").querySelectorAll('section[data-sp="tableau"]').forEach(z=>z.remove());
+  const bt=$("#app").querySelector('[data-st="tableau"]');if(bt)bt.remove();
+  $("#app").insertAdjacentHTML("afterbegin",nav);return}
  let pol=null;if(RS==="lst"){od0();pol=takePol()}
  $("#app").innerHTML=nav+`<div class="setw"><div class="setr">${tabPage(RS)}</div>${pvH(RS)}</div>`;
  if(pol)$("#app").querySelector(".setr").appendChild(pol)};
@@ -138,9 +151,10 @@ document.addEventListener("click",async e=>{const q=s=>e.target.closest(s);let x
  else if(x=q("[data-racd]")){const a=S.acc[+x.dataset.racd];if(!a||S.acc.length<2)return;const n=S.tx.filter(t=>t.acc===a.id).length;
   if(await ask("Supprimer le compte « "+a.name+" »"+(n?" et ses "+n+" opération(s)":"")+" ? Vous pourrez annuler quelques secondes.","Supprimer")){const sn=snap();S.acc=S.acc.filter(z=>z!==a);S.tx=S.tx.filter(t=>t.acc!==a.id);save();drawSet();toast("Compte supprimé",undoTo(sn))}}});
 
-/* Bouton ⚙ unique dans l'en-tête */
+/* Bouton ⚙ unique dans l'en-tête : il remplace l'onglet « Réglages », qui est retiré de la navigation */
 const sg=document.getElementById("syg");
 if(sg&&!document.getElementById("rsg"))sg.insertAdjacentHTML("beforebegin",'<button id="rsg" class="ib" title="Réglages de cet onglet" aria-label="Réglages de cet onglet">⚙&#xFE0E;</button>');
+const tabSet=document.querySelector('#tabs [data-tab="set"]');if(tabSet)tabSet.remove();
 F.p=tset("acc","fp",false);F.n=tset("acc","fn",true);PQH=tset("pre","hd",true);
 draw();
 })();
