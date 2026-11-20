@@ -1,8 +1,8 @@
-
 /* comptes_fixe.js v5 — La page ne bouge plus dans les onglets Comptes, Budget annuel, Tableau de bord,
    Tiers et catégories, Actions et Sauvegarde.
    - Comptes et Budget annuel : seul le tableau défile (Budget annuel : graphiques repliés).
-   - Tableau de bord (écran large) : page figée, blocs répartis sur 2 colonnes ; seuls les blocs défilent en interne.
+   - Tableau de bord (écran large) : page figée, blocs répartis sur 2 colonnes ; les anneaux de dépenses sont affichés en entier,
+     seuls Dernières opérations et Suivi des abonnements défilent en interne.
    - Tiers et catégories, Actions, Sauvegarde : page figée dès que son contenu tient à l'écran
      (sinon elle défile normalement pour que rien ne soit caché).
    À charger APRÈS reglages.js (et tiers.js) : <script src="comptes_fixe.js"></script>
@@ -17,8 +17,9 @@ html.accfix,html.accfix body{overflow:hidden!important;height:100%}
 .dfit .dcol{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
 .dfit .dcol>*{margin:0!important;flex:0 0 auto}
 .dfit .dcol>.dflex{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain}
-.dfit .dcol>.dgrid2.dflex{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(0,1fr);gap:12px!important;overflow:hidden}
-.dfit .dgrid2>section{min-height:0;overflow:auto;overscroll-behavior:contain}
+.dfit .dcol>.dgrid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px!important}
+.dfit .dgrid2>section{overflow:visible}
+.dfit #abo{min-height:110px}
 .dfit .hero{gap:12px!important}
 .dfit .hbig{font-size:1.9rem}
 .dfit section{padding:14px}
@@ -44,9 +45,9 @@ function dashWrap(a){
   ops=sec.find(k=>k.querySelector(".lhead")),
   cumul=sec.find(k=>k.querySelector(".cbt")),
   abo=kids.find(k=>k.id==="abo");
- const left=[hero,alr,comptes,ops].filter(Boolean),right=[rings,cumul,abo].filter(Boolean);
+ const left=[hero,alr,comptes,cumul,ops].filter(Boolean),right=[rings,abo].filter(Boolean);
  kids.forEach(k=>{if(!left.includes(k)&&!right.includes(k))right.push(k)});
- [ops,rings,abo].forEach(k=>k&&k.classList.add("dflex"));
+ [ops,abo].forEach(k=>k&&k.classList.add("dflex"));
  const L=document.createElement("div"),R=document.createElement("div");L.className=R.className="dcol";
  a._ord=kids.slice();
  left.forEach(n=>L.appendChild(n));right.forEach(n=>R.appendChild(n));
