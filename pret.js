@@ -153,7 +153,7 @@ const prAcc=id=>{if(!id)return"—";if(id==="esp")return"Espèces";if(id==="aut"
 const prKey=n=>String(n).trim().toLocaleLowerCase("fr");
 const pqK=(o,r)=>o?(r?"rendu":"pret"):(r?"recu":"emp"),pqRep=k=>k==="recu"||k==="rendu";
 const pqSg=n=>(n>0?"+":n<0?"−":"")+eur2(Math.abs(n));
-const pqDue=d=>{if(!d)return"";const n=aboDays(d);return n<0?`<span class="pq-bd late">En retard de ${-n} j</span>`:n===0?`<span class="pq-bd soon">Échéance aujourd’hui</span>`:`<span class="pq-bd${n<=7?" soon":""}">Échéance dans ${n} j</span>`};
+const pqDue=d=>{if(!d)return"";const n=aboDays(d);return n<0?`<span class="pq-bd late">En retard de ${-n} j</span>`:n===0?`<span class="pq-bd soon">Échéance aujourd’hui</span>`:`<span class="pq-bd${n<=(window.tset?tset("pre","due",7):7)?" soon":""}">Échéance dans ${n} j</span>`};
 function prGroups(){const m=new Map();
   PR().ops.forEach(o=>{const k=prKey(o.who);if(!m.has(k))m.set(k,{key:k,name:o.who,bal:0,n:0,last:"",pret:0,recu:0,emp:0,rendu:0,ops:[]});
     const g=m.get(k);g.bal+=PRT[o.k].s*o.v;g.n++;g[o.k]+=o.v;g.ops.push(o);if(o.date>g.last)g.last=o.date});
