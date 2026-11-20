@@ -1,5 +1,6 @@
-/* comptes_fixe.js v3 — La page ne bouge plus dans les onglets Comptes, Tableau de bord, Tiers et catégories, Actions et Sauvegarde.
-   - Comptes : seul le tableau des opérations défile.
+
+/* comptes_fixe.js v4 — La page ne bouge plus dans les onglets Comptes, Budget annuel, Tableau de bord, Tiers et catégories, Actions et Sauvegarde.
+   - Comptes et Budget annuel : seul le tableau défile (Budget annuel : graphiques repliés).
    - Tableau de bord, Tiers et catégories, Actions et Sauvegarde : la page est figée dès que son contenu tient à l'écran
      (si le contenu est plus long que l'écran, elle défile normalement pour que rien ne soit caché).
    À charger APRÈS reglages.js (et tiers.js) : <script src="comptes_fixe.js"></script>
@@ -7,14 +8,14 @@
 (()=>{
 const PAGES=["dash","lst","sav","act"];
 const st=document.createElement("style");
-st.textContent="html.accfix,html.accfix body{overflow:hidden!important;height:100%}.tw3{overscroll-behavior:contain}";
+st.textContent="html.accfix,html.accfix body{overflow:hidden!important;height:100%}.tw3,#bt{overscroll-behavior:contain}";
 document.head.appendChild(st);
 
 let busy=0;
 function fit(){
- const r=document.documentElement,w=document.querySelector(".tw3");
+ const r=document.documentElement,w=document.querySelector(".tw3"),bt=document.getElementById("bt");
  /* point de départ : tout déverrouillé, page en haut, pour mesurer la vraie taille du contenu */
- r.classList.remove("accfix");if(w)w.style.maxHeight="";scrollTo(0,0);
+ r.classList.remove("accfix");if(w)w.style.maxHeight="";if(bt)bt.style.maxHeight="";scrollTo(0,0);
 
  if(T==="acc"){
   if(!matchMedia("(min-width:761px)").matches||!w)return;
@@ -23,6 +24,13 @@ function fit(){
   if(h<200)return;
   w.style.maxHeight=Math.floor(h)+"px";r.classList.add("accfix");
   if(typeof fixCols==="function")fixCols();
+ }else if(T==="bud"){
+  /* Budget annuel : le tableau occupe la hauteur disponible ; les graphiques doivent être repliés pour que la page tienne à l'écran */
+  const ch=document.getElementById("bch"),gd=ch&&ch.querySelector("details");
+  if(!bt||!matchMedia("(min-width:761px)").matches||(gd&&gd.open))return;
+  const top=bt.getBoundingClientRect().top+scrollY,h=innerHeight-top-(ch?ch.offsetHeight:0)-24;
+  if(h<200)return;
+  bt.style.maxHeight=Math.floor(h)+"px";r.classList.add("accfix");
  }else if(PAGES.includes(T)){
   /* bas réel du contenu (sans la marge vide en bas de page) */
   const kids=[...document.querySelectorAll("#app > *")].filter(k=>k.offsetHeight>0&&!k.classList.contains("vh"));
@@ -33,6 +41,7 @@ function fit(){
 const later=()=>{if(busy)return;busy=1;requestAnimationFrame(()=>{busy=0;fit()})};
 
 const od=drawOps;drawOps=function(){od.apply(this,arguments);later()};
+const odb=drawBud;drawBud=function(){const d=document.querySelector("#bch details"),was=!!d&&!d.open;odb.apply(this,arguments);if(was){const n=document.querySelector("#bch details");if(n)n.open=false}later()};
 const odr=draw;window.draw=draw=function(){odr.apply(this,arguments);later()};
 
 addEventListener("resize",later);
