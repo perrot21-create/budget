@@ -574,7 +574,7 @@ const today=()=>{const t=new Date();return t.getFullYear()+"-"+String(t.getMonth
 function draw(){applyInk();
   document.querySelectorAll("#tabs button").forEach(b=>{const on=b.dataset.tab===T;b.classList.toggle("on",on);on?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current")});
   document.querySelector("main").style.maxWidth="";
-  document.querySelector("main").classList.toggle("wide",T==="bud");document.querySelector("main").classList.toggle("narrow",T==="dash"||T==="acc"||T==="set");T==="dash"?drawDash():T==="acc"?drawAcc():T==="bud"?drawBudTab():T==="sav"?drawSav():T==="set"?drawSet():T==="pre"?drawPre():drawLst();stale();bkBanner();
+  document.querySelector("main").classList.toggle("wide",T==="bud");document.querySelector("main").classList.toggle("narrow",["dash","acc","set","lst","pre","sav"].includes(T));T==="dash"?drawDash():T==="acc"?drawAcc():T==="bud"?drawBudTab():T==="sav"?drawSav():T==="set"?drawSet():T==="pre"?drawPre():drawLst();stale();bkBanner();
   const NAMES={dash:"Tableau de bord",acc:"Comptes",bud:"Budget annuel",lst:"Tiers et catégories",sav:"Sauvegarde",set:"Réglages",pre:"Prêts entre proches"};
   document.title=NAMES[T]+" — Mes comptes et budget";
   if(window.LASTT!==undefined&&window.LASTT!==T){let sr=document.getElementById("sr");if(!sr){sr=document.createElement("div");sr.id="sr";sr.className="vh";sr.setAttribute("role","status");sr.setAttribute("aria-live","polite");document.body.appendChild(sr)}sr.textContent="";setTimeout(()=>{sr.textContent="Onglet "+NAMES[T]},50)}
