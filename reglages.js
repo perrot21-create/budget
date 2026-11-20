@@ -132,4 +132,15 @@ document.addEventListener("click",async e=>{const q=s=>e.target.closest(s);let x
  else if(q("[data-rtw]")){S.colw={};save();toast("Largeurs de colonnes rétablies")}
  else if(x=q("[data-rtd]")){AC().tiers.splice(+x.dataset.rtd,1);save();drawSet()}
  else if(q("[data-rta]")){const c=AC(),hi=c.tiers.length?Math.max(...c.tiers.map(t=>t.max)):0;c.tiers.push({min:hi,max:hi+1000,fee:0});save();drawSet()}
- else if(q("[data-rtz]")){if(await ask("Rétablir les tranches de frais et la TTF d’origine
+ else if(q("[data-rtz]")){if(await ask("Rétablir les tranches de frais et la TTF d’origine ?","Remplacer")){AC();S.actions.cfg=null;AC();save();drawSet()}}
+ else if(x=q("[data-racm]")){const[i,d]=x.dataset.racm.split(":").map(Number),j=i+d;if(S.acc[j]){[S.acc[i],S.acc[j]]=[S.acc[j],S.acc[i]];save();drawSet()}}
+ else if(q("[data-raca]")){if(S.acc.length<5){S.acc.push({id:uid(),name:"Compte "+(S.acc.length+1)});save();drawSet()}}
+ else if(x=q("[data-racd]")){const a=S.acc[+x.dataset.racd];if(!a||S.acc.length<2)return;const n=S.tx.filter(t=>t.acc===a.id).length;
+  if(await ask("Supprimer le compte « "+a.name+" »"+(n?" et ses "+n+" opération(s)":"")+" ? Vous pourrez annuler quelques secondes.","Supprimer")){const sn=snap();S.acc=S.acc.filter(z=>z!==a);S.tx=S.tx.filter(t=>t.acc!==a.id);save();drawSet();toast("Compte supprimé",undoTo(sn))}}});
+
+/* Bouton ⚙ unique dans l'en-tête */
+const sg=document.getElementById("syg");
+if(sg&&!document.getElementById("rsg"))sg.insertAdjacentHTML("beforebegin",'<button id="rsg" class="ib" title="Réglages de cet onglet" aria-label="Réglages de cet onglet">⚙&#xFE0E;</button>');
+F.p=tset("acc","fp",false);F.n=tset("acc","fn",true);PQH=tset("pre","hd",true);
+draw();
+})();
