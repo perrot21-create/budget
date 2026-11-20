@@ -1,11 +1,11 @@
-
-/* comptes_fixe.js v2 — La page ne bouge plus dans les onglets Comptes, Tableau de bord et Tiers et catégories.
+/* comptes_fixe.js v3 — La page ne bouge plus dans les onglets Comptes, Tableau de bord, Tiers et catégories, Actions et Sauvegarde.
    - Comptes : seul le tableau des opérations défile.
-   - Tableau de bord et Tiers et catégories : la page est figée dès que son contenu tient à l'écran
+   - Tableau de bord, Tiers et catégories, Actions et Sauvegarde : la page est figée dès que son contenu tient à l'écran
      (si le contenu est plus long que l'écran, elle défile normalement pour que rien ne soit caché).
    À charger APRÈS reglages.js (et tiers.js) : <script src="comptes_fixe.js"></script>
    Pour revenir à l'ancien comportement : supprimer cette ligne <script> (et le fichier). */
 (()=>{
+const PAGES=["dash","lst","sav","act"];
 const st=document.createElement("style");
 st.textContent="html.accfix,html.accfix body{overflow:hidden!important;height:100%}.tw3{overscroll-behavior:contain}";
 document.head.appendChild(st);
@@ -23,7 +23,7 @@ function fit(){
   if(h<200)return;
   w.style.maxHeight=Math.floor(h)+"px";r.classList.add("accfix");
   if(typeof fixCols==="function")fixCols();
- }else if(T==="dash"||T==="lst"){
+ }else if(PAGES.includes(T)){
   /* bas réel du contenu (sans la marge vide en bas de page) */
   const kids=[...document.querySelectorAll("#app > *")].filter(k=>k.offsetHeight>0&&!k.classList.contains("vh"));
   const bottom=Math.max(0,...kids.map(k=>k.getBoundingClientRect().bottom));
@@ -39,7 +39,7 @@ addEventListener("resize",later);
 document.addEventListener("click",later,true);
 document.addEventListener("change",later,true);
 document.addEventListener("toggle",later,true);
-if(window.ResizeObserver){const a=document.getElementById("app");if(a)new ResizeObserver(()=>{if(T==="dash"||T==="lst")later()}).observe(a)}
+if(window.ResizeObserver){const a=document.getElementById("app");if(a)new ResizeObserver(()=>{if(PAGES.includes(T))later()}).observe(a)}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(later);
 fit();
 })();
