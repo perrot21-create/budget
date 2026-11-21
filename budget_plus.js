@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -29,6 +28,11 @@ const css=`
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
+/* nuance de fond : catégorie (teinte marquée) / sous-catégorie (teinte légère), tous les mois */
+#bt tbody tr.hdr.cb td{background-color:color-mix(in srgb,var(--cc) 24%,var(--surface))!important}
+#bt tbody tr.sub.cb td{background-color:color-mix(in srgb,var(--cc) 7%,var(--surface))!important}
+#bt tbody tr.hdr.cb td.mp{background-color:color-mix(in srgb,var(--cc) 24%,color-mix(in srgb,var(--ink) 5%,var(--surface)))!important}
+#bt tbody tr.sub.cb td.mp{background-color:color-mix(in srgb,var(--cc) 7%,color-mix(in srgb,var(--ink) 5%,var(--surface)))!important}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
