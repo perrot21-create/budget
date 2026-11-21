@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -22,7 +23,8 @@ const css=`
 #bt thead tr:first-child th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)!important}
 #bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),0 1px 0 var(--line)!important}
 #bt thead th.m-past{opacity:.72}
-#bt tbody td.m-past.g{opacity:.6}
+/* mois terminés : toutes les cellules (Budget, Réel, Écart) reçoivent la même opacité, donc la même teinte */
+#bt tbody td.m-past{opacity:.6}
 .qb{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:var(--onacc,#fff);background:var(--qc);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:middle}
 .nw{font-style:normal;font-size:.68rem;font-weight:700;color:var(--onacc,#fff);background:var(--accent);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
 /* survol : seulement la cellule pointée et le Budget du cumul annuel de sa ligne */
