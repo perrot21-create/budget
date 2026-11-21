@@ -45,6 +45,7 @@ const css=`
 #bt tbody tr:not(.sec) td.hh.hh.hh:hover:not(.nm){background-image:${g("var(--accent)",26)},var(--hg)!important}
 .hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* jauges, flèches, mini-courbes */
+.bpcl{padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px)}
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.1);pointer-events:none}
 .mg b{display:block;height:100%;border-radius:2px;background:color-mix(in srgb,var(--accent) 40%,transparent);transition:width .3s}
@@ -122,6 +123,7 @@ function post(){
   tb.querySelectorAll("thead tr").forEach((tr,ri)=>{
     let c=ri===1?1:0;
     [...tr.cells].forEach(td=>{
+      if(ri===0&&td.classList.contains("nm")&&!td.querySelector(".bpcl"))td.insertAdjacentHTML("afterbegin",'<button type="button" class="bpcl" data-tg="all-close" title="Fermer toutes les catégories">▸ Tout fermer</button>');
       const n=td.colSpan||1,m=mo[c]===undefined?-1:mo[c];td.dataset.col=c;
       if(m>=0){
         td.dataset.mm=m;td.classList.add(st(m),"q"+(m/3|0),"mc"+m);if(!vis(m))td.classList.add("vx");
