@@ -39,6 +39,10 @@ const css=`
 #bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:30px;min-width:30px;max-width:30px;padding:0;text-align:center;vertical-align:middle;overflow:hidden}
 #bt td.gk-r{--gc:#6f9a78}#bt td.gk-d{--gc:#c46a4c}#bt td.gk-s{--gc:#5f7391}
 html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
+/* cadre complet autour du bloc Revenus, couleur du thème général (accent) */
+html #bt#bt tbody td.frm:not(.nm):not(.grp):not(.pin){position:relative}
+html #bt#bt tbody td.frm::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:var(--ft,0 0 0 0 transparent),var(--fb,0 0 0 0 transparent),var(--fr,0 0 0 0 transparent),var(--fl,0 0 0 0 transparent)}
+#bt td.fr-t{--ft:inset 0 3px 0 var(--accent)}#bt td.fr-b{--fb:inset 0 -3px 0 var(--accent)}#bt td.fr-r{--fr:inset -3px 0 0 var(--accent)}#bt td.fr-l{--fl:inset 3px 0 0 var(--accent)}
 /* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
 html #bt#bt tbody tr.gsp td{height:12px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
@@ -250,13 +254,14 @@ function post(){
   if(!tb.querySelector("td.grp,th.grp")){
     const trs=[...tb.querySelectorAll("tbody tr")],LB={r:"Revenus",d:"Dépenses",s:"Synthèse"},
       kind=r=>r.classList.contains("sec")?"":r.classList.contains("k-rev")?"r":r.classList.contains("k-dep")?"d":r.classList.contains("k-syn")?"s":"";
-    let i=0;const starts=[];
+    let i=0,rv=null;const starts=[];
     while(i<trs.length){
       const k=kind(trs[i]);let j=i;
       while(j+1<trs.length&&kind(trs[j+1])===k)j++;
       let v=-1;
       if(k)for(let q=i;q<=j;q++)if(trs[q].getClientRects().length){v=q;break}
       if(k)starts.push({row:trs[i],vis:v>=0});
+      if(k==="r"&&v>=0)rv={v,j};
       for(let q=i;q<=j;q++){
         if(k&&v>=0&&q>v)continue;
         const td=document.createElement("td");
@@ -275,6 +280,15 @@ function post(){
       starts.forEach(b=>{if(!b.vis)return;
         {const sp=document.createElement("tr");sp.className="gsp";const td=document.createElement("td");td.colSpan=n;sp.appendChild(td);b.row.parentNode.insertBefore(sp,b.row)}
         seen=true})}
+    /* cadre autour du bloc Revenus : haut, bas, gauche (colonne verticale) et droite (dernière colonne) */
+    if(rv){
+      const vis=[];for(let q=rv.v;q<=rv.j;q++)if(trs[q].getClientRects().length)vis.push(trs[q]);
+      vis.forEach((r,n)=>{
+        [...r.cells].forEach(c=>{c.classList.add("frm");if(n===0)c.classList.add("fr-t");if(n===vis.length-1)c.classList.add("fr-b")});
+        const l=r.cells[r.cells.length-1];if(l)l.classList.add("fr-r");
+        const g=r.querySelector("td.grp");if(g)g.classList.add("fr-l","fr-t","fr-b");
+      });
+    }
     tb.style.width=(parseFloat(tb.style.width)||0)+SW+"px";
     tb.querySelectorAll(".mst").forEach(m=>{m.style.left=(parseFloat(m.style.left)||0)+SW+"px"});
     const vs=w.querySelector(".vs");if(vs)vs.style.left=(parseFloat(vs.style.left)||0)+SW+"px";
