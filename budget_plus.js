@@ -34,12 +34,14 @@ const css=`
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
-/* bandeaux Revenus / Dépenses / Synthèse : teintes douces (vert sauge, rouge terracotta, bleu-gris ardoise) + icône devant le titre */
-#bt tbody tr.sec.sr{--sc:#6f9a78;--si:"↑"}
-#bt tbody tr.sec.sd{--sc:#c46a4c;--si:"↓"}
-#bt tbody tr.sec.ss{--sc:#5f7391;--si:"Σ"}
-html #bt#bt tbody tr.sec:is(.sr,.sd,.ss)>*{background:color-mix(in srgb,var(--sc) 14%,var(--surface))!important;opacity:1!important}
-#bt tbody tr.sec:is(.sr,.sd,.ss)>:first-child::before{content:var(--si);color:var(--sc);font-weight:800;margin-right:8px}
+/* colonne verticale à gauche : blocs Revenus / Dépenses / Synthèse */
+#bt.hasg .nm{left:30px}
+#bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:30px;min-width:30px;max-width:30px;padding:0;text-align:center;vertical-align:top;overflow:hidden}
+#bt td.gk-r{--gc:#6f9a78}#bt td.gk-d{--gc:#c46a4c}#bt td.gk-s{--gc:#5f7391}
+html #bt#bt tbody td.grp{--gimg:linear-gradient(var(--surface),var(--surface)),linear-gradient(var(--surface),var(--surface));background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:var(--gimg)!important;background-size:100% 4px,100% 4px!important;background-position:top,bottom!important;background-repeat:no-repeat!important;border:0!important;box-shadow:none!important;opacity:1!important}
+html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
+html #bt#bt thead th.grp{z-index:6;background:var(--surface)!important;border:0;box-shadow:none}
+#bt td.grp .gt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-weight:800;letter-spacing:.14em;color:var(--ink);position:sticky;top:calc(var(--th1,36px)*2 + 12px);padding:6px 0;margin-top:8px}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
@@ -127,6 +129,9 @@ function leg(){
 }
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
+  /* les lignes de titre Revenus / Dépenses / Synthèse sont remplacées par la colonne verticale */
+  tb.querySelectorAll("tbody tr.sec").forEach(r=>{const t=r.textContent.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();if(t==="revenus"||t==="depenses"||t==="synthese")r.remove()});
+  const SW=30;
   const p=P(),now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),{R,B}=maps();
   const vis=m=>p.view==="all"||(p.view[0]==="q"?(m/3|0)===+p.view[1]:m===(Y===cy?cm:0));
   const st=m=>Y<cy?"m-past":Y>cy?"m-fut":m<cm?"m-past":m===cm?"m-cur":"m-fut";
@@ -136,7 +141,7 @@ function post(){
   [...tb.querySelectorAll("thead tr:first-child th")].slice(1).forEach(th=>{const n=th.colSpan||1,m=th.dataset.mo===undefined?-1:+th.dataset.mo;for(let j=0;j<n;j++)mo[ci+j]=m;ci+=n});
   const cols=[...tb.querySelectorAll("col")],cw=cols.map(c=>parseFloat(c.style.width)||0);
   const first={};mo.forEach((m,i)=>{if(m>=0&&first[m]===undefined)first[m]=i});
-  const pinOn=p.pin&&Y===cy,left=(i)=>{let x=cw[0];for(let j=first[cm];j<i;j++)x+=cw[j];return x};
+  const pinOn=p.pin&&Y===cy,left=(i)=>{let x=cw[0]+SW;for(let j=first[cm];j<i;j++)x+=cw[j];return x};
   /* étiquettes d'en-tête */
   tb.querySelectorAll("thead tr").forEach((tr,ri)=>{
     let c=ri===1?1:0;
@@ -218,18 +223,6 @@ function post(){
       let j=i+1;while(trs[j+1]&&trs[j+1].classList.contains("sub"))j++;
       tr.classList.add("opt");if(trs[j+1])trs[j+1].classList.add("opb");
     })}
-  /* bandeaux de section : type repéré par leur titre (revenus / dépenses / synthèse) */
-  tb.querySelectorAll("tbody tr.sec").forEach(r=>{
-    const t=nrm(r.textContent);r.classList.remove("sr","sd","ss");
-    const k=/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":/^synthese/.test(t)?"ss":"";
-    if(k)r.classList.add(k);
-    /* bandeaux plus fins : environ 25 % de hauteur en moins, pris sur le remplissage haut et bas */
-    const cl=[...r.children];cl.forEach(c=>{c.style.removeProperty("padding-top");c.style.removeProperty("padding-bottom")});
-    if(k&&cl.length){
-      const h=r.getBoundingClientRect().height,p=parseFloat(getComputedStyle(cl[0]).paddingTop)||0,cut=Math.min(p-3,h*.125);
-      if(h>0&&cut>0)cl.forEach(c=>{c.style.setProperty("padding-top",(p-cut)+"px","important");c.style.setProperty("padding-bottom",(p-cut)+"px","important")});
-    }
-  });
   /* soldes : la couleur du cadre (bleu / vert) est celle du titre de la ligne */
   tb.querySelectorAll("tbody tr.tsol,tbody tr.tcum").forEach(r=>{const n=r.querySelector("td.nm");if(n)r.style.setProperty("--sl",getComputedStyle(n).color)});
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
@@ -249,9 +242,38 @@ function post(){
   }
   const vr=[...tb.querySelectorAll("tbody tr")].filter(r=>r.getClientRects().length),lr=vr[vr.length-1];
   if(lr)lr.querySelectorAll(".m-cur").forEach(x=>x.classList.add("mcb"));
-  /* lignes d'en-tête (mois ; Budget / Réel / Écart) : même hauteur que la ligne Revenus */
+  /* colonne verticale (Revenus / Dépenses / Synthèse) : une cellule fusionnée par bloc, posée sur la première ligne visible */
+  if(!tb.querySelector("td.grp,th.grp")){
+    const trs=[...tb.querySelectorAll("tbody tr")],LB={r:"Revenus",d:"Dépenses",s:"Synthèse"},
+      kind=r=>r.classList.contains("sec")?"":r.classList.contains("k-rev")?"r":r.classList.contains("k-dep")?"d":r.classList.contains("k-syn")?"s":"";
+    let i=0;
+    while(i<trs.length){
+      const k=kind(trs[i]);let j=i;
+      while(j+1<trs.length&&kind(trs[j+1])===k)j++;
+      let v=-1;
+      if(k)for(let q=i;q<=j;q++)if(trs[q].getClientRects().length){v=q;break}
+      for(let q=i;q<=j;q++){
+        if(k&&v>=0&&q>v)continue;
+        const td=document.createElement("td");
+        if(q===v){td.className="grp gk-"+k;td.rowSpan=j-q+1;td.innerHTML='<span class="gt">'+LB[k]+'</span>'}
+        else td.className="grp0";
+        trs[q].insertBefore(td,trs[q].firstChild);
+      }
+      i=j+1;
+    }
+    const h1=tb.querySelector("thead tr:first-child");
+    if(h1){const th=document.createElement("th");th.className="grp";th.rowSpan=2;h1.insertBefore(th,h1.firstChild)}
+    const cg=tb.querySelector("colgroup");
+    if(cg){const c=document.createElement("col");c.dataset.c="g";c.style.width=SW+"px";cg.insertBefore(c,cg.firstChild)}
+    tb.style.width=(parseFloat(tb.style.width)||0)+SW+"px";
+    tb.querySelectorAll(".mst").forEach(m=>{m.style.left=(parseFloat(m.style.left)||0)+SW+"px"});
+    const vs=w.querySelector(".vs");if(vs)vs.style.left=(parseFloat(vs.style.left)||0)+SW+"px";
+    const inn=w.querySelector(".in");if(inn)inn.style.paddingRight="calc(100% - "+(cw[0]+SW+30)+"px)";
+    w.classList.add("hasg");
+  }
+  /* lignes d'en-tête (mois ; Budget / Réel / Écart) : même hauteur qu'une ligne de catégorie */
   {const hr=[...tb.querySelectorAll("thead tr")];hr.forEach(t=>{t.style.height=""});
-    const sr=tb.querySelector("tbody tr.sec.sr")||tb.querySelector("tbody tr.sec"),h=sr?Math.round(sr.getBoundingClientRect().height):0;
+    const sr=tb.querySelector("tbody tr.k-rev")||tb.querySelector("tbody tr"),h=sr?Math.round(sr.getBoundingClientRect().height):0;
     if(h>0)hr.forEach(t=>{t.style.height=h+"px"})}
   reveal();
   /* « Tout fermer » : le tableau remonte au début */
