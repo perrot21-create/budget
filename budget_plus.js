@@ -75,15 +75,13 @@ const css=`
 /* animations douces */
 @keyframes bpin{from{opacity:0}to{opacity:1}}
 #bt.anim td,#bt.anim th{animation:bpin .32s ease-out}
-/* barre d'outils et carte-résumé */
+/* espace entre les montants et le bord des cellules (ajuster --cp pour plus ou moins d'écart) */
+#bt{--cp:14px}
+#bt tbody td:not(.nm){padding-left:var(--cp)!important;padding-right:var(--cp)!important}
+/* barre d'outils */
 .bpc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .bpc select,.bpc button{height:40px}
 .bpc button.on{background:var(--accent);border-color:var(--accent);color:var(--onacc,#fff);font-weight:700}
-.bsum{width:95vw;max-width:95vw;margin:0 0 12px calc(50% - 47.5vw);display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-.bsum>div{background:var(--surface);border-radius:var(--rc2,12px);box-shadow:var(--sh);padding:10px 14px;border-top:3px solid var(--accent);display:flex;flex-direction:column;gap:2px}
-.bsum span{font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
-.bsum b{font-size:1.35rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.bsum small{color:var(--mute)}
 `;
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
@@ -100,17 +98,6 @@ function maps(){
   S.tx.forEach(t=>{if(!t.cat||+t.date.slice(0,4)!==Y)return;const m=+t.date.slice(5,7)-1,v=kindOf(t.cat)==="rev"?t.v:-t.v;add(R,t.cat+":"+(t.sub||""),m,v);add(R,t.cat,m,v)});
   for(const key in S.budget){const[y,k]=key.split("|");if(+y!==Y)continue;const c=k.split(":")[0];(S.budget[key]||[]).forEach((v,m)=>{add(B,k,m,+v||0);add(B,c,m,+v||0)})}
   return{R,B};
-}
-function banner(w,B,R,m){
-  let rb=0,rr=0,db=0,dr=0;
-  S.cats.forEach(c=>{const b=(B[c.id]||[])[m]||0,r=(R[c.id]||[])[m]||0;if(c.kind==="rev"){rb+=b;rr+=r}else{db+=b;dr+=r}});
-  const pc=db>0?Math.round(dr/db*100):0,left=db-dr,sol=rr-dr,c=n=>n>0?"pos":n<0?"neg":"";
-  let el=document.getElementById("bsum");
-  if(!el){el=document.createElement("div");el.id="bsum";el.className="bsum";w.parentNode.insertBefore(el,w)}
-  el.innerHTML=`<div><span>Revenus · ${MOIS[m]} ${Y}</span><b class="pos">${eur(rr)}</b><small>prévu ${eur(rb)}</small></div>
-  <div><span>Dépenses · ${MOIS[m]}</span><b class="neg">${eur(dr)}</b><div class="pb2${dr>db?" ov":""}"><i style="width:${Math.min(100,pc)}%"></i></div><small>${pc} % du budget (${eur(db)})</small></div>
-  <div><span>Solde réel du mois</span><b class="${c(sol)}">${eur(sol)}</b><small>prévu ${eur(rb-db)}</small></div>
-  <div><span>${left<0?"Budget dépassé de":"Reste à dépenser"}</span><b class="${c(left)}">${eur(Math.abs(left))}</b><small>sur ${MOIS[m].toLowerCase()}</small></div>`;
 }
 function spark(r,b,cy,cm){
   const mx=Math.max(1,...r,...b),pt=a=>a.map((v,i)=>`${i*4},${(15-Math.max(0,v)/mx*14).toFixed(1)}`).join(" ");
@@ -229,7 +216,6 @@ function post(){
   /* « Tout fermer » : le tableau remonte au début */
   if(topF){topF=false;const inn=w.querySelector(".in");if(inn)inn.style.paddingBottom="";w.scrollTop=0;requestAnimationFrame(()=>w.scrollTo({top:0,behavior:"smooth"}))}
   if(animF){animF=false;w.classList.add("anim");setTimeout(()=>w.classList.remove("anim"),400)}
-  banner(w,B,R,p.view[0]==="q"?(+p.view[1])*3+(Y===cy&&(cm/3|0)===+p.view[1]?cm%3:0):Y===cy?cm:0);
 }
 
 /* wrappers : se branchent sur le dessin existant */
