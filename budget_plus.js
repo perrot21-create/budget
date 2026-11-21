@@ -58,6 +58,9 @@ const css=`
 .mg b{display:block;height:100%;border-radius:2px;background:color-mix(in srgb,var(--accent) 40%,transparent);transition:width .3s}
 .mg.ov b{background:color-mix(in srgb,var(--neg) 45%,transparent)}
 .ar2{font-size:.7em;margin-right:3px}
+/* écart nul (budget et réel renseignés, réel = budget) : coche à la place d'une case vide */
+.ok0{color:var(--pos);font-weight:800;font-size:.95em}
+#bt td.z0>*:not(.ok0):not(.mg){display:none}
 .spk{width:44px;height:16px;vertical-align:middle;margin-right:6px;overflow:visible}
 .spk .sb{fill:none;stroke:var(--mute);stroke-width:1;stroke-dasharray:2 2;opacity:.7}
 .spk .sr{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round}
@@ -164,7 +167,16 @@ function post(){
         if(info){
           const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
           if(role==="e"&&(b>0||r>0)){td.classList.add("mgc");td.insertAdjacentHTML("beforeend",`<i class="mg${dep&&r>b?" ov":""}"><b style="width:${b>0?Math.min(100,r/b*100):100}%"></b></i>`)}
-          if(role==="e"){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`)}
+          if(role==="e"){
+            /* écart nul : budget et réel renseignés et égaux (à l'euro près) → « ✓ » à la place d'une case vide */
+            if(b>0&&r>0&&Math.abs(r-b)<.5){
+              [...td.childNodes].forEach(x=>{if(x.nodeType===3)x.remove()});
+              td.classList.add("z0");
+              td.insertAdjacentHTML("afterbegin",'<span class="ok0" title="Réel égal au budget" aria-label="Réel égal au budget">✓</span>');
+            }else{
+              const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`);
+            }
+          }
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
             let h="";
             if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
