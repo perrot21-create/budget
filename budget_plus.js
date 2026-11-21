@@ -34,12 +34,14 @@ const css=`
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
-/* bandeaux Revenus / Dépenses / Synthèse : fonds plus clairs */
-#bt tbody tr.sec.sr td{background-color:color-mix(in srgb,var(--pos) 8%,var(--surface))!important}
-#bt tbody tr.sec.sd td{background-color:color-mix(in srgb,var(--neg) 8%,var(--surface))!important}
-#bt tbody tr.sec.ss td{background-color:color-mix(in srgb,var(--mute) 8%,var(--surface))!important}
-/* toute la ligne du bandeau prend le fond de sa cellule-titre */
-html #bt#bt tbody tr.sec.sbk>:not(:first-child){background-color:var(--sb)!important;background-image:var(--sbi,none)!important;opacity:1!important}
+/* bandeaux Revenus / Dépenses / Synthèse : fond dégradé (fort sous le titre, qui s'estompe vers la droite) + icône devant le titre */
+#bt tbody tr.sec.sr{--s1:color-mix(in srgb,var(--pos) 24%,var(--surface));--s2:color-mix(in srgb,var(--pos) 4%,var(--surface));--sc:var(--pos);--si:"↑"}
+#bt tbody tr.sec.sd{--s1:color-mix(in srgb,var(--neg) 24%,var(--surface));--s2:color-mix(in srgb,var(--neg) 4%,var(--surface));--sc:var(--neg);--si:"↓"}
+#bt tbody tr.sec.ss{--s1:color-mix(in srgb,#4a86c5 24%,var(--surface));--s2:color-mix(in srgb,#4a86c5 4%,var(--surface));--sc:#4a86c5;--si:"Σ"}
+#bt tbody tr.sec:is(.sr,.sd,.ss){background-image:linear-gradient(90deg,var(--s1) 0,var(--s2) 1200px)}
+html #bt#bt tbody tr.sec:is(.sr,.sd,.ss)>*{background:transparent!important;opacity:1!important}
+html #bt#bt tbody tr.sec:is(.sr,.sd,.ss)>:first-child{background:var(--s1)!important}
+#bt tbody tr.sec:is(.sr,.sd,.ss)>:first-child::before{content:var(--si);color:var(--sc);font-weight:800;margin-right:8px}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
@@ -221,10 +223,8 @@ function post(){
   /* bandeaux de section : type repéré par leur titre (revenus / dépenses / synthèse) */
   tb.querySelectorAll("tbody tr.sec").forEach(r=>{
     const t=nrm(r.textContent);r.classList.remove("sr","sd","ss");
-    r.classList.add(/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":"ss");
-    r.classList.remove("sbk");const n=r.cells[0];
-    if(n){const cs=getComputedStyle(n),bg=cs.backgroundColor,bi=cs.backgroundImage,clear=!bg||/^rgba\(.*,\s*0\)$|^transparent$/.test(bg);
-      if(!clear||bi!=="none"){r.style.setProperty("--sb",clear?"transparent":bg);r.style.setProperty("--sbi",bi);r.classList.add("sbk")}}
+    const k=/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":/^synthese/.test(t)?"ss":"";
+    if(k)r.classList.add(k);
   });
   /* soldes : la couleur du cadre (bleu / vert) est celle du titre de la ligne */
   tb.querySelectorAll("tbody tr.tsol,tbody tr.tcum").forEach(r=>{const n=r.querySelector("td.nm");if(n)r.style.setProperty("--sl",getComputedStyle(n).color)});
