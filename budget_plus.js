@@ -71,7 +71,7 @@ const css=`
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
 const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
-let animF=false,hcN=null;
+let animF=false,hcN=null;const NMC={};
 
 function maps(){
   const R={},B={},add=(o,k,m,v)=>{(o[k]=o[k]||Array(12).fill(0))[m]+=v};
@@ -156,6 +156,13 @@ function post(){
       c+=n;
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
+  });
+  /* première colonne : catégories de revenus = fond de « Autres », catégories de dépenses = fond de « Abonnements » */
+  const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
+  ["rev","dep"].forEach(kd=>{
+    const rows=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)],s=rows.find(r=>src[kd].test(nrm(r.querySelector("td.nm").textContent)));
+    if(s)NMC[kd]=getComputedStyle(s.querySelector("td.nm")).backgroundColor;
+    if(NMC[kd])rows.filter(r=>!r.classList.contains("sub")).forEach(r=>r.querySelector("td.nm").style.setProperty("background-color",NMC[kd],"important"));
   });
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
