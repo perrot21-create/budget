@@ -34,26 +34,28 @@ const css=`
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
+/* petit trait blanc entre chaque sous-catégorie */
+#bt tbody tr.sub+tr.sub td{border-top:1px solid #fff!important}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* catégorie ouverte : séparation marquée au-dessus d'elle et au-dessus de la ligne qui suit ses sous-catégories */
 #bt tbody tr.opt td,#bt tbody tr.opb td{border-top:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
 /* mois ouvert : même séparation marquée entre sa colonne Écart et le mois suivant */
 #bt tbody td.mob,#bt thead th.mob{border-left:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
-#bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 5%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 13%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 5%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 13%,var(--surface))!important}
+#bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 3%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 8%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 3%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 8%,var(--surface))!important}
 /* sous-catégories : même couleur que leur catégorie, très légèrement plus foncée */
-#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 24%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 24%,var(--surface))!important}
+#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 6%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 15%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 6%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 15%,var(--surface))!important}
 /* catégories au ton clair (si la ligne de référence est de ton clair) */
-#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 2%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 6%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 2%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 6%,var(--surface))!important}
 #bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
 /* heatmap : rouge = dépassement / gros manque, orange = limite proche / petit manque, vert = revenu atteint */
 #bt td.hr2{--hg:${g("#d9483b",55)}}#bt td.hr1{--hg:${g("#d9483b",32)}}#bt td.ha{--hg:${g("#e0a030",34)}}#bt td.hg{--hg:${g("#3fa56d",30)}}
