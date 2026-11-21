@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -41,12 +40,12 @@ const css=`
 #bt td.gk-r{--gc:#6f9a78}#bt td.gk-d{--gc:#c46a4c}#bt td.gk-s{--gc:#5f7391}
 html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
 /* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
-html #bt#bt tbody tr.gsp td{height:6px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
+html #bt#bt tbody tr.gsp td{height:12px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
 html #bt#bt thead th{z-index:8}
 html #bt#bt thead th.nm{z-index:9}
 html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0;box-shadow:none}
-#bt td.grp .gt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-weight:800;letter-spacing:.14em;color:var(--ink);padding:0}
+#bt td.grp .gt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;white-space:nowrap;font-weight:800;font-size:.95em;letter-spacing:.08em;padding:.08em 0 0;line-height:1.2;color:var(--ink)}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
