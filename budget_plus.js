@@ -35,9 +35,9 @@ const css=`
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 /* bandeaux Revenus / Dépenses / Synthèse : fonds plus clairs */
-#bt tbody tr.sec.sr td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.sec.sd td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.sec.ss td{background-color:color-mix(in srgb,var(--mute) 4%,var(--surface))!important}
+#bt tbody tr.sec.sr td{background-color:color-mix(in srgb,var(--pos) 6%,var(--surface))!important}
+#bt tbody tr.sec.sd td{background-color:color-mix(in srgb,var(--neg) 6%,var(--surface))!important}
+#bt tbody tr.sec.ss td{background-color:color-mix(in srgb,var(--mute) 6%,var(--surface))!important}
 /* toute la ligne du bandeau prend le fond de sa cellule-titre */
 html #bt#bt tbody tr.sec.sbk>:not(:first-child){background-color:var(--sb)!important;background-image:var(--sbi,none)!important;opacity:1!important}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
