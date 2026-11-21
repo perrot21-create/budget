@@ -36,12 +36,14 @@ const css=`
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 /* colonne verticale à gauche : blocs Revenus / Dépenses / Synthèse */
 #bt.hasg .nm{left:30px}
-#bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:30px;min-width:30px;max-width:30px;padding:0;text-align:center;vertical-align:top;overflow:hidden}
+#bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:30px;min-width:30px;max-width:30px;padding:0;text-align:center;vertical-align:middle;overflow:hidden}
 #bt td.gk-r{--gc:#6f9a78}#bt td.gk-d{--gc:#c46a4c}#bt td.gk-s{--gc:#5f7391}
-html #bt#bt tbody td.grp{--gimg:linear-gradient(var(--surface),var(--surface)),linear-gradient(var(--surface),var(--surface));background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:var(--gimg)!important;background-size:100% 4px,100% 4px!important;background-position:top,bottom!important;background-repeat:no-repeat!important;border:0!important;box-shadow:none!important;opacity:1!important}
+html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
+/* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
+html #bt#bt tbody tr.gsp td{height:6px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
 html #bt#bt thead th.grp{z-index:6;background:var(--surface)!important;border:0;box-shadow:none}
-#bt td.grp .gt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-weight:800;letter-spacing:.14em;color:var(--ink);position:sticky;top:calc(var(--th1,36px)*2 + 12px);padding:6px 0;margin-top:8px}
+#bt td.grp .gt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-weight:800;letter-spacing:.14em;color:var(--ink);padding:0}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
@@ -246,12 +248,13 @@ function post(){
   if(!tb.querySelector("td.grp,th.grp")){
     const trs=[...tb.querySelectorAll("tbody tr")],LB={r:"Revenus",d:"Dépenses",s:"Synthèse"},
       kind=r=>r.classList.contains("sec")?"":r.classList.contains("k-rev")?"r":r.classList.contains("k-dep")?"d":r.classList.contains("k-syn")?"s":"";
-    let i=0;
+    let i=0;const starts=[];
     while(i<trs.length){
       const k=kind(trs[i]);let j=i;
       while(j+1<trs.length&&kind(trs[j+1])===k)j++;
       let v=-1;
       if(k)for(let q=i;q<=j;q++)if(trs[q].getClientRects().length){v=q;break}
+      if(k)starts.push({row:trs[i],vis:v>=0});
       for(let q=i;q<=j;q++){
         if(k&&v>=0&&q>v)continue;
         const td=document.createElement("td");
@@ -265,6 +268,11 @@ function post(){
     if(h1){const th=document.createElement("th");th.className="grp";th.rowSpan=2;h1.insertBefore(th,h1.firstChild)}
     const cg=tb.querySelector("colgroup");
     if(cg){const c=document.createElement("col");c.dataset.c="g";c.style.width=SW+"px";cg.insertBefore(c,cg.firstChild)}
+    /* lignes-séparateurs pleine largeur entre blocs visibles (Revenus | Dépenses | Synthèse) */
+    {let seen=false;const n=tb.querySelectorAll("colgroup col").length||1;
+      starts.forEach(b=>{if(!b.vis)return;
+        if(seen){const sp=document.createElement("tr");sp.className="gsp";const td=document.createElement("td");td.colSpan=n;sp.appendChild(td);b.row.parentNode.insertBefore(sp,b.row)}
+        seen=true})}
     tb.style.width=(parseFloat(tb.style.width)||0)+SW+"px";
     tb.querySelectorAll(".mst").forEach(m=>{m.style.left=(parseFloat(m.style.left)||0)+SW+"px"});
     const vs=w.querySelector(".vs");if(vs)vs.style.left=(parseFloat(vs.style.left)||0)+SW+"px";
