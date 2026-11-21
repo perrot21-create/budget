@@ -21,14 +21,13 @@ const css=`
 .nw{font-style:normal;font-size:.68rem;font-weight:700;color:var(--onacc,#fff);background:var(--accent);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
 /* survol ligne + colonne */
 #bt tbody tr:not(.sec):hover td:not(.nm){background-image:${g("var(--accent)",12)}!important}
-#bt tbody td.hc:not(.nm){background-image:${g("var(--accent)",13)}!important}
+#bt tbody tr:not(.sec) td.hc:not(.nm){background-image:${g("var(--accent)",13)}!important}
 #bt tbody tr:not(.sec):hover td.hc:not(.nm){background-image:${g("var(--accent)",26)}!important}
 /* bandeaux de catégorie */
 #bt tr.cb td.nm{box-shadow:inset 5px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:12px}
 #bt tr.hdr.cb td.nm{box-shadow:inset 8px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:16px;font-weight:800}
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:1px solid color-mix(in srgb,var(--mute) 22%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
-#bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
 #bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
@@ -36,17 +35,16 @@ const css=`
 #bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
 /* sous-catégories : même teinte que la catégorie, un peu plus claire */
-#bt tbody tr.k-rev.ca0.sub td,#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub td,#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
+#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
+#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
 /* hiérarchie des montants : catégories en gras, sous-catégories plus légères et décalées de 12 px vers l'intérieur */
-#bt tbody tr.k-rev:not(.sub):not(.sec) td:not(.nm),#bt tbody tr.k-dep:not(.sub):not(.sec) td:not(.nm){font-weight:800}
-#bt tbody tr.k-rev:not(.sub):not(.sec) td input[data-k],#bt tbody tr.k-dep:not(.sub):not(.sec) td input[data-k],#bt tbody tr.k-rev:not(.sub):not(.sec) td input[data-ak],#bt tbody tr.k-dep:not(.sub):not(.sec) td input[data-ak]{font-weight:800}
-#bt tbody tr.sub td:not(.nm){font-weight:400;font-size:.92em;padding-right:16px}
-#bt tbody tr.sub td input{font-weight:500}
+#bt tbody tr.k-rev:not(.sec) td:not(.nm),#bt tbody tr.k-dep:not(.sec) td:not(.nm){font-weight:800}
+#bt tbody tr.k-rev:not(.sec) td input[data-k],#bt tbody tr.k-dep:not(.sec) td input[data-k],#bt tbody tr.k-rev:not(.sec) td input[data-ak],#bt tbody tr.k-dep:not(.sec) td input[data-ak]{font-weight:800}
+#bt tbody tr.sub td:not(.nm){padding-right:16px}
 #bt tbody tr.sub .mg{right:22px}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
@@ -170,7 +168,7 @@ function post(){
     const rows=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)],s=rows.find(r=>src[kd].test(nrm(r.querySelector("td.nm").textContent)));
     if(s)NMC[kd]={ca:s.classList.contains("ca1")?1:0,sl:s.classList.contains("sub")};
     const o=NMC[kd];if(!o)return;
-    rows.filter(r=>!r.classList.contains("sub")&&r!==s).forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
+    rows.forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
   });
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
