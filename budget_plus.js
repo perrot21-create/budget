@@ -7,7 +7,6 @@ const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
 #bt .q0{--qc:var(--q0)}#bt .q1{--qc:var(--q1)}#bt .q2{--qc:var(--q2)}#bt .q3{--qc:var(--q3)}
 /* mois : trimestres, mois en cours, mois passés */
-#bt tbody tr:not(.sec) td.mq{background-image:${g("var(--qc)",7)}!important}
 #bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",16)}!important}
 #bt td.qs{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)}
 #bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 var(--qc),0 1px 0 var(--line)}
@@ -28,11 +27,11 @@ const css=`
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
-/* nuance de fond : catégorie (teinte marquée) / sous-catégorie (teinte légère), tous les mois */
-#bt tbody tr.hdr.cb td{background-color:color-mix(in srgb,var(--cc) 24%,var(--surface))!important}
-#bt tbody tr.sub.cb td{background-color:color-mix(in srgb,var(--cc) 7%,var(--surface))!important}
-#bt tbody tr.hdr.cb td.mp{background-color:color-mix(in srgb,var(--cc) 24%,color-mix(in srgb,var(--ink) 5%,var(--surface)))!important}
-#bt tbody tr.sub.cb td.mp{background-color:color-mix(in srgb,var(--cc) 7%,color-mix(in srgb,var(--ink) 5%,var(--surface)))!important}
+/* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
+#bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 21%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
@@ -113,13 +112,15 @@ function post(){
       c+=n});
   });
   /* corps du tableau */
-  let cc="";
+  let cc="",ca=0;const ix={rev:0,dep:0};
   tb.querySelectorAll("tbody tr").forEach(tr=>{
     const sec=tr.classList.contains("sec"),isK=/\bk-(rev|dep)\b/.test(tr.className)&&!sec,dep=tr.classList.contains("k-dep");
     let info=null;
     if(isK){
       const dot=tr.querySelector("td.nm i.cd");if(dot&&dot.style.background)cc=dot.style.background;
       if(cc){tr.style.setProperty("--cc",cc);tr.classList.add("cb")}
+      if(!tr.classList.contains("sub"))ca=ix[dep?"dep":"rev"]++%2;
+      tr.classList.add("ca"+ca);
       const tg=tr.querySelector("[data-tg]"),ik=tr.querySelector("input[data-k]"),key=tg?tg.dataset.tg:ik?ik.dataset.k:null;
       if(key)info={b:B[key]||Array(12).fill(0),r:R[key]||Array(12).fill(0)};
       if(!info||!(dep&&info.b.some((x,m)=>info.r[m]>x&&info.r[m]>0)))tr.classList.add("nov");
