@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -91,7 +90,7 @@ const css=`
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
 const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
-let animF=false;const NMC={},SUBC={};
+let animF=false,topF=false;const NMC={},SUBC={};
 /* rôle d'une cellule du corps : r = réel, e = écart, b = budget */
 const roleOf=td=>td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
 /* lit le montant affiché dans une cellule (champ de saisie ou texte) ; NaN si aucun nombre */
@@ -230,6 +229,8 @@ function post(){
   const vr=[...tb.querySelectorAll("tbody tr")].filter(r=>r.getClientRects().length),lr=vr[vr.length-1];
   if(lr)lr.querySelectorAll(".m-cur").forEach(x=>x.classList.add("mcb"));
   reveal();
+  /* « Tout fermer » : le tableau remonte au début */
+  if(topF){topF=false;const inn=w.querySelector(".in");if(inn)inn.style.paddingBottom="";w.scrollTop=0;requestAnimationFrame(()=>w.scrollTo({top:0,behavior:"smooth"}))}
   if(animF){animF=false;w.classList.add("anim");setTimeout(()=>w.classList.remove("anim"),400)}
   banner(w,B,R,p.view[0]==="q"?(+p.view[1])*3+(Y===cy&&(cm/3|0)===+p.view[1]?cm%3:0):Y===cy?cm:0);
 }
@@ -264,6 +265,7 @@ document.addEventListener("click",e=>{
 let openId=null;
 document.addEventListener("click",e=>{
   if(e.target.closest("[data-tm],[data-tg],[data-ca]"))animF=true;
+  if(e.target.closest('[data-tg="all-close"]'))topF=true;
   const b=e.target.closest("[data-tg]");if(b&&!/^all-/.test(b.dataset.tg)&&CL[b.dataset.tg])openId=b.dataset.tg;
 },true);
 function reveal(){
