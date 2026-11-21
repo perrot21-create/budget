@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -41,6 +42,12 @@ const css=`
 #bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
 #bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
 #bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
+/* hiérarchie des montants : catégories en gras, sous-catégories plus légères et décalées de 12 px vers l'intérieur */
+#bt tbody tr.k-rev:not(.sub):not(.sec) td:not(.nm),#bt tbody tr.k-dep:not(.sub):not(.sec) td:not(.nm){font-weight:800}
+#bt tbody tr.k-rev:not(.sub):not(.sec) td input[data-k],#bt tbody tr.k-dep:not(.sub):not(.sec) td input[data-k],#bt tbody tr.k-rev:not(.sub):not(.sec) td input[data-ak],#bt tbody tr.k-dep:not(.sub):not(.sec) td input[data-ak]{font-weight:800}
+#bt tbody tr.sub td:not(.nm){font-weight:400;font-size:.92em;padding-right:16px}
+#bt tbody tr.sub td input{font-weight:500}
+#bt tbody tr.sub .mg{right:22px}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
