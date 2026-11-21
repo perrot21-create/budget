@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -8,11 +9,11 @@ const css=`
 #bt .mc0{--mcol:#4a86c5}#bt .mc1{--mcol:#3fa7b8}#bt .mc2{--mcol:#4aa06d}#bt .mc3{--mcol:#8c9a3d}#bt .mc4{--mcol:#d1b23a}#bt .mc5{--mcol:#d19a3a}#bt .mc6{--mcol:#e0763f}#bt .mc7{--mcol:#d6567a}#bt .mc8{--mcol:#c0504d}#bt .mc9{--mcol:#9166c9}#bt .mc10{--mcol:#6c6fc9}#bt .mc11{--mcol:#5a7fa8}
 #bt .q0{--qc:var(--q0)}#bt .q1{--qc:var(--q1)}#bt .q2{--qc:var(--q2)}#bt .q3{--qc:var(--q3)}
 /* mois : trimestres, mois en cours, mois passés */
-#bt tbody tr:not(.sec) td.mq{background-image:${g("var(--mcol)",15)}!important}
-#bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",14)},${g("var(--mcol)",15)}!important}
+#bt tbody tr:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
+#bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",9)},${g("var(--mcol)",9)}!important}
 #bt td.qs{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)}
-#bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -4px 0 var(--mcol),0 1px 0 var(--line);background-image:${g("var(--mcol)",20)}!important}
-#bt thead th.m-cur{box-shadow:inset 0 4px 0 var(--accent),inset 0 -4px 0 var(--mcol),0 1px 0 var(--line);font-weight:800}
+#bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 var(--mcol),0 1px 0 var(--line);background-image:${g("var(--mcol)",12)}!important}
+#bt thead th.m-cur{box-shadow:inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line);font-weight:800}
 #bt thead th.m-past{opacity:.72}
 #bt tbody td.m-past.g{opacity:.6}
 .qb{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:var(--onacc,#fff);background:var(--qc);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:middle}
@@ -36,8 +37,8 @@ const css=`
 #bt tbody tr.k-rev.ca1.sub td,#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
 #bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
+#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
+#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",6)},${g("var(--mcol)",6)}!important}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
