@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -37,6 +38,8 @@ const css=`
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* catégorie ouverte : séparation marquée au-dessus d'elle et au-dessus de la ligne qui suit ses sous-catégories */
 #bt tbody tr.opt td,#bt tbody tr.opb td{border-top:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
+/* mois ouvert : même séparation marquée entre sa colonne Écart et le mois suivant */
+#bt tbody td.mob,#bt thead th.mob{border-left:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
 #bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 5%,var(--surface))!important}
 #bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 13%,var(--surface))!important}
@@ -214,6 +217,12 @@ function post(){
   const lastC={};mo.forEach((m,i)=>{if(m>=0)lastC[m]=i});
   tb.querySelectorAll(".mcf,.mcl,.mcb").forEach(x=>x.classList.remove("mcf","mcl","mcb"));
   tb.querySelectorAll(".m-cur").forEach(x=>{const c=+x.dataset.col,n=x.colSpan||1;if(c===first[cm])x.classList.add("mcf");if(c+n-1===lastC[cm])x.classList.add("mcl")});
+  /* mois ouvert (plusieurs colonnes) : repère la 1re colonne du mois suivant pour la séparation marquée */
+  tb.querySelectorAll(".mob").forEach(x=>x.classList.remove("mob"));
+  for(let m=0;m<11;m++){
+    if(first[m]===undefined||first[m+1]===undefined||lastC[m]<=first[m])continue;
+    tb.querySelectorAll(`[data-mm="${m+1}"]`).forEach(x=>{if(+x.dataset.col===first[m+1])x.classList.add("mob")});
+  }
   const vr=[...tb.querySelectorAll("tbody tr")].filter(r=>r.getClientRects().length),lr=vr[vr.length-1];
   if(lr)lr.querySelectorAll(".m-cur").forEach(x=>x.classList.add("mcb"));
   reveal();
