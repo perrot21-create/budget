@@ -34,8 +34,8 @@ const css=`
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
-/* petit trait blanc entre chaque sous-catégorie */
-#bt tbody tr.sub+tr.sub td{border-top:1px solid #fff!important}
+/* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
+#bt tbody tr.sub td{border-top:1px solid #fff!important}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* catégorie ouverte : séparation marquée au-dessus d'elle et au-dessus de la ligne qui suit ses sous-catégories */
 #bt tbody tr.opt td,#bt tbody tr.opb td{border-top:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
