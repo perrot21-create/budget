@@ -38,6 +38,8 @@ const css=`
 #bt tbody tr.sec.sr td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
 #bt tbody tr.sec.sd td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
 #bt tbody tr.sec.ss td{background-color:color-mix(in srgb,var(--mute) 4%,var(--surface))!important}
+/* toute la ligne du bandeau prend le fond de sa cellule-titre */
+#bt tbody tr.sec.sbk td:not(.nm){background-color:var(--sb)!important;background-image:none!important;opacity:1!important}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
@@ -219,6 +221,8 @@ function post(){
   tb.querySelectorAll("tbody tr.sec").forEach(r=>{
     const t=nrm(r.textContent);r.classList.remove("sr","sd","ss");
     r.classList.add(/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":"ss");
+    r.classList.remove("sbk");const n=r.querySelector("td.nm");
+    if(n){const bg=getComputedStyle(n).backgroundColor;if(bg&&!/^rgba\(.*,\s*0\)$|^transparent$/.test(bg)){r.style.setProperty("--sb",bg);r.classList.add("sbk")}}
   });
   /* soldes : la couleur du cadre (bleu / vert) est celle du titre de la ligne */
   tb.querySelectorAll("tbody tr.tsol,tbody tr.tcum").forEach(r=>{const n=r.querySelector("td.nm");if(n)r.style.setProperty("--sl",getComputedStyle(n).color)});
