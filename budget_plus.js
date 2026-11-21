@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -36,6 +35,8 @@ const css=`
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
+/* catégorie ouverte : séparation marquée au-dessus d'elle et au-dessus de la ligne qui suit ses sous-catégories */
+#bt tbody tr.opt td,#bt tbody tr.opb td{border-top:4px solid color-mix(in srgb,var(--mute) 70%,var(--surface))!important}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
 #bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 5%,var(--surface))!important}
 #bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 13%,var(--surface))!important}
@@ -195,6 +196,15 @@ function post(){
   /* sous-catégories : même alternance que leur catégorie (plus foncées grâce au CSS) */
   ["rev","dep"].forEach(kd=>{const o=NMC[kd];if(!o)return;
     tb.querySelectorAll(`tbody tr.k-${kd}.sub:not(.sec)`).forEach(r=>{r.classList.remove("ca0","ca1","sf");r.classList.add("ca"+o.ca)})});
+  /* catégorie ouverte (sous-catégories visibles) : repères pour les séparations marquées */
+  tb.querySelectorAll(".opt,.opb").forEach(x=>x.classList.remove("opt","opb"));
+  {const trs=[...tb.querySelectorAll("tbody tr")];
+    trs.forEach((tr,i)=>{
+      if(tr.classList.contains("sub"))return;
+      const nx=trs[i+1];if(!nx||!nx.classList.contains("sub")||!nx.getClientRects().length)return;
+      let j=i+1;while(trs[j+1]&&trs[j+1].classList.contains("sub"))j++;
+      tr.classList.add("opt");if(trs[j+1])trs[j+1].classList.add("opb");
+    })}
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
