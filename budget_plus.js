@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -41,11 +40,11 @@ const css=`
 #bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 21%,var(--surface))!important}
 #bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
-/* sous-catégories : même thème que leur catégorie, un peu plus foncé */
-#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 15%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 28%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 15%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 28%,var(--surface))!important}
+/* sous-catégories : même couleur que leur catégorie, très légèrement plus foncée */
+#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 24%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 24%,var(--surface))!important}
 /* catégories au ton clair (si la ligne de référence est de ton clair) */
 #bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
 #bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
