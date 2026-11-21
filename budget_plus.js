@@ -34,6 +34,12 @@ const css=`
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
+/* bandeaux Revenus / Dépenses / Synthèse : fonds plus clairs */
+#bt tbody tr.sec.sr td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
+#bt tbody tr.sec.sd td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
+#bt tbody tr.sec.ss td{background-color:color-mix(in srgb,var(--mute) 4%,var(--surface))!important}
+/* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
+#bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
 #bt tbody tr.sub td{border-top:1px solid #fff!important}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
@@ -209,6 +215,13 @@ function post(){
       let j=i+1;while(trs[j+1]&&trs[j+1].classList.contains("sub"))j++;
       tr.classList.add("opt");if(trs[j+1])trs[j+1].classList.add("opb");
     })}
+  /* bandeaux de section : type repéré par leur titre (revenus / dépenses / synthèse) */
+  tb.querySelectorAll("tbody tr.sec").forEach(r=>{
+    const t=nrm(r.textContent);r.classList.remove("sr","sd","ss");
+    r.classList.add(/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":"ss");
+  });
+  /* soldes : la couleur du cadre (bleu / vert) est celle du titre de la ligne */
+  tb.querySelectorAll("tbody tr.tsol,tbody tr.tcum").forEach(r=>{const n=r.querySelector("td.nm");if(n)r.style.setProperty("--sl",getComputedStyle(n).color)});
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
