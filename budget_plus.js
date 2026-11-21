@@ -10,10 +10,16 @@ const css=`
 #bt .q0{--qc:var(--q0)}#bt .q1{--qc:var(--q1)}#bt .q2{--qc:var(--q2)}#bt .q3{--qc:var(--q3)}
 /* mois : trimestres, mois en cours, mois passés */
 #bt tbody tr:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",9)},${g("var(--mcol)",9)}!important}
 #bt td.qs{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)}
 #bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 var(--mcol),0 1px 0 var(--line);background-image:${g("var(--mcol)",12)}!important}
-#bt thead th.m-cur{box-shadow:inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line);font-weight:800}
+/* mois en cours : liseré vert continu autour de toute la colonne (haut, gauche, droite, bas) */
+#bt .m-cur.mcf{--bl:inset 3px 0 0 var(--accent)}
+#bt .m-cur.mcl{--br:inset -3px 0 0 var(--accent)}
+#bt .m-cur.mcb{--bb:inset 0 -3px 0 var(--accent)}
+#bt td.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),var(--bb,0 0 0 0 transparent)}
+#bt thead th.m-cur{font-weight:800}
+#bt thead tr:first-child th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)}
+#bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),0 1px 0 var(--line)}
 #bt thead th.m-past{opacity:.72}
 #bt tbody td.m-past.g{opacity:.6}
 .qb{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:var(--onacc,#fff);background:var(--qc);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:middle}
@@ -38,14 +44,12 @@ const css=`
 #bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
 #bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
-#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",6)},${g("var(--mcol)",6)}!important}
 /* sous-catégories au ton « plein » (si la ligne de référence est de ton plein) */
 #bt tbody tr.k-rev.ca0.sub.sf td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
 #bt tbody tr.k-rev.ca1.sub.sf td{background-color:color-mix(in srgb,var(--pos) 21%,var(--surface))!important}
 #bt tbody tr.k-dep.ca0.sub.sf td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1.sub.sf td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
 #bt tbody tr.sub.sf:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr.sub.sf:not(.sec) td.m-cur{background-image:${g("var(--accent)",9)},${g("var(--mcol)",9)}!important}
 /* heatmap : rouge = dépassement / gros manque, orange = limite proche / petit manque, vert = revenu atteint */
 #bt td.hr2{--hg:${g("#d9483b",55)}}#bt td.hr1{--hg:${g("#d9483b",32)}}#bt td.ha{--hg:${g("#e0a030",34)}}#bt td.hg{--hg:${g("#3fa56d",30)}}
 #bt tbody tr:not(.sec) td.hh.hh.hh{background-image:var(--hg)!important}
@@ -209,6 +213,12 @@ function post(){
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
   if(p.view!=="all")w.scrollLeft=0;
   w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);
+  /* cadre du mois en cours : bords gauche / droit / bas */
+  const lastC={};mo.forEach((m,i)=>{if(m>=0)lastC[m]=i});
+  tb.querySelectorAll(".mcf,.mcl,.mcb").forEach(x=>x.classList.remove("mcf","mcl","mcb"));
+  tb.querySelectorAll(".m-cur").forEach(x=>{const c=+x.dataset.col,n=x.colSpan||1;if(c===first[cm])x.classList.add("mcf");if(c+n-1===lastC[cm])x.classList.add("mcl")});
+  const vr=[...tb.querySelectorAll("tbody tr")].filter(r=>r.getClientRects().length),lr=vr[vr.length-1];
+  if(lr)lr.querySelectorAll(".m-cur").forEach(x=>x.classList.add("mcb"));
   reveal();
   if(animF){animF=false;w.classList.add("anim");setTimeout(()=>w.classList.remove("anim"),400)}
   banner(w,B,R,p.view[0]==="q"?(+p.view[1])*3+(Y===cy&&(cm/3|0)===+p.view[1]?cm%3:0):Y===cy?cm:0);
