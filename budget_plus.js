@@ -15,18 +15,16 @@ const css=`
 #bt thead th.m-cur{box-shadow:inset 0 4px 0 var(--accent),inset 0 -4px 0 var(--mcol),0 1px 0 var(--line);font-weight:800}
 #bt thead th.m-past{opacity:.72}
 #bt tbody td.m-past.g{opacity:.6}
-#bt tbody tr:hover td.m-past.g{opacity:1}
 .qb{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:var(--onacc,#fff);background:var(--qc);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:middle}
 .nw{font-style:normal;font-size:.68rem;font-weight:700;color:var(--onacc,#fff);background:var(--accent);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
-/* survol ligne + colonne */
-#bt tbody tr:not(.sec):hover td:not(.nm){background-image:${g("var(--accent)",12)}!important}
-#bt tbody tr:not(.sec) td.hc:not(.nm){background-image:${g("var(--accent)",13)}!important}
-#bt tbody tr:not(.sec):hover td.hc:not(.nm){background-image:${g("var(--accent)",26)}!important}
+/* survol : seulement la cellule pointée et le Budget du cumul annuel de sa ligne */
+#bt tbody tr:not(.sec) td:hover:not(.nm),#bt tbody tr:not(.sec) td.hc{background-image:${g("var(--accent)",26)}!important}
 /* bandeaux de catégorie */
 #bt tr.cb td.nm{box-shadow:inset 5px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:12px}
 #bt tr.hdr.cb td.nm{box-shadow:inset 8px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:16px;font-weight:800}
 #bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:1px solid color-mix(in srgb,var(--mute) 22%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
+#bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
 #bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
@@ -34,17 +32,12 @@ const css=`
 #bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
 /* sous-catégories : même teinte que la catégorie, un peu plus claire */
-#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
-/* hiérarchie des montants : catégories en gras, sous-catégories plus légères et décalées de 12 px vers l'intérieur */
-#bt tbody tr.k-rev:not(.sec) td:not(.nm),#bt tbody tr.k-dep:not(.sec) td:not(.nm){font-weight:800}
-#bt tbody tr.k-rev:not(.sec) td input[data-k],#bt tbody tr.k-dep:not(.sec) td input[data-k],#bt tbody tr.k-rev:not(.sec) td input[data-ak],#bt tbody tr.k-dep:not(.sec) td input[data-ak]{font-weight:800}
-#bt tbody tr.sub td:not(.nm){padding-right:16px}
-#bt tbody tr.sub .mg{right:22px}
+#bt tbody tr.k-rev.ca0.sub td,#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sub td,#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
+#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
@@ -75,7 +68,7 @@ const css=`
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
 const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
-let animF=false,hcN=null;const NMC={};
+let animF=false;const NMC={};
 
 function maps(){
   const R={},B={},add=(o,k,m,v)=>{(o[k]=o[k]||Array(12).fill(0))[m]+=v};
@@ -105,7 +98,7 @@ function post(){
   const p=P(),now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),{R,B}=maps();
   const vis=m=>p.view==="all"||(p.view[0]==="q"?(m/3|0)===+p.view[1]:m===(Y===cy?cm:0));
   const st=m=>Y<cy?"m-past":Y>cy?"m-fut":m<cm?"m-past":m===cm?"m-cur":"m-fut";
-  hcN=null;
+  hcEl=null;
   /* correspondance colonne → mois */
   const mo=[];let ci=1;
   [...tb.querySelectorAll("thead tr:first-child th")].slice(1).forEach(th=>{const n=th.colSpan||1,m=th.dataset.mo===undefined?-1:+th.dataset.mo;for(let j=0;j<n;j++)mo[ci+j]=m;ci+=n});
@@ -167,7 +160,7 @@ function post(){
     const rows=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)],s=rows.find(r=>src[kd].test(nrm(r.querySelector("td.nm").textContent)));
     if(s)NMC[kd]={ca:s.classList.contains("ca1")?1:0,sl:s.classList.contains("sub")};
     const o=NMC[kd];if(!o)return;
-    rows.forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
+    rows.filter(r=>!r.classList.contains("sub")&&r!==s).forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
   });
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
@@ -206,17 +199,12 @@ document.addEventListener("click",e=>{
   if(b){const p=P(),k=b.dataset.bp;p[k]=p[k]?0:1;b.classList.toggle("on",!!p[k]);save();drawBud()}
 },false);
 document.addEventListener("click",e=>{if(e.target.closest("[data-tm],[data-tg],[data-ca]"))animF=true},true);
-/* surbrillance de la colonne survolée */
+/* survol : repère le Budget du cumul annuel de la ligne pointée */
+let hcEl=null;const clr=()=>{if(hcEl){hcEl.classList.remove("hc");hcEl=null}};
 document.addEventListener("mouseover",e=>{
-  const td=e.target.closest&&e.target.closest("#bt tbody td[data-col]"),n=td&&!td.classList.contains("nm")?td.dataset.col:null;
-  if(n===hcN)return;hcN=n;
-  document.querySelectorAll("#bt td.hc").forEach(x=>x.classList.remove("hc"));
-  if(n!==null)document.querySelectorAll(`#bt tbody td[data-col="${n}"]`).forEach(x=>x.classList.add("hc"));
+  const td=e.target.closest&&e.target.closest("#bt tbody tr:not(.sec) td"),an=td&&!td.classList.contains("nm")?td.parentElement.querySelector("td.ga"):null;
+  if(an===hcEl)return;clr();if(an){an.classList.add("hc");hcEl=an}
 });
-document.addEventListener("mouseout",e=>{
-  if(hcN===null)return;const r=e.relatedTarget;
-  if(r&&r.closest&&r.closest("#bt"))return;
-  hcN=null;document.querySelectorAll("#bt td.hc").forEach(x=>x.classList.remove("hc"));
-});
+document.addEventListener("mouseout",e=>{const r=e.relatedTarget;if(r&&r.closest&&r.closest("#bt"))return;clr()});
 if(typeof T!=="undefined"&&T==="bud")draw();
 })();
