@@ -39,6 +39,11 @@ const css=`
 #bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
 #bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
 #bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",6)},${g("var(--mcol)",6)}!important}
+/* heatmap : rouge = dépassement / gros manque, orange = limite proche / petit manque, vert = revenu atteint */
+#bt td.hr2{--hg:${g("#d9483b",55)}}#bt td.hr1{--hg:${g("#d9483b",32)}}#bt td.ha{--hg:${g("#e0a030",34)}}#bt td.hg{--hg:${g("#3fa56d",30)}}
+#bt tbody tr:not(.sec) td.hh.hh.hh{background-image:var(--hg)!important}
+#bt tbody tr:not(.sec) td.hh.hh.hh:hover:not(.nm){background-image:${g("var(--accent)",26)},var(--hg)!important}
+.hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
@@ -94,12 +99,19 @@ function spark(r,b,cy,cm){
   return `<svg class="spk" viewBox="0 0 44 16" aria-hidden="true"><polyline class="sb" points="${pt(b)}"/>${rr.length>1?`<polyline class="sr" points="${pt(rr)}"/>`:""}</svg>`;
 }
 
+function leg(){
+  const bp=document.querySelector(".bpc"),lg=document.getElementById("hleg");
+  if(!bp)return;
+  if(!P().heat){if(lg)lg.remove();return}
+  if(!lg){const e=document.createElement("span");e.id="hleg";e.className="sub";
+    e.innerHTML='<i class="hk" style="background:#d9483b"></i>Dépassement ou gros manque<i class="hk" style="background:#e0a030"></i>Limite proche ou petit manque<i class="hk" style="background:#3fa56d"></i>Revenu atteint';bp.appendChild(e)}
+}
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
   const p=P(),now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),{R,B}=maps();
   const vis=m=>p.view==="all"||(p.view[0]==="q"?(m/3|0)===+p.view[1]:m===(Y===cy?cm:0));
   const st=m=>Y<cy?"m-past":Y>cy?"m-fut":m<cm?"m-past":m===cm?"m-cur":"m-fut";
-  hcEl=null;
+  hcEl=null;leg();
   /* correspondance colonne → mois */
   const mo=[];let ci=1;
   [...tb.querySelectorAll("thead tr:first-child th")].slice(1).forEach(th=>{const n=th.colSpan||1,m=th.dataset.mo===undefined?-1:+th.dataset.mo;for(let j=0;j<n;j++)mo[ci+j]=m;ci+=n});
@@ -145,10 +157,10 @@ function post(){
           if(role==="r"&&(b>0||r>0)){td.classList.add("mgc");td.insertAdjacentHTML("beforeend",`<i class="mg${dep&&r>b?" ov":""}"><b style="width:${b>0?Math.min(100,r/b*100):100}%"></b></i>`)}
           if(role==="e"){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`)}
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
-            let col,a=0;
-            if(dep){const q=b>0?r/b:2;if(q>1){col="var(--neg)";a=Math.min(48,20+(q-1)*60)}else if(r>0){col="var(--pos)";a=Math.round((1-q)*28)}}
-            else{const q=b>0?r/b:1;if(q<.9&&s==="m-past"){col="var(--neg)";a=Math.min(40,(1-q)*60)}else if(q>=1){col="var(--pos)";a=22}}
-            if(col&&a>0)td.style.setProperty("background-image",g(col,a),"important")}
+            let h="";
+            if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
+            else{const q=b>0?r/b:1;if(q>=1)h="hg";else if(s==="m-past")h=q<.7?"hr2":q<.9?"ha":""}
+            if(h)td.classList.add("hh",h)}
         }
       }
       c+=n;
@@ -168,6 +180,7 @@ function post(){
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
   if(p.view!=="all")w.scrollLeft=0;
   w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);
+  reveal();
   if(animF){animF=false;w.classList.add("anim");setTimeout(()=>w.classList.remove("anim"),400)}
   banner(w,B,R,p.view[0]==="q"?(+p.view[1])*3+(Y===cy&&(cm/3|0)===+p.view[1]?cm%3:0):Y===cy?cm:0);
 }
@@ -186,7 +199,7 @@ window.drawBudTab=function(){
     d.querySelector("#bpv").value=p.view;
     d.querySelectorAll("[data-bp]").forEach(b=>b.classList.toggle("on",!!p[b.dataset.bp]));
   }
-  return r;
+  leg();return r;
 };
 document.addEventListener("change",e=>{
   if(e.target.id!=="bpv")return;
@@ -199,7 +212,20 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bp]");
   if(b){const p=P(),k=b.dataset.bp;p[k]=p[k]?0:1;b.classList.toggle("on",!!p[k]);save();drawBud()}
 },false);
-document.addEventListener("click",e=>{if(e.target.closest("[data-tm],[data-tg],[data-ca]"))animF=true},true);
+let openId=null;
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-tm],[data-tg],[data-ca]"))animF=true;
+  const b=e.target.closest("[data-tg]");if(b&&!/^all-/.test(b.dataset.tg)&&CL[b.dataset.tg])openId=b.dataset.tg;
+},true);
+function reveal(){
+  if(!openId)return;const id=openId;openId=null;
+  const w=document.getElementById("bt"),btn=w&&w.querySelector(`[data-tg="${id}"]`),hdr=btn&&btn.closest("tr");if(!hdr)return;
+  let last=hdr;while(last.nextElementSibling&&last.nextElementSibling.classList.contains("sub"))last=last.nextElementSibling;
+  requestAnimationFrame(()=>{
+    const wr=w.getBoundingClientRect(),hh=w.querySelector("thead").offsetHeight,over=last.getBoundingClientRect().bottom-wr.bottom,room=hdr.getBoundingClientRect().top-(wr.top+hh);
+    if(over>0&&room>0)w.scrollTop+=Math.min(over+8,room);
+  });
+}
 /* survol : repère le Budget du cumul annuel de la ligne pointée */
 let hcEl=null;const clr=()=>{if(hcEl){hcEl.classList.remove("hc");hcEl=null}};
 document.addEventListener("mouseover",e=>{
