@@ -5,12 +5,14 @@
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
+#bt .mc0{--mcol:#4a86c5}#bt .mc1{--mcol:#3fa7b8}#bt .mc2{--mcol:#4aa06d}#bt .mc3{--mcol:#8c9a3d}#bt .mc4{--mcol:#d1b23a}#bt .mc5{--mcol:#d19a3a}#bt .mc6{--mcol:#e0763f}#bt .mc7{--mcol:#d6567a}#bt .mc8{--mcol:#c0504d}#bt .mc9{--mcol:#9166c9}#bt .mc10{--mcol:#6c6fc9}#bt .mc11{--mcol:#5a7fa8}
 #bt .q0{--qc:var(--q0)}#bt .q1{--qc:var(--q1)}#bt .q2{--qc:var(--q2)}#bt .q3{--qc:var(--q3)}
 /* mois : trimestres, mois en cours, mois passés */
-#bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",16)}!important}
+#bt tbody tr:not(.sec) td.mq{background-image:${g("var(--mcol)",15)}!important}
+#bt tbody tr:not(.sec) td.m-cur{background-image:${g("var(--accent)",14)},${g("var(--mcol)",15)}!important}
 #bt td.qs{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)}
-#bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 var(--qc),0 1px 0 var(--line)}
-#bt thead th.m-cur{box-shadow:inset 0 4px 0 var(--accent),inset 0 -3px 0 var(--qc),0 1px 0 var(--line);font-weight:800}
+#bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -4px 0 var(--mcol),0 1px 0 var(--line);background-image:${g("var(--mcol)",20)}!important}
+#bt thead th.m-cur{box-shadow:inset 0 4px 0 var(--accent),inset 0 -4px 0 var(--mcol),0 1px 0 var(--line);font-weight:800}
 #bt thead th.m-past{opacity:.72}
 #bt tbody td.m-past.g{opacity:.6}
 #bt tbody tr:hover td.m-past.g{opacity:1}
@@ -105,7 +107,7 @@ function post(){
     [...tr.cells].forEach(td=>{
       const n=td.colSpan||1,m=mo[c]===undefined?-1:mo[c];td.dataset.col=c;
       if(m>=0){
-        td.dataset.mm=m;td.classList.add(st(m),"q"+(m/3|0));if(!vis(m))td.classList.add("vx");
+        td.dataset.mm=m;td.classList.add(st(m),"q"+(m/3|0),"mc"+m);if(!vis(m))td.classList.add("vx");
         if(ri===0){const sp=td.querySelector(".mst");if(sp){if(m%3===0)sp.insertAdjacentHTML("afterbegin",`<em class="qb">T${m/3+1}</em>`);if(st(m)==="m-cur")sp.insertAdjacentHTML("beforeend",`<em class="nw">${CM[m]?"Aujourd’hui":"●"}</em>`)}}
         if(pinOn&&m===cm){td.classList.add("pin");td.style.left=left(c)+"px"}
       }
@@ -129,7 +131,7 @@ function post(){
     [...tr.cells].forEach(td=>{
       const n=td.colSpan||1,m=mo[c]===undefined?-1:mo[c];td.dataset.col=c;
       if(m>=0){
-        td.dataset.mm=m;const s=st(m);td.classList.add(s,"q"+(m/3|0),"mq");
+        td.dataset.mm=m;const s=st(m);td.classList.add(s,"q"+(m/3|0),"mq","mc"+m);
         if(first[m]===c&&m%3===0)td.classList.add("qs");
         if(!vis(m))td.classList.add("vx");
         if(pinOn&&m===cm&&!sec){td.classList.add("pin");td.style.left=left(c)+"px"}
