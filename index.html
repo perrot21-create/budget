@@ -1198,7 +1198,21 @@ const UPRE=[
  {id:"prune",n:"Prune",c:{light:{bg:"#f6f1f6",surface:"#ffffff",ink:"#2b1f2e",mute:"#6b5a70",line:"#e6dbe8",accent:"#8a3c8f",pos:"#2f7a50",neg:"#b8383f"},dark:{bg:"#1a1220",surface:"#251a2d",ink:"#f0e8f3",mute:"#a995b0",line:"#3a2a45",accent:"#c98ad0",pos:"#62c58a",neg:"#f28b8f"}}},
  {id:"ardoise",n:"Ardoise",c:{light:{bg:"#f2f3f5",surface:"#ffffff",ink:"#1c1f24",mute:"#5f6670",line:"#dcdfe4",accent:"#3b4a63",pos:"#2a7048",neg:"#b0402f"},dark:{bg:"#121417",surface:"#1c1f24",ink:"#eceff3",mute:"#9aa1ab",line:"#2d323a",accent:"#9fb0cf",pos:"#58c283",neg:"#f28b78"}}},
  {id:"contraste",n:"Contraste élevé",c:{light:{bg:"#ffffff",surface:"#ffffff",ink:"#000000",mute:"#333333",line:"#6b6b6b",accent:"#0033cc",pos:"#006400",neg:"#b00000"},dark:{bg:"#000000",surface:"#0d0d0d",ink:"#ffffff",mute:"#cccccc",line:"#8a8a8a",accent:"#ffd400",pos:"#4cff7a",neg:"#ff7a7a"}}}];
-const UWID={c:["80%","65%"]};
+UPRE.push(
+ {id:"aube",n:"Aube",c:{
+  light:{bg:"#fbf6f0",surface:"#fffdfa",ink:"#2d2420",mute:"#6f625a",line:"#eaded3",accent:"#c2553f",pos:"#2f7a50",neg:"#b3412f",rev:"#d6ecdf",dep:"#f8dccd",syn:"#dde6ea",srev:"#cfe6d9",sdep:"#f6d3bf",ssyn:"#d3e2ea",stier:"#e6dcef",ptc:"#f0b8a3"},
+  dark:{bg:"#26201d",surface:"#322a26",ink:"#f4ebe4",mute:"#b3a69d",line:"#4a3e37",accent:"#f08a73",pos:"#6fd3a0",neg:"#f5a08c",rev:"#34594a",dep:"#6b4a3b",syn:"#3b5565",srev:"#35604f",sdep:"#74503f",ssyn:"#3a5a70",stier:"#5a4a73",ptc:"#e39a85"}}},
+ {id:"brume",n:"Brume",c:{
+  light:{bg:"#f1f6fa",surface:"#fcfeff",ink:"#1c2733",mute:"#5a6b7b",line:"#dbe6ee",accent:"#2a76ad",pos:"#1f7a56",neg:"#b4503d",rev:"#d4ece2",dep:"#f6dccf",syn:"#d6e6f2",srev:"#c9e6d9",sdep:"#f3d4c1",ssyn:"#cde2f1",stier:"#e1dcf0",ptc:"#a9d0ea"},
+  dark:{bg:"#1f2a35",surface:"#2a3744",ink:"#eaf2f8",mute:"#a5b6c5",line:"#3e4f60",accent:"#7cc0ee",pos:"#6ad3a6",neg:"#f4a190",rev:"#2f5a4c",dep:"#6a4b3d",syn:"#34566f",srev:"#2f604f",sdep:"#72513f",ssyn:"#35607f",stier:"#54497a",ptc:"#7fb4d9"}}},
+ {id:"menthe",n:"Menthe glacée",c:{
+  light:{bg:"#eff8f5",surface:"#fbfffd",ink:"#1b2e29",mute:"#587068",line:"#d3e8e1",accent:"#1c826f",pos:"#23794f",neg:"#b24a3a",rev:"#cfeee0",dep:"#f7dccd",syn:"#d3e9e9",srev:"#c3ebd7",sdep:"#f5d4c0",ssyn:"#c8e6e6",stier:"#e0dcf0",ptc:"#a3dccf"},
+  dark:{bg:"#1b2b27",surface:"#253732",ink:"#e8f5f0",mute:"#9fb8af",line:"#38504a",accent:"#6fd8c1",pos:"#6fd9a0",neg:"#f4a08d",rev:"#2b5a49",dep:"#694a3c",syn:"#2f5757",srev:"#2d614d",sdep:"#72503f",ssyn:"#2f6262",stier:"#554a78",ptc:"#6fc3b3"}}},
+ {id:"lavande",n:"Lavande",c:{
+  light:{bg:"#f6f3fb",surface:"#fefdff",ink:"#2a2438",mute:"#6a6179",line:"#e5def1",accent:"#7a56c2",pos:"#2c7a52",neg:"#b3433f",rev:"#d8ecde",dep:"#f8dad2",syn:"#e0e0f2",srev:"#cde8d9",sdep:"#f5d1c6",ssyn:"#d6d9f0",stier:"#e6d6f2",ptc:"#cbb8ef"},
+  dark:{bg:"#29223a",surface:"#342c47",ink:"#f1ecfa",mute:"#b2a8c6",line:"#4b4162",accent:"#b9a0f0",pos:"#6fd3a0",neg:"#f5a0a0",rev:"#36594c",dep:"#6d4a45",syn:"#434a78",srev:"#36604f",sdep:"#76504a",ssyn:"#46508a",stier:"#5f4885",ptc:"#a58ede"}}}
+);
+ const UWID={c:["80%","65%"]};
 const UDEN={c:{sp:"12px",sm:"10px",tp:"3px",tp2:"5px"},a:{sp:"28px",sm:"22px",tp:"10px",tp2:"12px"}};
 const USHD={none:"0 0 0 0 transparent",strong:"0 2px 4px rgba(0,0,0,.12),0 10px 28px rgba(0,0,0,.2)",line:"0 0 0 1px var(--line)"};
 const hx=v=>typeof v==="string"&&/^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():"";
