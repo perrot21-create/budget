@@ -16,10 +16,12 @@ const css=`
 #bt .m-cur.mcf{--bl:inset 3px 0 0 var(--accent)}
 #bt .m-cur.mcl{--br:inset -3px 0 0 var(--accent)}
 #bt .m-cur.mcb{--bb:inset 0 -3px 0 var(--accent)}
-#bt td.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),var(--bb,0 0 0 0 transparent)}
+#bt td.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),var(--bb,0 0 0 0 transparent)!important}
+#bt tbody td.m-cur.mcl:not(.pin){position:relative}
+#bt tbody td.m-cur.mcl::after{content:"";position:absolute;top:0;bottom:0;right:0;width:3px;background:var(--accent);pointer-events:none}
 #bt thead th.m-cur{font-weight:800}
-#bt thead tr:first-child th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)}
-#bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),0 1px 0 var(--line)}
+#bt thead tr:first-child th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)!important}
+#bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),0 1px 0 var(--line)!important}
 #bt thead th.m-past{opacity:.72}
 #bt tbody td.m-past.g{opacity:.6}
 .qb{font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.05em;color:var(--onacc,#fff);background:var(--qc);border-radius:6px;padding:1px 6px;margin-right:6px;vertical-align:middle}
@@ -90,6 +92,11 @@ const st=document.createElement("style");st.textContent=css;document.head.append
 
 const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
 let animF=false;const NMC={},SUBC={};
+/* rôle d'une cellule du corps : r = réel, e = écart, b = budget */
+const roleOf=td=>td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
+/* lit le montant affiché dans une cellule (champ de saisie ou texte) ; NaN si aucun nombre */
+const num=el=>{if(!el)return NaN;const i=el.querySelector("input");let t=String(i?i.value:el.textContent).replace(/[\s\u00a0\u202f€]/g,"").replace(/\u2212/g,"-");
+  if(t.includes(","))t=t.replace(/\./g,"").replace(",",".");t=t.replace(/[^0-9.\-]/g,"");const v=parseFloat(t);return isNaN(v)?NaN:v};
 
 function maps(){
   const R={},B={},add=(o,k,m,v)=>{(o[k]=o[k]||Array(12).fill(0))[m]+=v};
@@ -160,6 +167,7 @@ function post(){
       if(key)info={b:B[key]||Array(12).fill(0),r:R[key]||Array(12).fill(0)};
       if(!info||!(dep&&info.b.some((x,m)=>info.r[m]>x&&info.r[m]>0)))tr.classList.add("nov");
     }
+    const rowCells=[];{let k=0;[...tr.cells].forEach(x=>{rowCells.push([x,mo[k]===undefined?-1:mo[k]]);k+=x.colSpan||1})}
     let c=0;
     [...tr.cells].forEach(td=>{
       const n=td.colSpan||1,m=mo[c]===undefined?-1:mo[c];td.dataset.col=c;
@@ -168,19 +176,21 @@ function post(){
         if(first[m]===c&&m%3===0)td.classList.add("qs");
         if(!vis(m))td.classList.add("vx");
         if(pinOn&&m===cm&&!sec){td.classList.add("pin");td.style.left=left(c)+"px"}
+        if(isK&&roleOf(td)==="e"){
+          const pick=ro=>{const f=rowCells.find(([x,mm])=>mm===m&&roleOf(x)===ro);return f?num(f[0]):NaN};
+          let bv=pick("b"),rv=pick("r");
+          if(isNaN(bv)&&info)bv=info.b[m];
+          if(isNaN(rv)&&info)rv=info.r[m];
+          if(Math.abs(bv)>0&&Math.abs(rv)>0&&Math.abs(Math.abs(rv)-Math.abs(bv))<.5){
+            [...td.childNodes].forEach(x=>{if(x.nodeType===3)x.remove()});
+            td.classList.add("z0");
+            td.insertAdjacentHTML("afterbegin",'<span class="ok0" title="Réel égal au budget" aria-label="Réel égal au budget">✓</span>');
+          }
+        }
         if(info){
           const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
           if(role==="e"&&(b>0||r>0)){td.classList.add("mgc");td.insertAdjacentHTML("beforeend",`<i class="mg${dep&&r>b?" ov":""}"><b style="width:${b>0?Math.min(100,r/b*100):100}%"></b></i>`)}
-          if(role==="e"){
-            /* écart nul : budget et réel renseignés et égaux (à l'euro près) → « ✓ » à la place d'une case vide */
-            if(b>0&&r>0&&Math.abs(r-b)<.5){
-              [...td.childNodes].forEach(x=>{if(x.nodeType===3)x.remove()});
-              td.classList.add("z0");
-              td.insertAdjacentHTML("afterbegin",'<span class="ok0" title="Réel égal au budget" aria-label="Réel égal au budget">✓</span>');
-            }else{
-              const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`);
-            }
-          }
+          if(role==="e"&&!td.classList.contains("z0")){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`)}
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
             let h="";
             if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
