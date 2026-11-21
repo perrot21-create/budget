@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -221,8 +222,17 @@ function reveal(){
   const w=document.getElementById("bt"),btn=w&&w.querySelector(`[data-tg="${id}"]`),hdr=btn&&btn.closest("tr");if(!hdr)return;
   let last=hdr;while(last.nextElementSibling&&last.nextElementSibling.classList.contains("sub"))last=last.nextElementSibling;
   requestAnimationFrame(()=>{
-    const wr=w.getBoundingClientRect(),hh=w.querySelector("thead").offsetHeight,over=last.getBoundingClientRect().bottom-wr.bottom,room=hdr.getBoundingClientRect().top-(wr.top+hh);
-    if(over>0&&room>0)w.scrollTop+=Math.min(over+8,room);
+    const wr=w.getBoundingClientRect(),hh=w.querySelector("thead").offsetHeight,top=wr.top+hh,H=wr.bottom-top,
+      gt=hdr.getBoundingClientRect().top,gb=last.getBoundingClientRect().bottom,gh=gb-gt;
+    if(hdr.classList.contains("k-dep")){
+      /* dépenses : la catégorie ouverte est centrée dans la zone visible (ou calée en haut si elle est plus grande) */
+      const d=gh>=H?gt-top:(gt+gh/2)-(top+H/2),room=w.scrollHeight-w.clientHeight-w.scrollTop;
+      if(d>room){const inn=w.querySelector(".in");if(inn)inn.style.paddingBottom=Math.ceil(d-room+16)+"px"}
+      w.scrollTo({top:Math.max(0,w.scrollTop+d),behavior:"smooth"});
+    }else{
+      const over=gb-wr.bottom,room=gt-top;
+      if(over>0&&room>0)w.scrollTop+=Math.min(over+8,room);
+    }
   });
 }
 /* survol : repère le Budget du cumul annuel de la ligne pointée */
