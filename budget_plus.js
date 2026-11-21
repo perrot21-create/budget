@@ -60,7 +60,7 @@ const css=`
 .hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* flèches, mini-courbes */
 .bpcl{padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px)}
-.ar2{font-size:.7em;margin-right:3px}
+.ar2{font-size:.95em;font-weight:800;margin-right:3px}
 /* écart nul (budget et réel renseignés, réel = budget) : coche à la place d'une case vide */
 .ok0{color:var(--pos);font-weight:800;font-size:.95em}
 #bt td.z0>*:not(.ok0){display:none}
@@ -173,7 +173,7 @@ function post(){
         }
         if(info){
           const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
-          if(role==="e"&&!td.classList.contains("z0")){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`)}
+          if(role==="e"&&!td.classList.contains("z0")){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"↑":"↓"}</span>`)}
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
             let h="";
             if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
