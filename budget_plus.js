@@ -46,9 +46,9 @@ const css=`
 .hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
-.mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
-.mg b{display:block;height:100%;border-radius:2px;background:var(--accent);transition:width .3s}
-.mg.ov b{background:var(--neg)}
+.mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.1);pointer-events:none}
+.mg b{display:block;height:100%;border-radius:2px;background:color-mix(in srgb,var(--accent) 40%,transparent);transition:width .3s}
+.mg.ov b{background:color-mix(in srgb,var(--neg) 45%,transparent)}
 .ar2{font-size:.7em;margin-right:3px}
 .spk{width:44px;height:16px;vertical-align:middle;margin-right:6px;overflow:visible}
 .spk .sb{fill:none;stroke:var(--mute);stroke-width:1;stroke-dasharray:2 2;opacity:.7}
@@ -154,7 +154,7 @@ function post(){
         if(pinOn&&m===cm&&!sec){td.classList.add("pin");td.style.left=left(c)+"px"}
         if(info){
           const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
-          if(role==="r"&&(b>0||r>0)){td.classList.add("mgc");td.insertAdjacentHTML("beforeend",`<i class="mg${dep&&r>b?" ov":""}"><b style="width:${b>0?Math.min(100,r/b*100):100}%"></b></i>`)}
+          if(role==="e"&&(b>0||r>0)){td.classList.add("mgc");td.insertAdjacentHTML("beforeend",`<i class="mg${dep&&r>b?" ov":""}"><b style="width:${b>0?Math.min(100,r/b*100):100}%"></b></i>`)}
           if(role==="e"){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"▲":"▼"}</span>`)}
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
             let h="";
