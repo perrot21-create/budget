@@ -37,22 +37,21 @@ const css=`
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
 /* deux teintes alternées une catégorie sur deux : vertes pour les revenus, rouges pour les dépenses (tous les mois) */
-#bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-/* sous-catégories : même teinte que la catégorie, un peu plus claire */
-#bt tbody tr.k-rev.ca0.sub td,#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub td,#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 21%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
-#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
-/* sous-catégories au ton « plein » (si la ligne de référence est de ton plein) */
-#bt tbody tr.k-rev.ca0.sub.sf td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub.sf td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub.sf td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub.sf td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.sub.sf:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
+#bt tbody tr.k-rev.ca0 td{background-color:color-mix(in srgb,var(--pos) 9%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1 td{background-color:color-mix(in srgb,var(--pos) 21%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
+/* sous-catégories : même thème que leur catégorie, un peu plus foncé */
+#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 15%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 28%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 15%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 28%,var(--surface))!important}
+/* catégories au ton clair (si la ligne de référence est de ton clair) */
+#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
 /* heatmap : rouge = dépassement / gros manque, orange = limite proche / petit manque, vert = revenu atteint */
 #bt td.hr2{--hg:${g("#d9483b",55)}}#bt td.hr1{--hg:${g("#d9483b",32)}}#bt td.ha{--hg:${g("#e0a030",34)}}#bt td.hg{--hg:${g("#3fa56d",30)}}
 #bt tbody tr:not(.sec) td.hh.hh.hh{background-image:var(--hg)!important}
@@ -86,7 +85,7 @@ const css=`
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
 const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
-let animF=false,topF=false;const NMC={},SUBC={};
+let animF=false,topF=false;const NMC={};
 /* rôle d'une cellule du corps : r = réel, e = écart, b = budget */
 const roleOf=td=>td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
 /* lit le montant affiché dans une cellule (champ de saisie ou texte) ; NaN si aucun nombre */
@@ -187,20 +186,15 @@ function post(){
   });
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
   const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
-  /* sous-catégories : teinte de la ligne « Chômage » (revenus) / « …vision » (dépenses), relevée avant toute modification */
-  const ssrc={rev:/^chomage/,dep:/vision/};
-  ["rev","dep"].forEach(kd=>{
-    const s=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)].find(r=>ssrc[kd].test(nrm(r.querySelector("td.nm").textContent)));
-    if(s)SUBC[kd]={ca:s.classList.contains("ca1")?1:0,light:s.classList.contains("sub")||s.classList.contains("sl")};
-  });
   ["rev","dep"].forEach(kd=>{
     const rows=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)],s=rows.find(r=>src[kd].test(nrm(r.querySelector("td.nm").textContent)));
     if(s)NMC[kd]={ca:s.classList.contains("ca1")?1:0,sl:s.classList.contains("sub")};
     const o=NMC[kd];if(!o)return;
     rows.filter(r=>!r.classList.contains("sub")&&r!==s).forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
   });
-  ["rev","dep"].forEach(kd=>{const o=SUBC[kd];if(!o)return;
-    tb.querySelectorAll(`tbody tr.k-${kd}.sub:not(.sec)`).forEach(r=>{r.classList.remove("ca0","ca1","sf");r.classList.add("ca"+o.ca);if(!o.light)r.classList.add("sf")})});
+  /* sous-catégories : même alternance que leur catégorie (plus foncées grâce au CSS) */
+  ["rev","dep"].forEach(kd=>{const o=NMC[kd];if(!o)return;
+    tb.querySelectorAll(`tbody tr.k-${kd}.sub:not(.sec)`).forEach(r=>{r.classList.remove("ca0","ca1","sf");r.classList.add("ca"+o.ca)})});
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
