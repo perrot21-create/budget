@@ -1,3 +1,4 @@
+
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -42,7 +43,9 @@ html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--
 /* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
 html #bt#bt tbody tr.gsp td{height:6px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
-html #bt#bt thead th.grp{z-index:6;background:var(--surface)!important;border:0;box-shadow:none}
+html #bt#bt thead th{z-index:8}
+html #bt#bt thead th.nm{z-index:9}
+html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0;box-shadow:none}
 #bt td.grp .gt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap;font-weight:800;letter-spacing:.14em;color:var(--ink);padding:0}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
@@ -268,10 +271,10 @@ function post(){
     if(h1){const th=document.createElement("th");th.className="grp";th.rowSpan=2;h1.insertBefore(th,h1.firstChild)}
     const cg=tb.querySelector("colgroup");
     if(cg){const c=document.createElement("col");c.dataset.c="g";c.style.width=SW+"px";cg.insertBefore(c,cg.firstChild)}
-    /* lignes-séparateurs pleine largeur entre blocs visibles (Revenus | Dépenses | Synthèse) */
+    /* lignes-séparateurs pleine largeur : sous l'en-tête, puis entre blocs visibles (Revenus | Dépenses | Synthèse) */
     {let seen=false;const n=tb.querySelectorAll("colgroup col").length||1;
       starts.forEach(b=>{if(!b.vis)return;
-        if(seen){const sp=document.createElement("tr");sp.className="gsp";const td=document.createElement("td");td.colSpan=n;sp.appendChild(td);b.row.parentNode.insertBefore(sp,b.row)}
+        {const sp=document.createElement("tr");sp.className="gsp";const td=document.createElement("td");td.colSpan=n;sp.appendChild(td);b.row.parentNode.insertBefore(sp,b.row)}
         seen=true})}
     tb.style.width=(parseFloat(tb.style.width)||0)+SW+"px";
     tb.querySelectorAll(".mst").forEach(m=>{m.style.left=(parseFloat(m.style.left)||0)+SW+"px"});
