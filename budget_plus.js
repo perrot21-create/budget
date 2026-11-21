@@ -35,21 +35,21 @@ const css=`
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 /* colonne verticale à gauche : blocs Revenus / Dépenses / Synthèse */
-#bt.hasg .nm{left:30px}
-#bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:30px;min-width:30px;max-width:30px;padding:0;text-align:center;vertical-align:middle;overflow:hidden}
+#bt.hasg .nm{left:40px}
+#bt td.grp,#bt td.grp0,#bt th.grp{position:sticky;left:0;z-index:3;width:40px;min-width:40px;max-width:40px;padding:0;text-align:center;vertical-align:middle;overflow:hidden}
 #bt td.gk-r{--gc:#6f9a78}#bt td.gk-d{--gc:#c46a4c}#bt td.gk-s{--gc:#5f7391}
 html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--surface))!important;background-image:none!important;border:0!important;box-shadow:none!important;opacity:1!important}
 /* cadre complet autour de chaque bloc, couleur du thème général (accent) */
 html #bt#bt tbody td.frm:not(.nm):not(.grp):not(.pin){position:relative}
-html #bt#bt tbody td.frm::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:var(--ft,0 0 0 0 transparent),var(--fb,0 0 0 0 transparent),var(--fr,0 0 0 0 transparent),var(--fl,0 0 0 0 transparent)}
-#bt td.fr-t{--ft:inset 0 3px 0 var(--accent)}#bt td.fr-b{--fb:inset 0 -3px 0 var(--accent)}#bt td.fr-r{--fr:inset -3px 0 0 var(--accent)}#bt td.fr-l{--fl:inset 3px 0 0 var(--accent)}
+html #bt#bt tbody td.frm::before,html #bt#bt thead th.frm::before{border-radius:inherit;content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:var(--ft,0 0 0 0 transparent),var(--fb,0 0 0 0 transparent),var(--fr,0 0 0 0 transparent),var(--fl,0 0 0 0 transparent)}
+#bt .fr-t{--ft:inset 0 3px 0 var(--accent)}#bt .fr-b{--fb:inset 0 -3px 0 var(--accent)}#bt .fr-r{--fr:inset -3px 0 0 var(--accent)}#bt .fr-l{--fl:inset 3px 0 0 var(--accent)}
 /* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
 html #bt#bt tbody tr.gsp td{height:12px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
 html #bt#bt thead th{z-index:8}
 html #bt#bt thead th.nm{z-index:9}
 html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0;box-shadow:none}
-#bt td.grp .gt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;white-space:nowrap;font-weight:800;font-size:.95em;letter-spacing:.08em;padding:.08em 0 0;line-height:1.2;color:var(--ink)}
+#bt td.grp .gt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;white-space:nowrap;font-weight:800;font-size:1.2em;letter-spacing:.08em;padding:.08em 0 0;line-height:1.2;color:var(--ink)}
 /* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
 #bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
@@ -139,7 +139,7 @@ function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
   /* les lignes de titre Revenus / Dépenses / Synthèse sont remplacées par la colonne verticale */
   tb.querySelectorAll("tbody tr.sec").forEach(r=>{const t=r.textContent.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();if(t==="revenus"||t==="depenses"||t==="synthese")r.remove()});
-  const SW=30;
+  const SW=40;
   const p=P(),now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),{R,B}=maps();
   const vis=m=>p.view==="all"||(p.view[0]==="q"?(m/3|0)===+p.view[1]:m===(Y===cy?cm:0));
   const st=m=>Y<cy?"m-past":Y>cy?"m-fut":m<cm?"m-past":m===cm?"m-cur":"m-fut";
@@ -280,6 +280,13 @@ function post(){
       starts.forEach(b=>{if(!b.vis)return;
         {const sp=document.createElement("tr");sp.className="gsp";const td=document.createElement("td");td.colSpan=n;sp.appendChild(td);b.row.parentNode.insertBefore(sp,b.row)}
         seen=true})}
+    /* l'en-tête (ligne des mois + ligne Budget / Réel / Écart) forme un bloc à part, avec le même cadre */
+    {const hr=[...tb.querySelectorAll("thead tr")];
+      hr.forEach((r,n)=>{
+        [...r.cells].forEach(c=>{c.classList.add("frm");if(n===0||c.rowSpan>1)c.classList.add("fr-t");if(n===hr.length-1||c.rowSpan>1)c.classList.add("fr-b")});
+        const l=r.cells[r.cells.length-1];if(l)l.classList.add("fr-r");
+      });
+      const cg0=tb.querySelector("thead th.grp");if(cg0)cg0.classList.add("fr-l")}
     /* cadre autour de chaque bloc (Revenus, Dépenses, Synthèse) : haut, bas, gauche (colonne verticale) et droite (dernière colonne) */
     blk.forEach(rv=>{
       const vis=[];for(let q=rv.v;q<=rv.j;q++)if(trs[q].getClientRects().length)vis.push(trs[q]);
