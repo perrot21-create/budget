@@ -1,4 +1,3 @@
-
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -23,7 +22,7 @@ const css=`
 /* bandeaux de catégorie */
 #bt tr.cb td.nm{box-shadow:inset 5px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:12px}
 #bt tr.hdr.cb td.nm{box-shadow:inset 8px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important;padding-left:16px;font-weight:800}
-#bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:1px solid color-mix(in srgb,var(--mute) 22%,var(--surface))!important}
+#bt tbody tr.a0 td,#bt tbody tr.a1 td{border-top:2px solid color-mix(in srgb,var(--mute) 50%,var(--surface))!important}
 #bt tbody tr.sub td{border-top-color:color-mix(in srgb,var(--line) 50%,transparent)!important}
 #bt tbody tr.sub td:not(.nm){font-size:.95em}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
