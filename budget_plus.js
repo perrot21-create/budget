@@ -223,6 +223,12 @@ function post(){
     const t=nrm(r.textContent);r.classList.remove("sr","sd","ss");
     const k=/^revenu/.test(t)?"sr":/^depense/.test(t)?"sd":/^synthese/.test(t)?"ss":"";
     if(k)r.classList.add(k);
+    /* bandeaux plus fins : environ 25 % de hauteur en moins, pris sur le remplissage haut et bas */
+    const cl=[...r.children];cl.forEach(c=>{c.style.removeProperty("padding-top");c.style.removeProperty("padding-bottom")});
+    if(k&&cl.length){
+      const h=r.getBoundingClientRect().height,p=parseFloat(getComputedStyle(cl[0]).paddingTop)||0,cut=Math.min(p-3,h*.125);
+      if(h>0&&cut>0)cl.forEach(c=>{c.style.setProperty("padding-top",(p-cut)+"px","important");c.style.setProperty("padding-bottom",(p-cut)+"px","important")});
+    }
   });
   /* soldes : la couleur du cadre (bleu / vert) est celle du titre de la ligne */
   tb.querySelectorAll("tbody tr.tsol,tbody tr.tcum").forEach(r=>{const n=r.querySelector("td.nm");if(n)r.style.setProperty("--sl",getComputedStyle(n).color)});
@@ -245,7 +251,7 @@ function post(){
   if(lr)lr.querySelectorAll(".m-cur").forEach(x=>x.classList.add("mcb"));
   /* lignes d'en-tête (mois ; Budget / Réel / Écart) : même hauteur que la ligne Revenus */
   {const hr=[...tb.querySelectorAll("thead tr")];hr.forEach(t=>{t.style.height=""});
-    const sr=tb.querySelector("tbody tr.sec"),h=sr?Math.round(sr.getBoundingClientRect().height):0;
+    const sr=tb.querySelector("tbody tr.sec.sr")||tb.querySelector("tbody tr.sec"),h=sr?Math.round(sr.getBoundingClientRect().height):0;
     if(h>0)hr.forEach(t=>{t.style.height=h+"px"})}
   reveal();
   /* « Tout fermer » : le tableau remonte au début */
