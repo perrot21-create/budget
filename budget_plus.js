@@ -35,12 +35,12 @@ const css=`
 #bt tbody tr.k-dep.ca0 td{background-color:color-mix(in srgb,var(--neg) 9%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1 td{background-color:color-mix(in srgb,var(--neg) 21%,var(--surface))!important}
 /* sous-catégories : même teinte que la catégorie, un peu plus claire */
-#bt tbody tr.k-rev.ca0.sub td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
-#bt tbody tr.k-rev.ca1.sub td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
-#bt tbody tr.k-dep.ca0.sub td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
-#bt tbody tr.k-dep.ca1.sub td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
-#bt tbody tr.sub:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
-#bt tbody tr.sub:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
+#bt tbody tr.k-rev.ca0.sub td,#bt tbody tr.k-rev.ca0.sl td{background-color:color-mix(in srgb,var(--pos) 4%,var(--surface))!important}
+#bt tbody tr.k-rev.ca1.sub td,#bt tbody tr.k-rev.ca1.sl td{background-color:color-mix(in srgb,var(--pos) 11%,var(--surface))!important}
+#bt tbody tr.k-dep.ca0.sub td,#bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 4%,var(--surface))!important}
+#bt tbody tr.k-dep.ca1.sub td,#bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+#bt tbody tr.sub:not(.sec) td.mq,#bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",9)}!important}
+#bt tbody tr.sub:not(.sec) td.m-cur,#bt tbody tr.sl:not(.sec) td.m-cur{background-image:${g("var(--accent)",10)},${g("var(--mcol)",9)}!important}
 /* jauges, flèches, mini-courbes */
 .mgc{position:relative}
 .mg{position:absolute;left:6px;right:6px;bottom:2px;height:3px;border-radius:2px;background:rgba(128,128,128,.2);pointer-events:none}
@@ -157,12 +157,13 @@ function post(){
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
-  /* première colonne : catégories de revenus = fond de « Autres », catégories de dépenses = fond de « Abonnements » */
+  /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
   const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
   ["rev","dep"].forEach(kd=>{
     const rows=[...tb.querySelectorAll(`tbody tr.k-${kd}:not(.sec)`)],s=rows.find(r=>src[kd].test(nrm(r.querySelector("td.nm").textContent)));
-    if(s)NMC[kd]=getComputedStyle(s.querySelector("td.nm")).backgroundColor;
-    if(NMC[kd])rows.filter(r=>!r.classList.contains("sub")).forEach(r=>r.querySelector("td.nm").style.setProperty("background-color",NMC[kd],"important"));
+    if(s)NMC[kd]={ca:s.classList.contains("ca1")?1:0,sl:s.classList.contains("sub")};
+    const o=NMC[kd];if(!o)return;
+    rows.filter(r=>!r.classList.contains("sub")&&r!==s).forEach(r=>{r.classList.remove("ca0","ca1");r.classList.add("ca"+o.ca);if(o.sl)r.classList.add("sl")});
   });
   /* colonnes masquées (vues trimestre / mois) et largeur du tableau */
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
