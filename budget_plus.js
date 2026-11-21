@@ -42,7 +42,8 @@ html #bt#bt tbody td.grp{background-color:color-mix(in srgb,var(--gc) 38%,var(--
 /* cadre complet autour de chaque bloc, couleur du thème général (accent) */
 html #bt#bt tbody td.frm:not(.nm):not(.grp):not(.pin){position:relative}
 html #bt#bt tbody td.frm::before,html #bt#bt thead th.frm::before{border-radius:inherit;content:"";position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:var(--ft,0 0 0 0 transparent),var(--fb,0 0 0 0 transparent),var(--fr,0 0 0 0 transparent),var(--fl,0 0 0 0 transparent)}
-#bt .fr-t{--ft:inset 0 3px 0 var(--accent)}#bt .fr-b{--fb:inset 0 -3px 0 var(--accent)}#bt .fr-r{--fr:inset -3px 0 0 var(--accent)}#bt .fr-l{--fl:inset 3px 0 0 var(--accent)}
+#bt{--fc:color-mix(in srgb,var(--accent) 80%,transparent)}
+#bt .fr-t{--ft:inset 0 3px 0 var(--fc)}#bt .fr-b{--fb:inset 0 -3px 0 var(--fc)}#bt .fr-r{--fr:inset -3px 0 0 var(--fc)}#bt .fr-l{--fl:inset 3px 0 0 var(--fc)}
 /* séparation horizontale entre les blocs : une seule cellule sur toute la largeur, que les traits verticaux ne coupent pas */
 html #bt#bt tbody tr.gsp td{height:12px;padding:0;border:0!important;background:var(--bg)!important;background-image:none!important;box-shadow:none!important;font-size:0;line-height:0;position:relative;z-index:7}
 html #bt#bt tbody td.grp0{background:var(--surface)!important;background-image:none!important;border:0!important;box-shadow:none!important}
