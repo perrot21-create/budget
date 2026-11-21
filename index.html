@@ -620,12 +620,29 @@ function showCatOps(cid,per){
 document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("li[data-dcat]")){e.preventDefault();showCatOps(e.target.dataset.dcat,e.target.dataset.dper)}});
 
 /* ---------- Tableau de bord ---------- */
+/* ---------- Tableau de bord (corrigé : le budget ignore les lignes orphelines) ---------- */
+/* Remplacez toute l'ancienne fonction drawDash() par celle-ci. */
 function drawDash(){
   const td=today(),n0=new Date(),yr=n0.getFullYear(),mo=n0.getMonth(),ym=td.slice(0,7),cc=n=>n>0?"pos":n<0?"neg":"";
   const lim=iso(new Date(yr,mo+1,0));
+
+  /* CORRECTION : seules les lignes existant encore dans le Budget annuel sont comptées
+     (sous-catégories actuelles + « Sans sous-catégorie »). Les montants d'anciennes
+     sous-catégories supprimées restent en mémoire mais ne doivent plus être additionnés. */
+  const valid=new Set();
+  S.cats.forEach(c=>{c.subs.forEach(s=>valid.add(c.id+":"+s.id));valid.add(c.id+":")});
+
   const rows=S.acc.map((a,i)=>{const o=S.tx.filter(t=>t.acc===a.id);return{a,i,j:o.filter(t=>t.date<=td).reduce((s,t)=>s+t.v,0),p:o.filter(t=>t.date<=lim).reduce((s,t)=>s+t.v,0),np:o.filter(t=>!t.p).length}});
   const J=rows.reduce((s,r)=>s+r.j,0),NP=rows.reduce((s,r)=>s+r.np,0),P=rows.reduce((s,r)=>s+r.p,0);
-  const bc={};for(const key in S.budget){const[y,k]=key.split("|");if(+y!==yr)continue;const cid=k.split(":")[0];if(kindOf(cid)!=="dep")continue;bc[cid]=(bc[cid]||0)+((S.budget[key]||[])[mo]||0)}
+
+  const bc={};
+  for(const key in S.budget){
+    const[y,k]=key.split("|");
+    if(+y!==yr||!valid.has(k))continue;
+    const cid=k.split(":")[0];
+    if(kindOf(cid)!=="dep")continue;
+    bc[cid]=(bc[cid]||0)+((S.budget[key]||[])[mo]||0);
+  }
   const rc={};S.tx.forEach(t=>{if(t.date.slice(0,7)===ym&&t.cat&&kindOf(t.cat)==="dep")rc[t.cat]=(rc[t.cat]||0)-t.v});
   const dc=S.cats.filter(c=>c.kind==="dep").map(c=>({c,b:bc[c.id]||0,r:rc[c.id]||0}));
   const TB=dc.reduce((s,x)=>s+x.b,0),TR=dc.reduce((s,x)=>s+x.r,0),ov=dc.filter(x=>x.r>x.b&&x.r>0).sort((a,b)=>(b.r-b.b)-(a.r-a.b));
@@ -637,7 +654,7 @@ function drawDash(){
   const spent=depTx(ym+"-01",td),prevSp=depTx(pym+"-01",pto),dif=Math.round((spent-prevSp)*100)/100;
   const cmp=S.tx.some(t=>t.date.slice(0,7)===pym)?`<p class="hcmp ${dif>0?"neg":dif<0?"pos":""}"><span aria-hidden="true">${dif>0?"▲":dif<0?"▼":"="}</span> ${dif===0?"Autant de dépenses":eur2(Math.abs(dif))+(dif>0?" de plus":" de moins")} que le mois dernier à la même date</p>`:"";
   const left=TB-TR,pct=TB>0?Math.round(TR/TB*100):0;
-const heroA=`<section class="hcard hmain"><h2>Solde total du jour</h2><div class="hbig ${cc(J)}">${eur2(J)}</div><p class="sub">Prévu en fin de mois (${dfr(lim)}) : <b class="${cc(P)}">${eur2(P)}</b></p><p class="sub">${NP} opération(s) non pointée(s)</p></section>`;
+  const heroA=`<section class="hcard hmain"><h2>Solde total du jour</h2><div class="hbig ${cc(J)}">${eur2(J)}</div><p class="sub">Prévu en fin de mois (${dfr(lim)}) : <b class="${cc(P)}">${eur2(P)}</b></p><p class="sub">${NP} opération(s) non pointée(s)</p></section>`;
   const heroB=TB>0?`<section class="hcard"><h2>${left<0?"Budget dépassé en ":"Reste à dépenser en "}${esc(mn)}</h2><div class="hbig ${left<0?"neg":""}">${eur2(Math.abs(left))}</div><div class="pb2${TR>TB?" ov":""}" role="img" aria-label="${pct} % du budget utilisé"><i style="width:${Math.min(100,pct)}%"></i></div><p class="sub">${eur2(TR)} dépensés sur ${eur2(TB)} budgétés (${pct} %)</p>${cmp}</section>`
     :`<section class="hcard"><h2>Dépenses de ${esc(mn)}</h2><div class="hbig">${eur2(TR)}</div><p class="sub">Aucun budget défini pour ce mois. <button class="primary" data-tab="bud">Définir un budget</button></p>${cmp}</section>`;
   const mkRing=(dd,per)=>{const pos=dd.filter(x=>x.r>0).sort((a,b)=>b.r-a.r),TP=pos.reduce((s,x)=>s+x.r,0),top=pos.map(x=>({id:x.c.id,n:x.c.name,r:x.r,b:x.b||0,col:cco(x.c.id)}));
@@ -646,7 +663,16 @@ const heroA=`<section class="hcard hmain"><h2>Solde total du jour</h2><div class
     const leg=TP>0?`<ul class="dleg">${top.map(x=>`<li data-dcat="${x.id}" data-dper="${per}" tabindex="0" title="Voir les opérations de cette catégorie"><i class="cd" style="background:${x.col}"></i><span>${esc(x.n)}</span><b>${Math.round(x.r/TP*100)} %</b><span class="sub lamt">${eur2(x.r)}</span>${x.b>0?`<div class="pb2${x.r>x.b?" ov":""}" role="img" title="${eur2(x.r)} sur ${eur2(x.b)} budgétés (${Math.round(x.r/x.b*100)} %)" aria-label="${Math.round(x.r/x.b*100)} % du budget utilisé"><i style="width:${Math.min(100,x.r/x.b*100).toFixed(1)}%${x.r>x.b?"":";background:"+x.col}"></i></div>`:`<div class="pb2 nb" role="img" title="Aucun budget défini" aria-label="Aucun budget défini"></div>`}</li>`).join("")}</ul>`:`<p class="empty">Aucune dépense enregistrée sur cette période.</p>`;
     return{ring,leg}};
   const rM=mkRing(dc,"m"),{ring,leg}=rM;
-  const by={};for(const key in S.budget){const[y,k]=key.split("|");if(+y!==yr)continue;const cid=k.split(":")[0];if(kindOf(cid)!=="dep")continue;by[cid]=(by[cid]||0)+(S.budget[key]||[]).slice(0,mo+1).reduce((a,v)=>a+(v||0),0)}
+
+  /* CORRECTION : même filtre pour le budget cumulé de l'année */
+  const by={};
+  for(const key in S.budget){
+    const[y,k]=key.split("|");
+    if(+y!==yr||!valid.has(k))continue;
+    const cid=k.split(":")[0];
+    if(kindOf(cid)!=="dep")continue;
+    by[cid]=(by[cid]||0)+(S.budget[key]||[]).slice(0,mo+1).reduce((a,v)=>a+(v||0),0);
+  }
   const ry={};S.tx.forEach(t=>{if(t.date.slice(0,4)===String(yr)&&t.date<=lim&&t.cat&&kindOf(t.cat)==="dep")ry[t.cat]=(ry[t.cat]||0)-t.v});
   const rY=mkRing(S.cats.filter(c=>c.kind==="dep").map(c=>({c,b:by[c.id]||0,r:ry[c.id]||0})),"y");
   const cb=cumulBudgetAnnees();
