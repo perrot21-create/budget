@@ -552,6 +552,14 @@ html #bt#bt tbody tr.tsol td:not(.nm):not(.qs):not(.m-cur),
 html #bt#bt tbody tr.tcum td:not(.nm):not(.qs):not(.m-cur){
   box-shadow:none!important;
 }
+/* Dernière colonne (% réalisé) de Solde du mois et Solde cumulé : plus de cadre bleu ni vert */
+html body #bt#bt#bt tbody tr.tsol td:last-child,
+html body #bt#bt#bt tbody tr.tcum td:last-child{
+  box-shadow:none!important;
+  border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
+  border-bottom:0!important;
+  border-right:0!important;
+}
 </style>
 </head>
 <body>
