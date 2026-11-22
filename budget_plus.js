@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : bouton Écarts + menu Classement (v9)");
+console.info("budget_plus : bouton Écarts + Classement repliable (v10)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -102,12 +102,10 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 /* espace entre les montants et le bord des cellules (ajuster --cp pour plus ou moins d'écart) */
 #bt{--cp:14px}
 #bt tbody td:not(.nm){padding-left:var(--cp)!important;padding-right:var(--cp)!important}
-/* menu déroulant « Classement par tiers » */
-details.clsm>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
-details.clsm>summary::-webkit-details-marker{display:none}
-details.clsm>summary::before{content:"▸";font-size:.9em;transition:transform .15s;flex:none}
-details.clsm[open]>summary::before{transform:rotate(90deg)}
-details.clsm>summary>*{margin-top:0;margin-bottom:0}
+/* ligne « Classement par tiers » : titre cliquable qui déplie / replie les lignes qui le suivent */
+#bt tr.clsh{cursor:pointer;user-select:none}
+#bt tr.clsh .cla{display:inline-block;width:1em;margin-right:6px;transition:transform .15s}
+#bt tr.clsh.open .cla{transform:rotate(90deg)}
 /* barre d'outils */
 .bpc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .bpc select,.bpc button{height:40px}
@@ -135,6 +133,20 @@ function spark(r,b,cy,cm){
   return `<svg class="spk" viewBox="0 0 44 16" aria-hidden="true"><polyline class="sb" points="${pt(b)}"/>${rr.length>1?`<polyline class="sr" points="${pt(rr)}"/>`:""}</svg>`;
 }
 
+/* « Classement par tiers » : les lignes sous le titre sont masquées tant que le menu est fermé (fermé par défaut à l'ouverture du fichier) */
+function applyCls(tb){
+  const nz=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+  const hdr=[...tb.querySelectorAll("tbody tr")].find(r=>{const t=nz(r.textContent);return t.length<60&&t.startsWith("classement")&&t.includes("tiers")});
+  if(!hdr)return;
+  hdr.classList.add("clsh");hdr.classList.toggle("open",clsOpen);
+  if(!hdr.querySelector(".cla")){const c=[...hdr.cells].find(x=>x.textContent.trim());if(c)c.insertAdjacentHTML("afterbegin",'<span class="cla" aria-hidden="true">▸</span>')}
+  hdr.title=clsOpen?"Replier le classement":"Déplier le classement";
+  for(let x=hdr.nextElementSibling;x;x=x.nextElementSibling){if(x.classList.contains("sec"))break;x.style.display=clsOpen?"":"none"}
+}
+document.addEventListener("click",e=>{
+  const tr=e.target.closest&&e.target.closest("#bt tr.clsh");if(!tr)return;
+  clsOpen=!clsOpen;const tb=tr.closest("table");if(tb)applyCls(tb);
+});
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
   /* les lignes de titre Revenus / Dépenses / Synthèse sont remplacées par la colonne verticale */
@@ -223,6 +235,7 @@ function post(){
       if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(has(trs[j])){ok=true;break}j++}}
       if(!ok){tr.classList.add("nh");tr.style.display="none"}
     })}
+  applyCls(tb);
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
   const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
   ["rev","dep"].forEach(kd=>{
@@ -351,7 +364,7 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-bp]");
-  if(b){const p=P(),k=b.dataset.bp;p[k]=p[k]?0:1;if(k==="gap"&&p.gap){clsOpen=false;const d=document.querySelector("details.clsm");if(d)d.open=false}b.classList.toggle("on",!!p[k]);save();drawBud()}
+  if(b){const p=P(),k=b.dataset.bp;p[k]=p[k]?0:1;if(k==="gap"&&p.gap)clsOpen=false;b.classList.toggle("on",!!p[k]);save();drawBud()}
 },false);
 let openId=null;
 document.addEventListener("click",e=>{
@@ -384,29 +397,5 @@ document.addEventListener("mouseover",e=>{
   if(an===hcEl)return;clr();if(an){an.classList.add("hc");hcEl=an}
 });
 document.addEventListener("mouseout",e=>{const r=e.relatedTarget;if(r&&r.closest&&r.closest("#bt"))return;clr()});
-/* « Classement par tiers » : transformé en menu déroulant, fermé par défaut à l'ouverture du fichier, refermé quand « Écarts » s'active.
-   Le titre devient le bouton du menu ; tout ce qui le suit dans son conteneur devient le contenu déroulant. */
-{const nz=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
-  const wrap=()=>{
-    const root=document.getElementById("app")||document.body;
-    let h=[...root.querySelectorAll("*")].filter(e=>{
-      if(e.closest("details.clsm,#bt,select,option,button,summary,script,style"))return false;
-      const t=nz(e.textContent);return t.length<80&&t.startsWith("classement")&&t.includes("tiers")&&![...e.children].some(c=>{const u=nz(c.textContent);return u.startsWith("classement")&&u.includes("tiers")})
-    })[0];
-    if(!h)return;
-    /* si le titre est seul dans son conteneur, on remonte jusqu'à trouver du contenu à sa suite */
-    while(h&&!h.nextElementSibling&&h.parentElement&&h.parentElement!==root)h=h.parentElement;
-    if(!h||!h.nextElementSibling)return;
-    const d=document.createElement("details"),sm=document.createElement("summary"),body=[];
-    d.className="clsm";
-    for(let x=h.nextElementSibling;x;x=x.nextElementSibling)body.push(x);
-    h.parentNode.insertBefore(d,h);sm.appendChild(h);d.appendChild(sm);body.forEach(x=>d.appendChild(x));
-    d.open=clsOpen;
-  };
-  let raf=0;
-  new MutationObserver(()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;try{wrap()}catch(e){}})}).observe(document.body,{childList:true,subtree:true});
-  document.addEventListener("toggle",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("clsm"))clsOpen=e.target.open},true);
-  wrap();
-}
 if(typeof T!=="undefined"&&T==="bud")draw();
 })();
