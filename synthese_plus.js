@@ -21,7 +21,7 @@
     '#bt td[data-sp="bl"]{color:var(--bl)!important}' +
     '#bt td[data-sp="neg"]{color:var(--neg)!important}' +
     '#bt td[data-sp="re"]{color:var(--reel)!important;font-style:italic}' +
-    "#bt tbody tr.grp td{border-top:2px solid color-mix(in srgb,var(--mute) 45%,var(--surface))!important}" +
+    "#bt tbody tr.grp td{border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important}" +
     "#bt td.nm .sh{margin-left:6px;font-weight:400;color:var(--mute);font-size:var(--fs-sm)}";
   document.head.appendChild(st);
 
