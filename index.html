@@ -895,7 +895,7 @@ function charts(rb,db,ra,da,op,carry,A){
   <div class="chc"><h3>Évolution du solde cumulé</h3><svg viewBox="0 0 560 232"><line x1="56" x2="540" y1="${Yv(0)}" y2="${Yv(0)}" class="c-z"/><polyline points="${pl(bu)}" class="c-lb"/><polyline points="${pl(re)}" class="c-lr"/>${M.map(m=>`<circle cx="${X(m)}" cy="${Yv(bu[m])}" r="4" class="c-db"><title>${MOIS[m]} : budget ${E(bu[m])}</title></circle><circle cx="${X(m)}" cy="${Yv(re[m])}" r="4" class="c-dr"><title>${MOIS[m]} : réel ${E(re[m])}</title></circle>`).join("")}<text x="0" y="14" class="ct">${E(Math.max(...vs))}</text><text x="0" y="205" class="ct">${E(lo)}</text>${lb}</svg>${lg}</div>
   <div class="chc"><h3>Dépenses : budget contre réel</h3><svg viewBox="0 0 560 232">${cc}${lb}</svg>${lg}</div></div></details>`;
 }
-let GM=0;
+let GM=0,CT=true; /* CT = Classement par tiers replié (true) à l'ouverture */
 function goMonth(i){const w=$("#bt"),n=new Date(),m=i??(Y===n.getFullYear()?n.getMonth():0);GM=m;const th=w.querySelector(`th[data-mo="${m}"]`),nm=w.querySelector("th.nm");if(th&&nm)w.scrollLeft+=th.getBoundingClientRect().left-nm.getBoundingClientRect().right}
 function drawBud(first){
   S.cats.forEach(c=>{if(c.subs.length&&CL[c.id]===undefined)CL[c.id]=true});
@@ -959,7 +959,7 @@ function drawBud(first){
   const cY=chain(Y,bs,rs),op=cY.op,rcum=cY.rc,run=cY.endB;carry=op[0];
   const TT={};S.tx.forEach(t=>{if(+t.date.slice(0,4)!==Y)return;const k=t.tier||"",m=+t.date.slice(5,7)-1;(TT[k]=TT[k]||Array(12).fill(0))[m]+=t.v});
   const tl=Object.keys(TT).map(k=>({n:k?(S.tiers.find(x=>x.id===k)||{name:"Tiers supprimé"}).name:"Sans tiers",v:TT[k],t:TT[k].reduce((a,b)=>a+b,0)})).sort((a,b)=>a.t-b.t);
-  const tiersRows=tl.length?secRow("sec k-syn tier","Classement par tiers")+tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td>${CA?`<td class="v"></td><td class="v"></td>`:""}<td class="v"></td></tr>`).join(""):"";
+  const tiersRows=tl.length?secRow("sec k-syn tier",`<button class="tg" data-tt="1" aria-expanded="${!CT}" aria-label="Ouvrir ou fermer le classement par tiers">${CT?"▸":"▾"}</button> Classement par tiers`)+(CT?"":tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td>${CA?`<td class="v"></td><td class="v"></td>`:""}<td class="v"></td></tr>`).join("")):"";
   const rowB=(name,cls,v,ann,rv)=>`<tr class="${cls}"><td class="nm">${name}</td>${M.map(m=>`<td class="g ${ng(v[m])}${cmc(m)}">${fe(Math.round(v[m]))}</td>${CM[m]?(rv?`<td class="v ri ${ng(rv[m])}${cmc(m)}">${fe(rv[m])}</td><td class="v ${ng(rv[m]-v[m])}${cmc(m)}">${fe(Math.round(rv[m]-v[m]))}</td>`:`<td class="v${cmc(m)}"></td><td class="v${cmc(m)}"></td>`):""}`).join("")}<td class="g ga tt ${ng(ann)}">${fe(Math.round(ann))}</td>${CA?(rv?`<td class="v ri tt ${ng(rv[11])}">${fe(rv[11])}</td><td class="v tt ${ng(rv[11]-ann)}">${fe(Math.round(rv[11]-ann))}</td><td class="v"></td>`:'<td class="v"></td><td class="v"></td><td class="v"></td>'):'<td class="v"></td>'}</tr>`;
   h+=secRow("sec k-syn","Synthèse")
    +row("Total revenus","tot trev k-syn",m=>rb[m],m=>ra[m],m=>ra[m]-rb[m],no)
