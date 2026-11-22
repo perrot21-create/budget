@@ -538,11 +538,12 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 #bt tr.tcum td{box-shadow:inset 0 -2px 0 var(--pos)!important}
 #bt tr.tcum td.nm{box-shadow:inset 2px 0 0 var(--pos),inset 0 -2px 0 var(--pos),3px 0 0 var(--syn-sep)!important}
 #bt tr.tcum td:last-child{box-shadow:inset 0 -2px 0 var(--pos),inset -2px 0 0 var(--pos)!important}
-/* Synthèse : petite séparation blanche entre toutes les lignes */
-#bt tr.k-syn td,
-#bt tr.tz0 td,
-#bt tr.tz1 td{
-  border-top:3px solid var(--sep-syn,var(--surface))!important;
+/* Synthèse : mêmes séparateurs que les lignes de catégories */
+#bt tbody tr.k-syn td,
+#bt tbody tr.tz0 td,
+#bt tbody tr.tz1 td{
+  border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
+}
 }</style>
 </head>
 <body>
