@@ -54,8 +54,8 @@ html #bt#bt thead th{z-index:8}
 html #bt#bt thead th.nm{z-index:9}
 html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0;box-shadow:none}
 #bt td.grp .gt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(180deg);writing-mode:vertical-rl;white-space:nowrap;font-weight:800;font-size:1.2em;letter-spacing:.08em;padding:.08em 0 0;line-height:1.2;color:var(--ink)}
-/* lignes Solde du mois et Solde cumulé : mêmes traits (haut et bas) sur tous les mois, couleur du cadre de la ligne */
-#bt tbody tr.tsol td:not(.nm),#bt tbody tr.tcum td:not(.nm){border-top:2px solid var(--sl)!important;border-bottom:2px solid var(--sl)!important}
+
+
 /* petit trait blanc au-dessus de chaque sous-catégorie (dont la première) */
 #bt tbody tr.sub td{border-top:1px solid #fff!important}
 #bt tr.tcum td,#bt tr.tsol td{font-size:1.05em}
