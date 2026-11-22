@@ -1,4 +1,4 @@
-/* synthese_plus.js (v2)
+/* synthese_plus.js (v3)
    À charger APRÈS budget_plus.js, tout à la fin de index.html :
    <script src="synthese_plus.js"></script>
    Pour annuler : retirer cette ligne.
@@ -6,13 +6,24 @@
    - « Classement par tiers » : menu déroulant, fermé à l'ouverture, ouvert/fermé au clic.
    - Synthèse : libellés explicatifs, montants prévus en bleu, report réel en violet italique,
      trait de séparation au-dessus de la ligne Report.
+
+   Compatible avec les anciennes modifications éventuellement restées dans index.html
+   (variable CT et ligne de clic data-tt) : dans ce cas, ce fichier prend la main sur le clic.
 */
 (function () {
   "use strict";
   if (typeof window.drawBud !== "function") return;
 
-  var CT = true;      /* true = Classement par tiers replié à l'ouverture */
+  var localCT = true; /* utilisé seulement si index.html ne définit pas déjà CT */
   var timer = null;
+
+  /* Menu fermé ? (utilise CT d'index.html s'il existe, sinon l'état local) */
+  function closed() { return (typeof CT !== "undefined") ? CT : localCT; }
+  /* Bascule ; renvoie true si c'est index.html qui génère/omet les lignes de tiers */
+  function toggle() {
+    if (typeof CT !== "undefined") { CT = !CT; return true; }
+    localCT = !localCT; return false;
+  }
 
   /* ---------- Style (couleurs forcées pour résister aux autres fichiers) ---------- */
   var st = document.createElement("style");
@@ -56,14 +67,15 @@
     var tier = wrap.querySelector("tr.sec.tier");
     if (!tier) return;
     var nm = tier.querySelector("td.nm");
+    var cl = closed();
     if (nm) {
       nm.innerHTML =
-        '<button type="button" class="tg" data-tt="1" aria-expanded="' + (!CT) +
-        '" aria-label="Ouvrir ou fermer le classement par tiers">' + (CT ? "\u25B8" : "\u25BE") +
+        '<button type="button" class="tg" data-tt="1" aria-expanded="' + (!cl) +
+        '" aria-label="Ouvrir ou fermer le classement par tiers">' + (cl ? "\u25B8" : "\u25BE") +
         "</button> Classement par tiers";
     }
     wrap.querySelectorAll("tr.tz0,tr.tz1").forEach(function (r) {
-      r.style.display = CT ? "none" : "";
+      r.style.display = cl ? "none" : "";
     });
     var t = wrap.querySelector("table"), i = wrap.querySelector(".vs i");
     if (t && i) i.style.height = t.offsetHeight + "px";
@@ -136,12 +148,17 @@
     }).observe(app, { childList: true, subtree: true });
   }
 
-  /* Clic sur le triangle : ouverture/fermeture sur place */
-  document.addEventListener("click", function (e) {
-    if (e.target.closest && e.target.closest("[data-tt]")) {
-      CT = !CT;
+  /* Clic sur le triangle. Écouteur en phase de capture sur window : il passe avant tout
+     ancien écouteur resté dans index.html, qui est alors ignoré (pas de double bascule). */
+  window.addEventListener("click", function (e) {
+    if (!(e.target.closest && e.target.closest("[data-tt]"))) return;
+    e.stopImmediatePropagation();
+    var redraw = toggle();
+    if (redraw) {
+      window.drawBud();            /* index.html ne génère les lignes que si CT est false */
+    } else {
       var wrap = document.getElementById("bt");
-      if (wrap) applyTier(wrap);
+      if (wrap) applyTier(wrap);   /* sinon : simple affichage/masquage sur place */
     }
-  });
+  }, true);
 })();
