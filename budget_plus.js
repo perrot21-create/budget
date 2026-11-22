@@ -98,6 +98,7 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt td.pin{position:sticky;z-index:1}
 /* filtres, vues */
 #bt.fdep tr.k-rev,#bt.fov tr.k-rev,#bt.fov tr.nov{display:none}
+#bt.fheat tr.nh{display:none}
 #bt .vx,#bt col.vx{display:none!important}
 /* animations douces */
 @keyframes bpin{from{opacity:0}to{opacity:1}}
@@ -221,6 +222,15 @@ function post(){
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
+  /* heatmap active : repère les lignes sans aucune cellule colorée (une catégorie reste visible si une de ses sous-catégories est colorée) */
+  {const trs=[...tb.querySelectorAll("tbody tr")],has=tr=>!!tr.querySelector("td.hh");
+    trs.forEach(tr=>tr.classList.remove("nh"));
+    if(p.heat)trs.forEach((tr,i)=>{
+      if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
+      let ok=has(tr);
+      if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(has(trs[j])){ok=true;break}j++}}
+      if(!ok)tr.classList.add("nh");
+    })}
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
   const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
   ["rev","dep"].forEach(kd=>{
@@ -247,7 +257,7 @@ function post(){
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
   if(p.view!=="all")w.scrollLeft=0;
-  w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);
+  w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);w.classList.toggle("fheat",!!p.heat);
   /* cadre du mois en cours : bords gauche / droit / bas */
   const lastC={};mo.forEach((m,i)=>{if(m>=0)lastC[m]=i});
   tb.querySelectorAll(".mcf,.mcl,.mcb").forEach(x=>x.classList.remove("mcf","mcl","mcb"));
