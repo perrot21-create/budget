@@ -84,10 +84,11 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt tbody tr:not(.sec) td.hh.hh.hh:hover:not(.nm){background-image:${g("var(--accent)",26)},var(--hg)!important}
 .hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* flèches, mini-courbes */
-.bpcl{padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px);display:inline-block;margin:0 auto}
+.bpcl{display:block;margin:0 auto;padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px)}
 #bt thead tr:first-child th.nm{text-align:center;vertical-align:middle}
-.ar2{font-size:.95em;font-weight:800;margin-right:3px}
-/* écart nul (budget et réel renseignés, réel = budget) : coche à la place d'une case vide */
+/* flèche calée à gauche de la cellule : toutes les flèches d'une colonne sont alignées verticalement */
+.ar2{float:left;width:1em;text-align:center;font-size:.95em;font-weight:800;margin-right:6px}
+/* écart nul ou compris entre -5 et +5 (budget et réel renseignés) : coche à la place du montant */
 .ok0{color:var(--pos);font-weight:800;font-size:.95em}
 #bt td.z0>*:not(.ok0){display:none}
 .spk{width:44px;height:16px;vertical-align:middle;margin-right:6px;overflow:visible}
@@ -194,15 +195,21 @@ function post(){
           let bv=pick("b"),rv=pick("r");
           if(isNaN(bv)&&info)bv=info.b[m];
           if(isNaN(rv)&&info)rv=info.r[m];
-          if(Math.abs(bv)>0&&Math.abs(rv)>0&&Math.abs(Math.abs(rv)-Math.abs(bv))<.5){
+          /* écart compris entre -5 et +5 (bornes incluses) = atteint */
+          const ev=num(td),d=isNaN(ev)?Math.abs(Math.abs(rv)-Math.abs(bv)):Math.abs(ev);
+          if(Math.abs(bv)>0&&Math.abs(rv)>0&&d<=5){
             [...td.childNodes].forEach(x=>{if(x.nodeType===3)x.remove()});
             td.classList.add("z0");
-            td.insertAdjacentHTML("afterbegin",'<span class="ok0" title="Réel égal au budget" aria-label="Réel égal au budget">✓</span>');
+            td.insertAdjacentHTML("afterbegin",'<span class="ok0" title="Réel atteint (écart de 5 € ou moins)" aria-label="Réel atteint">✓</span>');
           }
+        }
+        /* flèche d'écart, alignée à gauche de la cellule : catégories, sous-catégories, totaux et soldes */
+        if(!sec&&roleOf(td)==="e"&&!td.classList.contains("z0")&&!td.querySelector(".ar2")){
+          const v=num(td);
+          if(!isNaN(v)&&v!==0)td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${v>0?"↑":"↓"}</span>`);
         }
         if(info){
           const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
-          if(role==="e"&&!td.classList.contains("z0")){const t=td.textContent.trim();if(t&&t!=="–")td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${t[0]==="+"?"↑":"↓"}</span>`)}
           if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
             let h="";
             if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
