@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : heatmap basée sur les écarts affichés (v4)");
+console.info("budget_plus : bouton Écarts (v5)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -79,11 +79,6 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 2%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 6%,var(--surface))!important}
 #bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
-/* heatmap : rouge = dépassement / gros manque, orange = limite proche / petit manque, vert = revenu atteint */
-#bt td.hr2{--hg:${g("#d9483b",55)}}#bt td.hr1{--hg:${g("#d9483b",32)}}#bt td.ha{--hg:${g("#e0a030",34)}}#bt td.hg{--hg:${g("#3fa56d",30)}}
-#bt tbody tr:not(.sec) td.hh.hh.hh{background-image:var(--hg)!important}
-#bt tbody tr:not(.sec) td.hh.hh.hh:hover:not(.nm){background-image:${g("var(--accent)",26)},var(--hg)!important}
-.hk{display:inline-block;width:10px;height:10px;border-radius:3px;margin:0 4px 0 10px;vertical-align:baseline}
 /* flèches, mini-courbes */
 .bpcl{display:block;margin:0 auto;padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px)}
 #bt thead tr:first-child th.nm{text-align:center;vertical-align:middle}
@@ -99,7 +94,7 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt td.pin{position:sticky;z-index:1}
 /* filtres, vues */
 #bt.fdep tr.k-rev,#bt.fov tr.k-rev,#bt.fov tr.nov{display:none}
-#bt.fheat tr.nh{display:none!important}
+#bt.fgap tr.nh{display:none!important}
 #bt .vx,#bt col.vx{display:none!important}
 /* animations douces */
 @keyframes bpin{from{opacity:0}to{opacity:1}}
@@ -114,7 +109,7 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 `;
 const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
-const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,heat:0,pin:0});
+const P=()=>S.bp||(S.bp={view:"all",dep:0,over:0,gap:0,pin:0});
 let animF=false,topF=false;const NMC={};
 /* rôle d'une cellule du corps : r = réel, e = écart, b = budget */
 const roleOf=td=>td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
@@ -134,13 +129,6 @@ function spark(r,b,cy,cm){
   return `<svg class="spk" viewBox="0 0 44 16" aria-hidden="true"><polyline class="sb" points="${pt(b)}"/>${rr.length>1?`<polyline class="sr" points="${pt(rr)}"/>`:""}</svg>`;
 }
 
-function leg(){
-  const bp=document.querySelector(".bpc"),lg=document.getElementById("hleg");
-  if(!bp)return;
-  if(!P().heat){if(lg)lg.remove();return}
-  if(!lg){const e=document.createElement("span");e.id="hleg";e.className="sub";
-    e.innerHTML='<i class="hk" style="background:#d9483b"></i>Dépassement ou manque<i class="hk" style="background:#e0a030"></i>Dépense sous le budget<i class="hk" style="background:#3fa56d"></i>Revenu supérieur au budget';bp.appendChild(e)}
-}
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
   /* les lignes de titre Revenus / Dépenses / Synthèse sont remplacées par la colonne verticale */
@@ -149,7 +137,7 @@ function post(){
   const p=P(),now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),{R,B}=maps();
   const vis=m=>p.view==="all"||(p.view[0]==="q"?(m/3|0)===+p.view[1]:m===(Y===cy?cm:0));
   const st=m=>Y<cy?"m-past":Y>cy?"m-fut":m<cm?"m-past":m===cm?"m-cur":"m-fut";
-  hcEl=null;leg();
+  hcEl=null;
   /* correspondance colonne → mois */
   const mo=[];let ci=1;
   [...tb.querySelectorAll("thead tr:first-child th")].slice(1).forEach(th=>{const n=th.colSpan||1,m=th.dataset.mo===undefined?-1:+th.dataset.mo;for(let j=0;j<n;j++)mo[ci+j]=m;ci+=n});
@@ -215,28 +203,16 @@ function post(){
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
-  /* heatmap : basée uniquement sur les écarts AFFICHÉS dans les colonnes Écart.
-     Un mois n'est coloré (Budget, Réel, Écart) que si son écart dépasse 5 en valeur absolue ; coche ✓, vide, -5 à +5 : aucune couleur.
-     Seules les lignes ayant au moins un tel écart restent visibles (une catégorie reste visible si une de ses sous-catégories en a un). */
-  {const trs=[...tb.querySelectorAll("tbody tr")];
-    trs.forEach(tr=>{tr.classList.remove("nh");tr.querySelectorAll("td.hh").forEach(td=>td.classList.remove("hh","hr2","hr1","ha","hg"))});
-    const gap=new Map();
-    trs.forEach(tr=>{
+  /* bouton « Écarts » : ne garde que les lignes ayant, dans une colonne Écart visible, un écart chiffré.
+     Les coches ✓ (écart de -5 à +5), les cases vides et « – » ne comptent pas.
+     Une catégorie reste visible si une de ses sous-catégories a un écart chiffré. */
+  {const trs=[...tb.querySelectorAll("tbody tr")],
+    has=tr=>[...tr.querySelectorAll("td.v")].some(td=>{if(td.classList.contains("z0")||td.classList.contains("vx"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
+    trs.forEach(tr=>tr.classList.remove("nh"));
+    if(p.gap)trs.forEach((tr,i)=>{
       if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
-      const dep=tr.classList.contains("k-dep"),ms={};
-      tr.querySelectorAll("td.v").forEach(td=>{
-        if(td.classList.contains("z0")||td.classList.contains("vx"))return;
-        const v=num(td);if(isNaN(v)||Math.abs(v)<=5)return;
-        ms[td.dataset.mm]=dep?(v<0?"hr2":"ha"):(v>0?"hg":"hr2");
-      });
-      gap.set(tr,Object.keys(ms).length>0);
-      if(!p.heat)return;
-      tr.querySelectorAll("td[data-mm]").forEach(td=>{const h=ms[td.dataset.mm];if(h&&roleOf(td))td.classList.add("hh",h)});
-    });
-    if(p.heat)trs.forEach((tr,i)=>{
-      if(!gap.has(tr))return;
-      let ok=gap.get(tr);
-      if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(gap.get(trs[j])){ok=true;break}j++}}
+      let ok=has(tr);
+      if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(has(trs[j])){ok=true;break}j++}}
       if(!ok)tr.classList.add("nh");
     })}
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
@@ -265,7 +241,7 @@ function post(){
   cols.forEach((col,i)=>{if(mo[i]>=0&&!vis(mo[i]))col.classList.add("vx")});
   tb.style.width=cols.reduce((s,c,i)=>s+(c.classList.contains("vx")?0:cw[i]),0)+"px";
   if(p.view!=="all")w.scrollLeft=0;
-  w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);w.classList.toggle("fheat",!!p.heat);
+  w.classList.toggle("fdep",!!p.dep);w.classList.toggle("fov",!!p.over);w.classList.toggle("fgap",!!p.gap);
   /* cadre du mois en cours : bords gauche / droit / bas */
   const lastC={};mo.forEach((m,i)=>{if(m>=0)lastC[m]=i});
   tb.querySelectorAll(".mcf,.mcl,.mcb").forEach(x=>x.classList.remove("mcf","mcl","mcb"));
@@ -349,12 +325,12 @@ window.drawBudTab=function(){
   if(ctl&&!ctl.querySelector(".bpc")){
     const d=document.createElement("div");d.className="bpc";
     d.innerHTML=`<select id="bpv" aria-label="Vue"><option value="all">Année entière</option><option value="q0">Trimestre T1</option><option value="q1">Trimestre T2</option><option value="q2">Trimestre T3</option><option value="q3">Trimestre T4</option><option value="m">Focus mois</option></select>
-    <button data-bp="dep" title="Masquer les revenus">Dépenses seules</button><button data-bp="over" title="Afficher uniquement les lignes en dépassement">Dépassements</button><button data-bp="heat" title="Colorer les cellules selon l’écart au budget">Heatmap</button><button data-bp="pin" title="Épingler le mois en cours à côté des noms">Épingler le mois</button>`;
+    <button data-bp="dep" title="Masquer les revenus">Dépenses seules</button><button data-bp="over" title="Afficher uniquement les lignes en dépassement">Dépassements</button><button data-bp="gap" title="Afficher uniquement les catégories ayant un écart chiffré (hors coche ✓)">Écarts</button><button data-bp="pin" title="Épingler le mois en cours à côté des noms">Épingler le mois</button>`;
     ctl.insertBefore(d,ctl.querySelector(".dd"));
     d.querySelector("#bpv").value=p.view;
     d.querySelectorAll("[data-bp]").forEach(b=>b.classList.toggle("on",!!p[b.dataset.bp]));
   }
-  leg();return r;
+  return r;
 };
 document.addEventListener("change",e=>{
   if(e.target.id!=="bpv")return;
