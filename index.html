@@ -547,7 +547,12 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 #bt#bt tbody tr.sec.k-syn.tier td.nm{
   box-shadow:3px 0 0 var(--syn-sep)!important;
 }
-}</style>
+/* Traits entre trimestres : continus sur toute la hauteur du tableau */
+#bt#bt td.g.q,
+#bt#bt th.g.q{
+  border-left:3px solid var(--qsep,color-mix(in srgb,var(--mute) 55%,var(--surface)))!important;
+}
+ }</style>
 </head>
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
