@@ -222,8 +222,10 @@ function post(){
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
-  /* heatmap active : repère les lignes sans aucune cellule colorée (une catégorie reste visible si une de ses sous-catégories est colorée) */
-  {const trs=[...tb.querySelectorAll("tbody tr")],has=tr=>!!tr.querySelector("td.hh");
+  /* heatmap active : ne garde que les lignes ayant, dans une colonne Écart visible, un écart de plus de 5 en valeur absolue
+     (écarts de -5 à +5, cases vides et coches ✓ exclus ; une catégorie reste visible si une de ses sous-catégories est concernée) */
+  {const trs=[...tb.querySelectorAll("tbody tr")],
+    has=tr=>[...tr.querySelectorAll("td.v")].some(td=>{if(td.classList.contains("vx")||td.classList.contains("z0"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
     trs.forEach(tr=>tr.classList.remove("nh"));
     if(p.heat)trs.forEach((tr,i)=>{
       if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
