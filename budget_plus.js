@@ -98,7 +98,7 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt td.pin{position:sticky;z-index:1}
 /* filtres, vues */
 #bt.fdep tr.k-rev,#bt.fov tr.k-rev,#bt.fov tr.nov{display:none}
-#bt.fheat tr.nh{display:none}
+#bt.fheat tr.nh{display:none!important}
 #bt .vx,#bt col.vx{display:none!important}
 /* animations douces */
 @keyframes bpin{from{opacity:0}to{opacity:1}}
@@ -227,6 +227,12 @@ function post(){
   {const trs=[...tb.querySelectorAll("tbody tr")],
     has=tr=>[...tr.querySelectorAll("td.v")].some(td=>{if(td.classList.contains("vx")||td.classList.contains("z0"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
     trs.forEach(tr=>tr.classList.remove("nh"));
+    /* une cellule n'est colorée que si l'écart de son mois, sur la même ligne, dépasse 5 en valeur absolue (coche, vide ou -5/+5 : pas de couleur) */
+    if(p.heat)trs.forEach(tr=>{
+      const ms=new Set();
+      tr.querySelectorAll("td.v").forEach(td=>{if(td.classList.contains("z0"))return;const v=num(td);if(!isNaN(v)&&Math.abs(v)>5)ms.add(td.dataset.mm)});
+      tr.querySelectorAll("td.hh").forEach(td=>{if(!ms.has(td.dataset.mm))td.classList.remove("hh","hr2","hr1","ha","hg")});
+    });
     if(p.heat)trs.forEach((tr,i)=>{
       if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
       let ok=has(tr);
