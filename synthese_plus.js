@@ -11,7 +11,7 @@
   "use strict";
   if (typeof window.drawBud !== "function") return;
 
-  var CT = true;      /* true = Classement par tiers replié à l'ouverture */
+  
   var timer = null;
 
   /* ---------- Style (couleurs forcées pour résister aux autres fichiers) ---------- */
@@ -136,12 +136,5 @@
     }).observe(app, { childList: true, subtree: true });
   }
 
-  /* Clic sur le triangle : ouverture/fermeture sur place */
-  document.addEventListener("click", function (e) {
-    if (e.target.closest && e.target.closest("[data-tt]")) {
-      CT = !CT;
-      var wrap = document.getElementById("bt");
-      if (wrap) applyTier(wrap);
-    }
-  });
+ 
 })();
