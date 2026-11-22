@@ -529,26 +529,22 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 .sw2 input:checked+.trk::after{transform:translateX(26px)}
 .sw2 input:focus-visible+.trk{outline:2px solid var(--ink);outline-offset:2px}
 .sw2 .sml{display:flex;flex-direction:column;gap:2px}.sw2 .sml b{font-size:var(--fs-lg)}.sw2 .sml small{font-size:var(--fs-md);color:var(--mute);line-height:1.35}
-/* Synthèse : toutes les lignes de séparation = celle entre Total revenus et Total dépenses */
-#bt tbody tr.tdep td,
-#bt tbody tr.tsol td,
-#bt tbody tr.gap.k-syn td,
-#bt tbody tr.tcum td{
+/* Synthèse : même ligne grise de 2 px sur toute la longueur (noms, mois, cumul annuel) */
+#bt#bt tbody tr.k-syn:not(.sec) td{
   border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
   border-bottom:0!important;
   box-shadow:none!important;
 }
-#bt tbody tr.tdep td.nm,
-#bt tbody tr.tsol td.nm,
-#bt tbody tr.gap.k-syn td.nm,
-#bt tbody tr.tcum td.nm{
+#bt#bt tbody tr.k-syn:not(.sec) td.nm{
   box-shadow:3px 0 0 var(--syn-sep)!important;
 }
-#bt tbody tr.sec.k-syn.tier td{
+/* Plus de ligne sombre entre Solde cumulé et Classement par tiers, sur toute la longueur */
+#bt#bt tbody tr.sec.k-syn.tier td{
   border-top:0!important;
+  border-bottom:0!important;
   box-shadow:none!important;
 }
-#bt tbody tr.sec.k-syn.tier td.nm{
+#bt#bt tbody tr.sec.k-syn.tier td.nm{
   box-shadow:3px 0 0 var(--syn-sep)!important;
 }
 }</style>
