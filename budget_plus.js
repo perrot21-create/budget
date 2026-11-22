@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : bouton Écarts (v6)");
+console.info("budget_plus : bouton Écarts (v7)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -206,14 +206,16 @@ function post(){
   /* bouton « Écarts » : ne garde que les lignes ayant, dans une colonne Écart d'un MOIS visible (pas le cumul annuel ni le % réalisé), un écart chiffré.
      Les coches ✓ (écart de -5 à +5), les cases vides et « – » ne comptent pas.
      Une catégorie reste visible si une de ses sous-catégories a un écart chiffré. */
-  {const trs=[...tb.querySelectorAll("tbody tr")],
-    has=tr=>[...tr.querySelectorAll("td.v[data-mm]")].some(td=>{if(td.classList.contains("z0")||td.classList.contains("vx"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
-    trs.forEach(tr=>tr.classList.remove("nh"));
+  {const trs=[...tb.querySelectorAll("tbody tr")],nz=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(),
+    /* colonnes dont l'en-tête est « Écart » (uniquement celles des mois, jamais le cumul annuel ni le % réalisé) */
+    ec=new Set([...tb.querySelectorAll("thead tr:not(:first-child) th")].filter(th=>nz(th.textContent)==="ecart"&&!th.classList.contains("vx")).map(th=>th.dataset.col)),
+    has=tr=>[...tr.cells].some(td=>{if(!ec.has(td.dataset.col)||td.classList.contains("z0")||td.classList.contains("vx"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
+    trs.forEach(tr=>{tr.classList.remove("nh");tr.style.display=""});
     if(p.gap)trs.forEach((tr,i)=>{
       if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
       let ok=has(tr);
       if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(has(trs[j])){ok=true;break}j++}}
-      if(!ok)tr.classList.add("nh");
+      if(!ok){tr.classList.add("nh");tr.style.display="none"}
     })}
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
   const nrm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/^[^a-z0-9]+/i,"").toLowerCase(),src={rev:/^autres/,dep:/^abonnement/};
