@@ -13,15 +13,15 @@ const css=`
 #bt td.qs{box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)}
 #bt thead th[data-mo]{border-radius:10px 10px 0 0;box-shadow:inset 0 -3px 0 var(--mcol),0 1px 0 var(--line);background-image:${g("var(--mcol)",12)}!important}
 /* mois en cours : liseré vert continu autour de toute la colonne (haut, gauche, droite, bas) */
-#bt .m-cur.mcf{--bl:inset 3px 0 0 var(--accent)}
-#bt .m-cur.mcl{--br:inset -3px 0 0 var(--accent)}
-#bt .m-cur.mcb{--bb:inset 0 -3px 0 var(--accent)}
-#bt td.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),var(--bb,0 0 0 0 transparent)!important}
+#bt .m-cur.mcf{--sbl:inset 3px 0 0 var(--accent)}
+#bt .m-cur.mcl{--sbr:inset -3px 0 0 var(--accent)}
+#bt .m-cur.mcb{--sbb:inset 0 -3px 0 var(--accent)}
+#bt td.m-cur{box-shadow:var(--sbl,0 0 0 0 transparent),var(--sbr,0 0 0 0 transparent),var(--sbb,0 0 0 0 transparent)!important}
 #bt tbody td.m-cur.mcl:not(.pin){position:relative}
 #bt tbody td.m-cur.mcl::after{content:"";position:absolute;top:0;bottom:0;right:0;width:3px;background:var(--accent);pointer-events:none}
 #bt thead th.m-cur{font-weight:800}
-#bt thead tr:first-child th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)!important}
-#bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--bl,0 0 0 0 transparent),var(--br,0 0 0 0 transparent),0 1px 0 var(--line)!important}
+#bt thead tr:first-child th.m-cur{box-shadow:var(--sbl,0 0 0 0 transparent),var(--sbr,0 0 0 0 transparent),inset 0 3px 0 var(--accent),inset 0 -3px 0 var(--mcol),0 1px 0 var(--line)!important}
+#bt thead tr:not(:first-child) th.m-cur{box-shadow:var(--sbl,0 0 0 0 transparent),var(--sbr,0 0 0 0 transparent),0 1px 0 var(--line)!important}
 #bt thead th.m-past{opacity:.72}
 /* mois terminés : toutes les cellules (Budget, Réel, Écart) reçoivent la même opacité, donc la même teinte */
 #bt tbody td.m-past{opacity:.6}
