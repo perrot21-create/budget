@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : bouton Écarts + Classement repliable (v10)");
+console.info("budget_plus : bouton Écarts + Classement repliable (v11)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -141,12 +141,13 @@ function applyCls(tb){
   hdr.classList.add("clsh");hdr.classList.toggle("open",clsOpen);
   if(!hdr.querySelector(".cla")){const c=[...hdr.cells].find(x=>x.textContent.trim());if(c)c.insertAdjacentHTML("afterbegin",'<span class="cla" aria-hidden="true">▸</span>')}
   hdr.title=clsOpen?"Replier le classement":"Déplier le classement";
-  for(let x=hdr.nextElementSibling;x;x=x.nextElementSibling){if(x.classList.contains("sec"))break;x.style.display=clsOpen?"":"none"}
+  for(let x=hdr.nextElementSibling;x;x=x.nextElementSibling){if(x.classList.contains("sec"))break;{x.style.display=clsOpen?"":"none";if(clsOpen&&getComputedStyle(x).display==="none")x.style.display="table-row"}}
 }
+/* écouteur en phase de capture : le clic arrive même si un autre script arrête la propagation sur le tableau */
 document.addEventListener("click",e=>{
   const tr=e.target.closest&&e.target.closest("#bt tr.clsh");if(!tr)return;
   clsOpen=!clsOpen;const tb=tr.closest("table");if(tb)applyCls(tb);
-});
+},true);
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
   /* les lignes de titre Revenus / Dépenses / Synthèse sont remplacées par la colonne verticale */
