@@ -529,30 +529,20 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 .sw2 input:checked+.trk::after{transform:translateX(26px)}
 .sw2 input:focus-visible+.trk{outline:2px solid var(--ink);outline-offset:2px}
 .sw2 .sml{display:flex;flex-direction:column;gap:2px}.sw2 .sml b{font-size:var(--fs-lg)}.sw2 .sml small{font-size:var(--fs-md);color:var(--mute);line-height:1.35}
-/* Synthèse : même ligne grise de 2 px sur toute la longueur (noms, mois, cumul annuel) */
+/* Synthèse : lignes grises de 2 px, traits de trimestre identiques à Revenus/Dépenses */
 #bt#bt tbody tr.k-syn:not(.sec) td{
   border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
   border-bottom:0!important;
-  box-shadow:none!important;
+}
+#bt#bt tbody tr.k-syn:not(.sec) td.qs{
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--qc) 65%,transparent)!important;
 }
 #bt#bt tbody tr.k-syn:not(.sec) td.nm{
   box-shadow:3px 0 0 var(--syn-sep)!important;
 }
-/* Plus de ligne sombre entre Solde cumulé et Classement par tiers, sur toute la longueur */
-#bt#bt tbody tr.sec.k-syn.tier td{
-  border-top:0!important;
-  border-bottom:0!important;
-  box-shadow:none!important;
-}
-#bt#bt tbody tr.sec.k-syn.tier td.nm{
-  box-shadow:3px 0 0 var(--syn-sep)!important;
-}
-/* Traits entre trimestres : continus sur toute la hauteur du tableau */
-#bt#bt td.g.q,
-#bt#bt th.g.q{
-  border-left:3px solid var(--qsep,color-mix(in srgb,var(--mute) 55%,var(--surface)))!important;
-}
- }</style>
+#bt#bt tbody tr.tcum td.fr-b{--fb:0 0 0 0 transparent}
+#bt#bt tbody tr.sec.k-syn.tier td{border-top:0!important}
+ </style>
 </head>
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
