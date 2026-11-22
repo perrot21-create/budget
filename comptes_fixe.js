@@ -30,9 +30,14 @@ document.head.appendChild(st);
 /* ---- Tableau de bord : répartition en 2 colonnes ---- */
 function dashUnwrap(a){
  if(!a)return;
- if(a._ord){a._ord.forEach(n=>a.appendChild(n));a._ord=null}
- a.querySelectorAll(":scope > .dcol").forEach(c=>c.remove());
+ const cols=a.querySelectorAll(":scope > .dcol");
+ /* on ne remet les anciens blocs en place que si les colonnes existent encore ;
+    sinon la page a été redessinée et ces blocs sont périmés */
+ if(a._ord&&cols.length)a._ord.forEach(n=>a.appendChild(n));
+ a._ord=null;
+ cols.forEach(c=>c.remove());
  a.classList.remove("dfit");a.style.height="";
+}
 }
 function dashWrap(a){
  const kids=[...a.children].filter(k=>!k.classList.contains("vh")),
