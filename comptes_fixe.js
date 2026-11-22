@@ -38,7 +38,7 @@ function dashUnwrap(a){
  cols.forEach(c=>c.remove());
  a.classList.remove("dfit");a.style.height="";
 }
-}
+
 function dashWrap(a){
  const kids=[...a.children].filter(k=>!k.classList.contains("vh")),
   has=(k,s)=>k.matches(s)||!!k.querySelector(s),
