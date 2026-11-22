@@ -921,7 +921,7 @@ function drawBud(first){
   const A={};
   S.tx.forEach(t=>{if(!t.cat||+t.date.slice(0,4)!==Y)return;const k=t.cat+":"+(t.sub||""),m=+t.date.slice(5,7)-1;(A[k]=A[k]||Array(12).fill(0))[m]+=kindOf(t.cat)==="rev"?t.v:-t.v});
   const B=(k,m)=>(S.budget[Y+"|"+k]||[])[m]||0,R=(k,m)=>(A[k]||[])[m]||0,E=(k,m,kd)=>(kd==="rev"?1:-1)*(R(k,m)-B(k,m));
-  const cmc=m=>m%2?" mp":" mi",M=[...Array(12).keys()],fe=n=>f(n)+"\u202f€",fm=n=>n?fe(n):"–",fx=n=>{n=Math.round(n);return n>0?"+"+fe(n):fm(n)},sg=n=>n>0?"pos":n<0?"neg":"",ng=n=>n>0?"pos":n<0?"neg":"",no=()=>"";
+  const cmc=m=>(m%2?" mp":" mi")+(m>0&&m%3===0?" q":""),M=[...Array(12).keys()],fe=n=>f(n)+"\u202f€",fm=n=>n?fe(n):"–",fx=n=>{n=Math.round(n);return n>0?"+"+fe(n):fm(n)},sg=n=>n>0?"pos":n<0?"neg":"",ng=n=>n>0?"pos":n<0?"neg":"",no=()=>"";
   const nc=1+M.reduce((s,m)=>s+(CM[m]?3:1),0)+(CA?4:2);
   const L=[];
   const nrm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
@@ -978,7 +978,7 @@ function drawBud(first){
   const cY=chain(Y,bs,rs),op=cY.op,rcum=cY.rc,run=cY.endB;carry=op[0];
   const TT={};S.tx.forEach(t=>{if(+t.date.slice(0,4)!==Y)return;const k=t.tier||"",m=+t.date.slice(5,7)-1;(TT[k]=TT[k]||Array(12).fill(0))[m]+=t.v});
   const tl=Object.keys(TT).map(k=>({n:k?(S.tiers.find(x=>x.id===k)||{name:"Tiers supprimé"}).name:"Sans tiers",v:TT[k],t:TT[k].reduce((a,b)=>a+b,0)})).sort((a,b)=>a.t-b.t);
-  const tiersRows=tl.length?secRow("sec k-syn tier",`<button class="tg" data-tt="1" aria-expanded="${!CT}" aria-label="Ouvrir ou fermer le classement par tiers">${CT?"▸":"▾"}</button> Classement par tiers`)+(CT?"":tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td>${CA?`<td class="v"></td><td class="v"></td>`:""}<td class="v"></td></tr>`).join("")):"";
+  const tiersRows=tl.length?secRow("sec k-syn tier",`<button class="tg" data-tt="1" aria-expanded="${!CT}" aria-label="Ouvrir ou fermer le classement par tiers">${CT?"▸":"▾"}</button> Classement par tiers`)+(CT?"":tl.map((r,i)=>`<tr class="tz${i%2}"><td class="nm">${i+1}. ${esc(r.n)}</td>${M.map(m=>`<td class="g ${sg(r.v[m])}${m>0&&m%3===0?" q":""}">${fm(r.v[m])}</td>${CM[m]?"<td class=\"v\"></td><td class=\"v\"></td>":""}`).join("")}<td class="g ga tt ${sg(r.t)}">${fm(r.t)}</td>${CA?`<td class="v"></td><td class="v"></td>`:""}<td class="v"></td></tr>`).join("")):"";
   const rowB=(name,cls,v,ann,rv)=>`<tr class="${cls}"><td class="nm">${name}</td>${M.map(m=>`<td class="g ${ng(v[m])}${cmc(m)}">${fe(Math.round(v[m]))}</td>${CM[m]?(rv?`<td class="v ri ${ng(rv[m])}${cmc(m)}">${fe(rv[m])}</td><td class="v ${ng(rv[m]-v[m])}${cmc(m)}">${fe(Math.round(rv[m]-v[m]))}</td>`:`<td class="v${cmc(m)}"></td><td class="v${cmc(m)}"></td>`):""}`).join("")}<td class="g ga tt ${ng(ann)}">${fe(Math.round(ann))}</td>${CA?(rv?`<td class="v ri tt ${ng(rv[11])}">${fe(rv[11])}</td><td class="v tt ${ng(rv[11]-ann)}">${fe(Math.round(rv[11]-ann))}</td><td class="v"></td>`:'<td class="v"></td><td class="v"></td><td class="v"></td>'):'<td class="v"></td>'}</tr>`;
   h+=secRow("sec k-syn","Synthèse")
    +row("Total revenus","tot trev k-syn",m=>rb[m],m=>ra[m],m=>ra[m]-rb[m],no)
