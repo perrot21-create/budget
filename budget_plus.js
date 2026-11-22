@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : bouton Écarts (v7)");
+console.info("budget_plus : bouton Écarts (v8)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -271,7 +271,7 @@ function post(){
       for(let q=i;q<=j;q++){
         if(k&&v>=0&&q>v)continue;
         const td=document.createElement("td");
-        if(q===v){td.className="grp gk-"+k;td.rowSpan=j-q+1;td.innerHTML='<span class="gt">'+LB[k]+'</span>'}
+        if(q===v){td.className="grp gk-"+k;td.rowSpan=Math.max(1,trs.slice(q,j+1).filter(r=>r.getClientRects().length).length);td.innerHTML='<span class="gt">'+LB[k]+'</span>'}
         else td.className="grp0";
         trs[q].insertBefore(td,trs[q].firstChild);
       }
@@ -312,6 +312,8 @@ function post(){
   {const hr=[...tb.querySelectorAll("thead tr")];hr.forEach(t=>{t.style.height=""});
     const sr=tb.querySelector("tbody tr.k-rev")||tb.querySelector("tbody tr"),h=sr?Math.round(sr.getBoundingClientRect().height):0;
     if(h>0)hr.forEach(t=>{t.style.height=h+"px"})}
+  /* libellés verticaux (Revenus / Dépenses / Synthèse) : réduits si le bloc visible est trop court */
+  tb.querySelectorAll("td.grp .gt").forEach(g=>{g.style.fontSize="";const td=g.parentElement,av=td.clientHeight-8,L=g.offsetHeight;if(av>0&&L>av)g.style.fontSize=Math.max(.55,av/L*1.2).toFixed(2)+"em"});
   reveal();
   /* « Tout fermer » : le tableau remonte au début */
   if(topF){topF=false;const inn=w.querySelector(".in");if(inn)inn.style.paddingBottom="";w.scrollTop=0;requestAnimationFrame(()=>w.scrollTo({top:0,behavior:"smooth"}))}
