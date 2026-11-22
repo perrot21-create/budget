@@ -1,4 +1,3 @@
-
 /* synthese_plus.js
    À charger APRÈS budget_plus.js, tout à la fin de index.html :
    <script src="synthese_plus.js"></script>
