@@ -2,6 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
+console.info("budget_plus : heatmap basée sur les écarts affichés (v4)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -138,7 +139,7 @@ function leg(){
   if(!bp)return;
   if(!P().heat){if(lg)lg.remove();return}
   if(!lg){const e=document.createElement("span");e.id="hleg";e.className="sub";
-    e.innerHTML='<i class="hk" style="background:#d9483b"></i>Dépassement ou gros manque<i class="hk" style="background:#e0a030"></i>Limite proche ou petit manque<i class="hk" style="background:#3fa56d"></i>Revenu atteint';bp.appendChild(e)}
+    e.innerHTML='<i class="hk" style="background:#d9483b"></i>Dépassement ou manque<i class="hk" style="background:#e0a030"></i>Dépense sous le budget<i class="hk" style="background:#3fa56d"></i>Revenu supérieur au budget';bp.appendChild(e)}
 }
 function post(){
   const w=document.getElementById("bt"),tb=w&&w.querySelector("table");if(!tb)return;
@@ -209,34 +210,33 @@ function post(){
           const v=num(td);
           if(!isNaN(v)&&v!==0)td.insertAdjacentHTML("afterbegin",`<span class="ar2" aria-hidden="true">${v>0?"↑":"↓"}</span>`);
         }
-        if(info){
-          const b=info.b[m],r=info.r[m],role=td.classList.contains("ri")?"r":td.classList.contains("v")?"e":td.classList.contains("g")?"b":"";
-          if(p.heat&&role&&s!=="m-fut"&&(b>0||r>0)){
-            let h="";
-            if(dep){const q=b>0?r/b:9;h=q>1.2?"hr2":q>1?"hr1":q>=.9?"ha":""}
-            else{const q=b>0?r/b:1;if(q>=1)h="hg";else if(s==="m-past")h=q<.7?"hr2":q<.9?"ha":""}
-            if(h)td.classList.add("hh",h)}
-        }
       }
       c+=n;
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
-  /* heatmap active : ne garde que les lignes ayant, dans une colonne Écart visible, un écart de plus de 5 en valeur absolue
-     (écarts de -5 à +5, cases vides et coches ✓ exclus ; une catégorie reste visible si une de ses sous-catégories est concernée) */
-  {const trs=[...tb.querySelectorAll("tbody tr")],
-    has=tr=>[...tr.querySelectorAll("td.v")].some(td=>{if(td.classList.contains("vx")||td.classList.contains("z0"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
-    trs.forEach(tr=>tr.classList.remove("nh"));
-    /* une cellule n'est colorée que si l'écart de son mois, sur la même ligne, dépasse 5 en valeur absolue (coche, vide ou -5/+5 : pas de couleur) */
-    if(p.heat)trs.forEach(tr=>{
-      const ms=new Set();
-      tr.querySelectorAll("td.v").forEach(td=>{if(td.classList.contains("z0"))return;const v=num(td);if(!isNaN(v)&&Math.abs(v)>5)ms.add(td.dataset.mm)});
-      tr.querySelectorAll("td.hh").forEach(td=>{if(!ms.has(td.dataset.mm))td.classList.remove("hh","hr2","hr1","ha","hg")});
+  /* heatmap : basée uniquement sur les écarts AFFICHÉS dans les colonnes Écart.
+     Un mois n'est coloré (Budget, Réel, Écart) que si son écart dépasse 5 en valeur absolue ; coche ✓, vide, -5 à +5 : aucune couleur.
+     Seules les lignes ayant au moins un tel écart restent visibles (une catégorie reste visible si une de ses sous-catégories en a un). */
+  {const trs=[...tb.querySelectorAll("tbody tr")];
+    trs.forEach(tr=>{tr.classList.remove("nh");tr.querySelectorAll("td.hh").forEach(td=>td.classList.remove("hh","hr2","hr1","ha","hg"))});
+    const gap=new Map();
+    trs.forEach(tr=>{
+      if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
+      const dep=tr.classList.contains("k-dep"),ms={};
+      tr.querySelectorAll("td.v").forEach(td=>{
+        if(td.classList.contains("z0")||td.classList.contains("vx"))return;
+        const v=num(td);if(isNaN(v)||Math.abs(v)<=5)return;
+        ms[td.dataset.mm]=dep?(v<0?"hr2":"ha"):(v>0?"hg":"hr2");
+      });
+      gap.set(tr,Object.keys(ms).length>0);
+      if(!p.heat)return;
+      tr.querySelectorAll("td[data-mm]").forEach(td=>{const h=ms[td.dataset.mm];if(h&&roleOf(td))td.classList.add("hh",h)});
     });
     if(p.heat)trs.forEach((tr,i)=>{
-      if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
-      let ok=has(tr);
-      if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(has(trs[j])){ok=true;break}j++}}
+      if(!gap.has(tr))return;
+      let ok=gap.get(tr);
+      if(!ok&&!tr.classList.contains("sub")){let j=i+1;while(trs[j]&&trs[j].classList.contains("sub")){if(gap.get(trs[j])){ok=true;break}j++}}
       if(!ok)tr.classList.add("nh");
     })}
   /* toutes les catégories d'un type prennent la couleur de la ligne « Autres » (revenus) ou « Abonnements » (dépenses) */
