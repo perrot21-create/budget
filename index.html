@@ -896,6 +896,7 @@ function charts(rb,db,ra,da,op,carry,A){
   <div class="chc"><h3>Dépenses : budget contre réel</h3><svg viewBox="0 0 560 232">${cc}${lb}</svg>${lg}</div></div></details>`;
 }
 let GM=0,CT=true; /* CT = Classement par tiers replié (true) à l'ouverture */
+ document.addEventListener("click",e=>{if(e.target.closest("[data-tt]")){CT=!CT;drawBud()}});
 function goMonth(i){const w=$("#bt"),n=new Date(),m=i??(Y===n.getFullYear()?n.getMonth():0);GM=m;const th=w.querySelector(`th[data-mo="${m}"]`),nm=w.querySelector("th.nm");if(th&&nm)w.scrollLeft+=th.getBoundingClientRect().left-nm.getBoundingClientRect().right}
 function drawBud(first){
   S.cats.forEach(c=>{if(c.subs.length&&CL[c.id]===undefined)CL[c.id]=true});
