@@ -542,7 +542,12 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 }
 #bt#bt tbody tr.tcum td.fr-b{--fb:0 0 0 0 transparent}
 #bt#bt tbody tr.sec.k-syn.tier td{border-top:0!important}
- </style>
+/* Solde du mois et Solde cumulé : plus de traits bleus/verts, ligne grise comme les autres */
+html #bt#bt tbody tr.tsol td:not(.nm),
+html #bt#bt tbody tr.tcum td:not(.nm){
+  border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
+  border-bottom:0!important;
+}</style>
 </head>
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
