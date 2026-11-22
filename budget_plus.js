@@ -2,7 +2,7 @@
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
 "use strict";
-console.info("budget_plus : bouton Écarts (v5)");
+console.info("budget_plus : bouton Écarts (v6)");
 const g=(a,p)=>`linear-gradient(color-mix(in srgb,${a} ${p}%,transparent),color-mix(in srgb,${a} ${p}%,transparent))`;
 const css=`
 :root{--q0:#4a86c5;--q1:#4aa06d;--q2:#d19a3a;--q3:#9166c9}
@@ -203,11 +203,11 @@ function post(){
     });
     if(info){const l=tr.lastElementChild;if(l&&l.classList.contains("pc"))l.insertAdjacentHTML("afterbegin",spark(info.r,info.b,cy,cm))}
   });
-  /* bouton « Écarts » : ne garde que les lignes ayant, dans une colonne Écart visible, un écart chiffré.
+  /* bouton « Écarts » : ne garde que les lignes ayant, dans une colonne Écart d'un MOIS visible (pas le cumul annuel ni le % réalisé), un écart chiffré.
      Les coches ✓ (écart de -5 à +5), les cases vides et « – » ne comptent pas.
      Une catégorie reste visible si une de ses sous-catégories a un écart chiffré. */
   {const trs=[...tb.querySelectorAll("tbody tr")],
-    has=tr=>[...tr.querySelectorAll("td.v")].some(td=>{if(td.classList.contains("z0")||td.classList.contains("vx"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
+    has=tr=>[...tr.querySelectorAll("td.v[data-mm]")].some(td=>{if(td.classList.contains("z0")||td.classList.contains("vx"))return false;const v=num(td);return !isNaN(v)&&Math.abs(v)>5});
     trs.forEach(tr=>tr.classList.remove("nh"));
     if(p.gap)trs.forEach((tr,i)=>{
       if(tr.classList.contains("sec")||!/\bk-(rev|dep)\b/.test(tr.className))return;
