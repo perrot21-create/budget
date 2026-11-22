@@ -529,23 +529,27 @@ div.hero{margin-top:36px;margin-bottom:28px;gap:28px 56px}.hero~section,.hero~.d
 .sw2 input:checked+.trk::after{transform:translateX(26px)}
 .sw2 input:focus-visible+.trk{outline:2px solid var(--ink);outline-offset:2px}
 .sw2 .sml{display:flex;flex-direction:column;gap:2px}.sw2 .sml b{font-size:var(--fs-lg)}.sw2 .sml small{font-size:var(--fs-md);color:var(--mute);line-height:1.35}
-/* Solde du mois et Solde cumulé : plus aucun trait bleu ni vert */
-#bt tr.tsol td,
-#bt tr.tcum td,
-#bt tr.tsol td:last-child,
-#bt tr.tcum td:last-child{
+/* Synthèse : toutes les lignes de séparation = celle entre Total revenus et Total dépenses */
+#bt tbody tr.tdep td,
+#bt tbody tr.tsol td,
+#bt tbody tr.gap.k-syn td,
+#bt tbody tr.tcum td{
+  border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
+  border-bottom:0!important;
   box-shadow:none!important;
 }
-/* On garde uniquement l'ombre qui sépare la colonne des noms des mois */
-#bt tr.tsol td.nm,
-#bt tr.tcum td.nm{
+#bt tbody tr.tdep td.nm,
+#bt tbody tr.tsol td.nm,
+#bt tbody tr.gap.k-syn td.nm,
+#bt tbody tr.tcum td.nm{
   box-shadow:3px 0 0 var(--syn-sep)!important;
 }
-/* Synthèse : mêmes séparateurs que les lignes de catégories */
-#bt tbody tr.k-syn td,
-#bt tbody tr.tz0 td,
-#bt tbody tr.tz1 td{
-  border-top:2px solid color-mix(in srgb,var(--mute) 32%,var(--surface))!important;
+#bt tbody tr.sec.k-syn.tier td{
+  border-top:0!important;
+  box-shadow:none!important;
+}
+#bt tbody tr.sec.k-syn.tier td.nm{
+  box-shadow:3px 0 0 var(--syn-sep)!important;
 }
 }</style>
 </head>
