@@ -2553,7 +2553,12 @@ const odb=drawBud;drawBud=function(){const d=document.querySelector("#bch detail
 const odr=draw;window.draw=draw=function(){odr.apply(this,arguments);fit();later()};
 
 addEventListener("resize",later);
-document.addEventListener("click",later,true);
+/* Un clic dans un champ de saisie ne change pas la mise en page : on ne recalcule rien (sinon le champ perd le focus) */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t&&t.closest&&t.closest("input,select,textarea,summary,label"))return;
+  later();
+},true);
 document.addEventListener("change",later,true);
 document.addEventListener("toggle",later,true);
 if(window.ResizeObserver){const a=document.getElementById("app");if(a)new ResizeObserver(()=>{if(PAGES.includes(T)&&T!=="dash")later()}).observe(a)}
