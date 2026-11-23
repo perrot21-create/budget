@@ -3171,7 +3171,12 @@ st.textContent=`
 #stp .sp-r span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #stp .sp-r .a{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .dfit .dcol>#stp{flex:0 0 auto;min-height:0;overflow:visible;order:1}
-`;
+#stp h3 button.sp-top{border:0;background:none;padding:0;min-height:0;font:inherit;color:inherit;cursor:pointer;text-align:left;box-shadow:none}
+#stp h3 button.sp-top:hover{color:var(--accent);text-decoration:underline}
+#stp h3 button.sp-top::after{content:" ›";font-weight:800}
+.mdl .sp-gr{cursor:pointer}
+.mdl .sp-gr:hover td{background:color-mix(in srgb,var(--accent) 18%,var(--surface))!important}
+.mdl .sp-gr button{border:0;background:none;padding:0;min-height:0;font:inherit;color:var(--ink);cursor:pointer;text-align:left;font-weight:600}`;
 document.head.appendChild(st);
 
 /* ---------- Etat ---------- */
