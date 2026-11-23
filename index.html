@@ -1915,7 +1915,7 @@ document.addEventListener("click",function(e){
 });
 })();
 </script>
-</script>
+<script>
 /* pret.js — onglet « Prêts entre proches » (JS + CSS). À charger dans index.html avec : <script src="pret.js"></script> */
 (()=>{if(document.getElementById("pq-css"))return;const s=document.createElement("style");s.id="pq-css";s.textContent=`
 /* Prêts entre proches (v4 — « Par proche » en 4 carrés) */
@@ -2196,7 +2196,7 @@ addEventListener("resize",pqFit);
   new MutationObserver(()=>{const on=!!a.querySelector(".pq-root");document.documentElement.classList.toggle("pq-lock",on);if(on)pqFit()}).observe(a,{childList:true})};
   document.readyState==="loading"?document.addEventListener("DOMContentLoaded",hook):hook()})();
 </script>
- </script>
+ <script>
 /* reglages.js v3 — Réglages par onglet. À charger APRÈS pret.js : <script src="reglages.js"></script> */
 (()=>{
 const NM={dash:"Tableau de bord",acc:"Comptes",bud:"Budget annuel",lst:"Tiers et catégories",act:"Actions",pre:"Prêts entre proches",sav:"Sauvegarde"};
@@ -2358,7 +2358,7 @@ F.p=tset("acc","fp",false);F.n=tset("acc","fn",true);PQH=tset("pre","hd",true);
 draw();
 })();
 </script>
- </script>
+ <script>
   /* tiers.js — Onglet « Tiers et catégories » compact (menus déroulants).
    À charger APRÈS reglages.js : <script src="tiers.js"></script>
    Pour revenir à l'ancien affichage : supprimer cette ligne <script> (et le fichier). */
@@ -2432,7 +2432,7 @@ document.addEventListener("input",e=>{const x=e.target;if(x.dataset&&x.dataset.c
 if(T==="lst")drawLst();
 })(); 
 </script> 
-</script> 
+<script> 
   /* comptes_fixe.js v5 — La page ne bouge plus dans les onglets Comptes, Budget annuel, Tableau de bord,
    Tiers et catégories, Actions et Sauvegarde.
    - Comptes et Budget annuel : seul le tableau défile (Budget annuel : graphiques repliés).
@@ -2545,7 +2545,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(later);
 fit();
 })();
 </script> 
-</script> 
+<script> 
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
    À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
 (()=>{
@@ -2929,7 +2929,7 @@ document.addEventListener("mouseout",e=>{const r=e.relatedTarget;if(r&&r.closest
 if(typeof T!=="undefined"&&T==="bud")draw();
 })();
 </script>   
-</script>  
+<script>  
 /* synthese_plus.js (v2)
    À charger APRÈS budget_plus.js, tout à la fin de index.html :
    <script src="synthese_plus.js"></script>
@@ -3071,7 +3071,7 @@ if(typeof T!=="undefined"&&T==="bud")draw();
  
 })();
 </script> 
-</script> 
+<script> 
 /* stats.js — bloc « Statistiques » du Tableau de bord.
    À charger EN DERNIER (après synthese_plus.js) : <script src="stats.js"></script>
    Pour annuler : retirer cette ligne <script> (et le fichier).
