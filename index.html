@@ -3398,7 +3398,8 @@ document.addEventListener("click",e=>{
   const b=e.target.closest&&e.target.closest("#stp button");if(!b)return;
   const s=ST(),D=b.dataset;
   if(D.spmode){if(s.mode!==D.spmode){s.mode=D.spmode;s.id="";s.sub=""}}
-  else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
+    else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
+  else if(D.sptop){openGroups(D.sptop);return}
   else return;
   save();rerender();
 });
