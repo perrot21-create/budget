@@ -3360,7 +3360,31 @@ function showOps(ops,a,b,titre){
   o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button")],f0=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f0){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f0.focus()}}};
   document.body.appendChild(o);o.querySelector("button").focus();
 }
-
+/* ---------- Fenêtre : toutes les catégories d'un type, puis leurs opérations ---------- */
+function openGroups(type){
+  const s=ST(),{a,b}=period(s),ops=filt(s,a,b),{G,nameOf,plain,noun}=groupsOf(s,ops);
+  const L=G[type].slice().sort((x,y)=>y.v-x.v),cl=type==="rev"?"pos":"neg",lbl=type==="rev"?"revenus":"dépenses";
+  const tot=r2(L.reduce((q,x)=>q+x.v,0)),sum=L.reduce((q,x)=>q+Math.max(0,x.v),0)||1;
+  const rows=L.map(x=>`<tr class="sp-gr" data-spg="${esc(x.key)}" tabindex="0"><td><button type="button" data-spg="${esc(x.key)}">${nameOf(x.key)}</button></td><td class="r">${x.n}</td><td class="r ${cl}">${eur2(x.v)}</td><td class="r">${x.v>0?Math.round(x.v/sum*100)+" %":"–"}</td></tr>`).join("");
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Toutes les ${noun} de ${lbl}"><div class="mh"><h2>Toutes les ${noun} de ${lbl} · ${dfr(a)} → ${dfr(b)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${L.length} ${noun} · Total : <b class="${cl}">${eur2(tot)}</b> · Cliquez sur une ligne pour voir ses opérations.</p><div class="tw2"><table class="lt" aria-label="Liste des ${noun} de ${lbl}"><thead><tr><th>${noun==="tiers"?"Tiers":"Catégorie"}</th><th class="r">Opérations</th><th class="r">Montant</th><th class="r">Part</th></tr></thead><tbody>${rows}</tbody></table></div><div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  const open=el=>{
+    const q=el&&el.dataset&&el.dataset.spg;if(q===undefined)return;
+    const g=L.find(x=>x.key===q);if(!g)return;
+    showOps(g.ops.slice().sort((x,y)=>y.date.localeCompare(x.date)),a,b,plain(q));
+  };
+  o.onclick=e=>{
+    if(e.target===o||e.target.closest("[data-r]"))return end();
+    open(e.target.closest("[data-spg]"));
+  };
+  o.onkeydown=e=>{
+    if(e.key==="Escape"){e.stopPropagation();end()}
+    else if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("tr.sp-gr")){e.preventDefault();open(e.target)}
+    else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button,tr.sp-gr")],f0=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f0){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f0.focus()}}
+  };
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
 /* ---------- Evénements ---------- */
 document.addEventListener("toggle",e=>{
   const d=e.target;if(!d.dataset||d.dataset.spdd===undefined)return;
