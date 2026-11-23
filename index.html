@@ -3156,7 +3156,11 @@ st.textContent=`
 #stp .sp-c small.pos{color:var(--pos);font-weight:600}#stp .sp-c small.neg{color:var(--neg);font-weight:600}
 #stp .sp-pair{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
 #stp .sp-pair .sp-c{min-width:0}
-
+#stp .sp-c.sp-row,#stp .sp-c.sp-net{border:1px solid var(--mute);align-items:stretch;text-align:left;padding:3px 10px}
+#stp .sp-c.sp-row{flex-direction:row;justify-content:space-between;align-items:center;gap:8px}
+#stp .sp-c.sp-net{flex:1.7 1 0;justify-content:space-around}
+#stp .sp-line{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#stp .sp-c .sub{font-size:var(--fs-md);color:var(--ink)}
 /* zone droite : tops */
 #stp .sp-rs{display:flex;flex-direction:column;gap:6px;min-width:0;min-height:0;overflow:hidden}
 #stp .sp-rs>div{flex:1 1 0;min-height:0;overflow:hidden}
@@ -3297,7 +3301,7 @@ function inner(){
   const sub2=k==="net"?`<small>Dép. ${eur2(g.d)} · Rev. ${eur2(g.r)}</small>`:"";
   const big=ops.reduce((m,t)=>Math.abs(t.v)>Math.abs(m.v)?t:m,ops[0]),lst=ops[0],sv=t=>`${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}`;
   const extra=`<div class="sp-c"><span class="sub" title="Plus grosse opération">Plus grosse op.</span><b class="sp-v ${big.v>0?"pos":"neg"}">${sv(big)}</b><small>${dfr(big.date)}</small></div><div class="sp-c"><span class="sub" title="Dernière opération">Dernière op.</span><b class="sp-v ${lst.v>0?"pos":"neg"}">${sv(lst)}</b><small>${dfr(lst.date)}</small></div>`;
-  const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div><div class="sp-pair">${extra}</div></div>`;
+  const band=`<div class="sp-band"><div class="sp-c sp-net"><div class="sp-line"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b></div><div class="sp-line"><span class="sub">Dép. ${eur2(g.d)}</span><span class="sub">Rev. ${eur2(g.r)}</span></div></div><div class="sp-c sp-row"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c sp-row"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div><div class="sp-pair">${extra}</div></div>`;
   return wrap(ops.length,accBlock(s,ops,k),band,rankHtml(s,ops,k));
 }
 
