@@ -3194,7 +3194,7 @@ function inner(){
     const amx=Math.max(0.01,...ar.map(x=>Math.abs(x.v)));
     byAcc=`<h3>Par compte</h3>`+ar.map(x=>`<div class="stx-r"><span class="l"><i class="cd t${x.i}" style="background:var(--ac)"></i>${esc(x.a.name)}</span><div class="pb2"><i style="width:${(Math.abs(x.v)/amx*100).toFixed(1)}%;background:var(--ac)" class="t${x.i}"></i></div><span class="a ${col(x.v,k)}">${x.v?fv(x.v,k):"–"}</span><span class="p sub">${x.n} op.</span></div>`).join("");
   }
-  return head+`<div class="stx-k">${cards}</div><h3>${byYear?"Par année":"Par mois"}</h3>${rows}${byAcc}<p style="margin:14px 0 0"><button type="button" data-sxops="1">Voir les opérations (${ops.length})</button></p>`;
+return head+`<div class="stx-k">${cards}</div>${byYear?`<h3>Par année</h3>${rows}`:""}${byAcc}<p style="margin:14px 0 0"><button type="button" data-sxops="1">Voir les opérations (${ops.length})</button></p>`;
 }
 
 /* ---------- Insertion dans le Tableau de bord ---------- */
