@@ -3071,6 +3071,204 @@ if(typeof T!=="undefined"&&T==="bud")draw();
  
 })();
 </script> 
-   
+</script> 
+/* stats.js — bloc « Statistiques » du Tableau de bord.
+   À charger EN DERNIER (après synthese_plus.js) : <script src="stats.js"></script>
+   Pour annuler : retirer cette ligne <script> (et le fichier).
+
+   Total d'un tiers ou d'une catégorie (et sous-catégorie) sur une période :
+   de date à date, une année, ou d'année en année, sur un, plusieurs ou tous les comptes.
+   Source : S.tx (aucune nouvelle donnée de budget). Les critères sont mémorisés dans S.stats
+   (sauvegarde et fichier partagé inclus). */
+(()=>{
+"use strict";
+
+/* ---------- Style ---------- */
+const st=document.createElement("style");
+st.textContent=`
+#stx h2{margin-bottom:10px}
+#stx .stx-f{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin-bottom:10px}
+#stx .stx-f label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
+#stx .stx-f select,#stx .stx-f input[type=date]{height:40px;min-width:0;color:var(--ink);background:var(--surface)}
+#stx .stx-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
+#stx .stx-seg button{border:0;border-radius:0;height:40px;background:var(--surface);color:var(--mute);font-weight:600}
+#stx .stx-seg button+button{border-left:1px solid var(--line)}
+#stx .stx-seg button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}
+#stx .stx-q{display:flex;gap:6px;flex-wrap:wrap}
+#stx .stx-q button{height:40px;padding:0 12px;font-size:var(--fs-sm)}
+#stx .stx-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+#stx .stx-c{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
+#stx .stx-v{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#stx h3{margin:14px 0 6px;font-size:var(--fs-md);font-weight:600;color:var(--mute)}
+#stx .stx-r{display:grid;grid-template-columns:minmax(80px,120px) minmax(60px,1fr) auto 64px;gap:4px 12px;align-items:center;padding:3px 0}
+#stx .stx-r .pb2{margin:0;height:10px}
+#stx .stx-r .a{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+#stx .stx-r .p{text-align:right;font-size:var(--fs-sm);white-space:nowrap}
+#stx .stx-r .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dfit #stx{min-height:220px}
+@media(max-width:600px){#stx .stx-r{grid-template-columns:minmax(70px,100px) minmax(40px,1fr) auto}#stx .stx-r .p{display:none}}
+`;
+document.head.appendChild(st);
+
+/* ---------- Etat mémorisé ---------- */
+const DEF=()=>{const y=new Date().getFullYear();return{mode:"tiers",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
+function ST(){
+  let s=S.stats;if(!s||typeof s!=="object")s=S.stats=DEF();
+  const d=DEF();Object.keys(d).forEach(k=>{if(s[k]===undefined)s[k]=d[k]});
+  s.accs=(s.accs||[]).filter(id=>S.acc.some(a=>a.id===id));
+  if(!s.accs.length)s.accs=S.acc.map(a=>a.id);
+  return s;
+}
+
+/* ---------- Calculs ---------- */
+const r2=n=>Math.round(n*100)/100;
+function sel(s){
+  let a,b;
+  if(s.per==="dates"){a=s.d1;b=s.d2;if(a&&b&&a>b)[a,b]=[b,a]}
+  else if(s.per==="year"){a=s.y1+"-01-01";b=s.y1+"-12-31"}
+  else{let y1=+s.y1,y2=+s.y2;if(y1>y2)[y1,y2]=[y2,y1];a=y1+"-01-01";b=y2+"-12-31"}
+  if(!a||!b)return{a,b,ops:[],bad:true};
+  const set=new Set(s.accs);
+  const ops=S.tx.filter(t=>set.has(t.acc)&&t.date>=a&&t.date<=b&&(s.mode==="tiers"
+    ?(s.id===""||(s.id==="_"?!t.tier:t.tier===s.id))
+    :((s.id===""||t.cat===s.id)&&(!s.sub||t.sub===s.sub)))).sort((x,y)=>y.date.localeCompare(x.date));
+  return{a,b,ops,bad:false};
+}
+const agg=ops=>{let r=0,d=0;ops.forEach(t=>{if(t.v>0)r+=t.v;else d-=t.v});return{r:r2(r),d:r2(d)}};
+const kindOf2=g=>g.d>0&&!g.r?"dep":g.r>0&&!g.d?"rev":"net";
+const val=(g,k)=>k==="dep"?g.d:k==="rev"?g.r:r2(g.r-g.d);
+const sgn=n=>n>0?"+":n<0?"−":"";
+const col=(v,k)=>k==="dep"?"neg":k==="rev"?"pos":v>0?"pos":v<0?"neg":"";
+const fv=(v,k)=>k==="net"?sgn(v)+eur2(Math.abs(v)):eur2(Math.abs(v));
+const mlab=(y,m,long)=>cap(new Date(y,m,1).toLocaleDateString("fr-FR",long?{month:"long"}:{month:"short",year:"numeric"}));
+
+/* ---------- Rendu ---------- */
+function opt(v,l,cur){return `<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(l)}</option>`}
+function yearsList(s){
+  const y=new Set([new Date().getFullYear(),+s.y1,+s.y2]);S.tx.forEach(t=>y.add(+t.date.slice(0,4)));
+  return [...y].filter(Boolean).sort((a,b)=>a-b);
+}
+function inner(){
+  const s=ST(),R=sel(s),ops=R.ops;
+  const subjSel=s.mode==="tiers"
+    ?`<label>Tiers<select data-sx="id" aria-label="Tiers">${opt("","Tous les tiers",s.id)}${opt("_","Sans tiers",s.id)}${[...S.tiers].sort((a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"})).map(t=>opt(t.id,t.name,s.id)).join("")}</select></label>`
+    :`<label>Catégorie<select data-sx="id" aria-label="Catégorie">${opt("","Toutes les catégories",s.id)}${[["rev","Revenus"],["dep","Dépenses"]].map(([k,l])=>`<optgroup label="${l}">${S.cats.filter(c=>c.kind===k).map(c=>opt(c.id,c.name,s.id)).join("")}</optgroup>`).join("")}</select></label>`;
+  const cat=s.mode==="cat"&&S.cats.find(c=>c.id===s.id);
+  const subSel=cat&&cat.subs.length?`<label>Sous-catégorie<select data-sx="sub" aria-label="Sous-catégorie">${opt("","Toutes",s.sub)}${cat.subs.map(x=>opt(x.id,x.name,s.sub)).join("")}</select></label>`:"";
+  const allOn=s.accs.length===S.acc.length;
+  const accs=`<div class="stx-f"><span class="sub">Comptes :</span><label class="chip" style="flex-direction:row;color:var(--ink)"><input type="checkbox" data-sxall="1"${allOn?" checked":""}>Tous</label>${S.acc.map((a,i)=>`<label class="chip" style="flex-direction:row;color:var(--ink)"><input type="checkbox" data-sxa="${a.id}"${s.accs.includes(a.id)?" checked":""}><i class="cd t${i}" style="background:var(--ac);margin:0"></i>${esc(a.name)}</label>`).join("")}</div>`;
+  const ys=yearsList(s),yo=v=>ys.map(y=>opt(y,y,v)).join("");
+  const per=`<div class="stx-f"><label>Période<select data-sx="per" aria-label="Type de période">${opt("dates","De date à date",s.per)}${opt("year","Une année",s.per)}${opt("years","D’année en année",s.per)}</select></label>
+   ${s.per==="dates"?`<label>Du<input type="date" data-sx="d1" value="${esc(s.d1)}"></label><label>Au<input type="date" data-sx="d2" value="${esc(s.d2)}"></label>`
+     :s.per==="year"?`<label>Année<select data-sx="y1" aria-label="Année">${yo(s.y1)}</select></label>`
+     :`<label>De<select data-sx="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sx="y2" aria-label="Dernière année">${yo(s.y2)}</select></label>`}
+   <div class="stx-q" role="group" aria-label="Raccourcis"><button type="button" data-sxq="m">Ce mois</button><button type="button" data-sxq="12">12 derniers mois</button><button type="button" data-sxq="y">Cette année</button><button type="button" data-sxq="py">Année dernière</button></div></div>`;
+  const head=`<h2>Statistiques</h2><div class="stx-f"><div class="stx-seg" role="group" aria-label="Analyser par"><button type="button" data-sxmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-sxmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjSel}${subSel}</div>${accs}${per}`;
+  if(R.bad)return head+`<p class="empty">Choisissez les deux dates de la période.</p>`;
+  if(!ops.length)return head+`<p class="empty">Aucune opération pour ces critères.</p>`;
+
+  const g=agg(ops),k=kindOf2(g),tot=val(g,k);
+  const ya=+R.a.slice(0,4),yb=+R.b.slice(0,4),ma=+R.a.slice(5,7)-1,mb=+R.b.slice(5,7)-1;
+  const nm=Math.max(1,(yb-ya)*12+mb-ma+1);
+  const cards=(k==="net"?[["Dépenses",g.d,"dep"],["Revenus",g.r,"rev"],["Net",tot,"net"]]:[[k==="dep"?"Dépenses":"Revenus",tot,k]])
+    .map(([l,v,kk])=>`<div class="stx-c"><span class="sub">${l}</span><b class="stx-v ${col(v,kk)}">${fv(v,kk)}</b></div>`).join("")
+    +`<div class="stx-c"><span class="sub">Opérations</span><b class="stx-v">${ops.length}</b></div><div class="stx-c"><span class="sub">Moyenne / mois</span><b class="stx-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>`;
+
+  /* ventilation : par année (années multiples ou période > 24 mois), sinon par mois */
+  const byYear=s.per==="years"||nm>24,B=[];
+  if(byYear){for(let y=ya;y<=yb;y++)B.push({key:String(y),l:String(y),o:[]})}
+  else{for(let y=ya,m=ma;y<yb||(y===yb&&m<=mb);m++){if(m>11){m=0;y++}B.push({key:y+"-"+String(m+1).padStart(2,"0"),l:mlab(y,m,s.per==="year"),o:[]})}}
+  const idx={};B.forEach(x=>idx[x.key]=x);
+  ops.forEach(t=>{const x=idx[byYear?t.date.slice(0,4):t.date.slice(0,7)];if(x)x.o.push(t)});
+  B.forEach(x=>x.v=val(agg(x.o),k));
+  const mx=Math.max(0.01,...B.map(x=>Math.abs(x.v)));
+  const bar=(v)=>`<div class="pb2" role="img" aria-label="${eur2(Math.abs(v))}"><i style="width:${(Math.abs(v)/mx*100).toFixed(1)}%;background:var(--${col(v,k)==="neg"?"neg":col(v,k)==="pos"?"pos":"accent"})"></i></div>`;
+  const rows=B.map((x,i)=>{
+    let p="";
+    if(byYear&&i>0&&B[i-1].v){const d=(x.v-B[i-1].v)/Math.abs(B[i-1].v)*100,good=k==="dep"?d<0:d>0;p=`<span class="${d===0?"":good?"pos":"neg"}" title="Variation par rapport à ${B[i-1].l}">${d>0?"▲":d<0?"▼":"="} ${sgn(d)}${Math.abs(Math.round(d))} %</span>`}
+    return `<div class="stx-r"><span class="l">${esc(x.l)}</span>${bar(x.v)}<span class="a ${col(x.v,k)}">${x.v?fv(x.v,k):"–"}</span><span class="p">${p}</span></div>`}).join("");
+
+  let byAcc="";
+  if(s.accs.length>1){
+    const ar=S.acc.map((a,i)=>({a,i,v:val(agg(ops.filter(t=>t.acc===a.id)),k),n:ops.filter(t=>t.acc===a.id).length})).filter(x=>x.n);
+    const amx=Math.max(0.01,...ar.map(x=>Math.abs(x.v)));
+    byAcc=`<h3>Par compte</h3>`+ar.map(x=>`<div class="stx-r"><span class="l"><i class="cd t${x.i}" style="background:var(--ac)"></i>${esc(x.a.name)}</span><div class="pb2"><i style="width:${(Math.abs(x.v)/amx*100).toFixed(1)}%;background:var(--ac)" class="t${x.i}"></i></div><span class="a ${col(x.v,k)}">${x.v?fv(x.v,k):"–"}</span><span class="p sub">${x.n} op.</span></div>`).join("");
+  }
+  return head+`<div class="stx-k">${cards}</div><h3>${byYear?"Par année":"Par mois"}</h3>${rows}${byAcc}<p style="margin:14px 0 0"><button type="button" data-sxops="1">Voir les opérations (${ops.length})</button></p>`;
+}
+
+/* ---------- Insertion dans le Tableau de bord ---------- */
+function on(){return !(typeof tset==="function")||tset("dash","s_sta",true)!==false}
+const od=drawDash;
+drawDash=function(){
+  od.apply(this,arguments);
+  if(!on())return;
+  const app=document.getElementById("app");if(!app)return;
+  const ref=app.querySelector(".dlast,.lhead"),after=ref&&ref.closest("section");
+  const sec=document.createElement("section");sec.id="stx";sec.className="dflex";sec.setAttribute("aria-label","Statistiques");
+  sec.innerHTML=inner();
+  if(after&&after.parentNode)after.parentNode.insertBefore(sec,after);else app.appendChild(sec);
+};
+function rerender(){
+  const el=document.getElementById("stx");if(!el)return;
+  const ae=document.activeElement;let q=null;
+  if(ae&&el.contains(ae)){const d=ae.dataset||{};q=d.sx?`[data-sx="${d.sx}"]`:d.sxa?`[data-sxa="${d.sxa}"]`:d.sxall?"[data-sxall]":null}
+  el.innerHTML=inner();
+  if(q){const n=el.querySelector(q);if(n)n.focus()}
+}
+
+/* ---------- Réglage « Statistiques » (bouton ⚙) ---------- */
+if(window.registerSettings)registerSettings("dash",{label:"Tableau de bord",
+  c:[["s_alr","Alertes de dépassement",true],["s_cpt","Mes comptes",true],["s_rng","Anneaux de dépenses",true],["s_sta","Statistiques",true],["s_lst","Dernières opérations",true],["s_cum","Solde cumulé budgétaire",true],["s_abo","Suivi des abonnements",true]],
+  n:[["n","Nombre de dernières opérations (3 à 8)",3,8,8,""]]});
+
+/* ---------- Fenêtre « Voir les opérations » ---------- */
+function showOps(){
+  const s=ST(),R=sel(s),ops=R.ops,g=agg(ops),k=kindOf2(g),tot=val(g,k);
+  let py=new Date().getFullYear();
+  const rows=ops.map(t=>{
+    const c=S.cats.find(x=>x.id===t.cat),sb=c&&c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier),ac=S.acc.find(x=>x.id===t.acc),ai=S.acc.findIndex(x=>x.id===t.acc),dd=dco(t.date,py);py=+t.date.slice(0,4);
+    return `<tr class="${ai>=0?"ta t"+ai:""}"><td title="${dfr(t.date)}">${dd}</td><td>${ac?esc(ac.name):""}</td><td>${ti?esc(ti.name):""}</td><td>${c?dot(c.id)+esc(c.name)+(sb?" → "+esc(sb.name):""):"Sans catégorie"}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td><td class="c"><span aria-hidden="true">${t.p?"✓":"○"}</span><span class="vh">${t.p?"Pointée":"Non pointée"}</span></td></tr>`}).join("");
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Opérations de la sélection"><div class="mh"><h2>Opérations · ${dfr(R.a)} → ${dfr(R.b)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${ops.length} opération(s) · Total : <b>${fv(tot,k)}</b></p><div class="tw2"><table class="lt mcat" aria-label="Opérations"><thead><tr><th>Date</th><th>Compte</th><th>Tiers</th><th>Catégorie</th><th class="r">Montant</th><th class="c">Pointée</th></tr></thead><tbody>${rows}</tbody></table></div><div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  o.onclick=e=>{if(e.target===o||e.target.closest("[data-r]"))end()};
+  o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button")],f=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f.focus()}}};
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
+
+/* ---------- Evénements ---------- */
+document.addEventListener("change",e=>{
+  const t=e.target;if(!t.closest||!t.closest("#stx"))return;
+  const s=ST(),D=t.dataset;
+  if(D.sx){
+    s[D.sx]=(D.sx==="y1"||D.sx==="y2")?+t.value:t.value;
+    if(D.sx==="id")s.sub="";
+  }else if(D.sxa!==undefined){
+    const a=new Set(s.accs);t.checked?a.add(D.sxa):a.delete(D.sxa);
+    s.accs=S.acc.map(x=>x.id).filter(id=>a.has(id));
+    if(!s.accs.length)s.accs=S.acc.map(x=>x.id);
+  }else if(D.sxall!==undefined){
+    s.accs=t.checked?S.acc.map(x=>x.id):[S.acc[0].id];
+  }else return;
+  save();rerender();
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("#stx button");if(!b)return;
+  const s=ST(),D=b.dataset,n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  if(D.sxmode){if(s.mode!==D.sxmode){s.mode=D.sxmode;s.id="";s.sub=""}}
+  else if(D.sxq){
+    s.per="dates";
+    if(D.sxq==="m"){s.d1=iso(new Date(y,m,1));s.d2=iso(new Date(y,m+1,0))}
+    else if(D.sxq==="12"){s.d1=iso(new Date(y,m-12,n.getDate()+1));s.d2=today()}
+    else if(D.sxq==="y"){s.d1=y+"-01-01";s.d2=y+"-12-31"}
+    else{s.d1=(y-1)+"-01-01";s.d2=(y-1)+"-12-31"}
+  }
+  else if(D.sxops){showOps();return}
+  else return;
+  save();rerender();
+});
+})();
+</script> 
 </body>
 </html>
