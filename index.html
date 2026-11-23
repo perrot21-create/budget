@@ -3071,401 +3071,16 @@ if(typeof T!=="undefined"&&T==="bud")draw();
  
 })();
 </script> 
-<script> 
-/* stats.js — bloc « Statistiques » du Tableau de bord.
-   
-   
-
-   Total d'un tiers ou d'une catégorie (et sous-catégorie) sur une période :
-   de date à date, une année, ou d'année en année, sur un, plusieurs ou tous les comptes.
-   Source : S.tx (aucune nouvelle donnée de budget). Les critères sont mémorisés dans S.stats
-   (sauvegarde et fichier partagé inclus). */
-(()=>{
-"use strict";
-
-/* ---------- Style ---------- */
-const st=document.createElement("style");
-st.textContent=`
-#stx h2{margin-bottom:10px}
-#stx .stx-f{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin-bottom:10px}
-#stx .stx-f label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
-#stx .stx-f select,#stx .stx-f input[type=date]{height:40px;min-width:0;color:var(--ink);background:var(--surface)}
-#stx .stx-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
-#stx .stx-seg button{border:0;border-radius:0;height:40px;background:var(--surface);color:var(--mute);font-weight:600}
-#stx .stx-seg button+button{border-left:1px solid var(--line)}
-#stx .stx-seg button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}
-#stx .stx-q{display:flex;gap:6px;flex-wrap:wrap}
-#stx .stx-q button{height:40px;padding:0 12px;font-size:var(--fs-sm)}
-#stx .stx-k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
-#stx .stx-c{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
-#stx .stx-v{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-#stx h3{margin:14px 0 6px;font-size:var(--fs-md);font-weight:600;color:var(--mute)}
-#stx .stx-r{display:grid;grid-template-columns:minmax(80px,120px) minmax(60px,1fr) auto 64px;gap:4px 12px;align-items:center;padding:3px 0}
-#stx .stx-r .pb2{margin:0;height:10px}
-#stx .stx-r .a{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
-#stx .stx-r .p{text-align:right;font-size:var(--fs-sm);white-space:nowrap}
-#stx .stx-r .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dfit #stx{min-height:220px}
-@media(max-width:600px){#stx .stx-r{grid-template-columns:minmax(70px,100px) minmax(40px,1fr) auto}#stx .stx-r .p{display:none}}
-`;
-document.head.appendChild(st);
-
-/* ---------- Etat mémorisé ---------- */
-const DEF=()=>{const y=new Date().getFullYear();return{mode:"tiers",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
-function ST(){
-  let s=S.stats;if(!s||typeof s!=="object")s=S.stats=DEF();
-  const d=DEF();Object.keys(d).forEach(k=>{if(s[k]===undefined)s[k]=d[k]});
-  s.accs=(s.accs||[]).filter(id=>S.acc.some(a=>a.id===id));
-  if(!s.accs.length)s.accs=S.acc.map(a=>a.id);
-  return s;
-}
-
-/* ---------- Calculs ---------- */
-const r2=n=>Math.round(n*100)/100;
-function sel(s){
-  let a,b;
-  if(s.per==="dates"){a=s.d1;b=s.d2;if(a&&b&&a>b)[a,b]=[b,a]}
-  else if(s.per==="year"){a=s.y1+"-01-01";b=s.y1+"-12-31"}
-  else{let y1=+s.y1,y2=+s.y2;if(y1>y2)[y1,y2]=[y2,y1];a=y1+"-01-01";b=y2+"-12-31"}
-  if(!a||!b)return{a,b,ops:[],bad:true};
-  const set=new Set(s.accs);
-  const ops=S.tx.filter(t=>set.has(t.acc)&&t.date>=a&&t.date<=b&&(s.mode==="tiers"
-    ?(s.id===""||(s.id==="_"?!t.tier:t.tier===s.id))
-    :((s.id===""||t.cat===s.id)&&(!s.sub||t.sub===s.sub)))).sort((x,y)=>y.date.localeCompare(x.date));
-  return{a,b,ops,bad:false};
-}
-const agg=ops=>{let r=0,d=0;ops.forEach(t=>{if(t.v>0)r+=t.v;else d-=t.v});return{r:r2(r),d:r2(d)}};
-const kindOf2=g=>g.d>0&&!g.r?"dep":g.r>0&&!g.d?"rev":"net";
-const val=(g,k)=>k==="dep"?g.d:k==="rev"?g.r:r2(g.r-g.d);
-const sgn=n=>n>0?"+":n<0?"−":"";
-const col=(v,k)=>k==="dep"?"neg":k==="rev"?"pos":v>0?"pos":v<0?"neg":"";
-const fv=(v,k)=>k==="net"?sgn(v)+eur2(Math.abs(v)):eur2(Math.abs(v));
-const mlab=(y,m,long)=>cap(new Date(y,m,1).toLocaleDateString("fr-FR",long?{month:"long"}:{month:"short",year:"numeric"}));
-
-/* ---------- Rendu ---------- */
-function opt(v,l,cur){return `<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(l)}</option>`}
-function yearsList(s){
-  const y=new Set([new Date().getFullYear(),+s.y1,+s.y2]);S.tx.forEach(t=>y.add(+t.date.slice(0,4)));
-  return [...y].filter(Boolean).sort((a,b)=>a-b);
-}
-function inner(){
-  const s=ST(),R=sel(s),ops=R.ops;
-  const subjSel=s.mode==="tiers"
-    ?`<label>Tiers<select data-sx="id" aria-label="Tiers">${opt("","Tous les tiers",s.id)}${opt("_","Sans tiers",s.id)}${[...S.tiers].sort((a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"})).map(t=>opt(t.id,t.name,s.id)).join("")}</select></label>`
-    :`<label>Catégorie<select data-sx="id" aria-label="Catégorie">${opt("","Toutes les catégories",s.id)}${[["rev","Revenus"],["dep","Dépenses"]].map(([k,l])=>`<optgroup label="${l}">${S.cats.filter(c=>c.kind===k).map(c=>opt(c.id,c.name,s.id)).join("")}</optgroup>`).join("")}</select></label>`;
-  const cat=s.mode==="cat"&&S.cats.find(c=>c.id===s.id);
-  const subSel=cat&&cat.subs.length?`<label>Sous-catégorie<select data-sx="sub" aria-label="Sous-catégorie">${opt("","Toutes",s.sub)}${cat.subs.map(x=>opt(x.id,x.name,s.sub)).join("")}</select></label>`:"";
-  const allOn=s.accs.length===S.acc.length;
-  const accs=`<div class="stx-f"><span class="sub">Comptes :</span><label class="chip" style="flex-direction:row;color:var(--ink)"><input type="checkbox" data-sxall="1"${allOn?" checked":""}>Tous</label>${S.acc.map((a,i)=>`<label class="chip" style="flex-direction:row;color:var(--ink)"><input type="checkbox" data-sxa="${a.id}"${s.accs.includes(a.id)?" checked":""}><i class="cd t${i}" style="background:var(--ac);margin:0"></i>${esc(a.name)}</label>`).join("")}</div>`;
-  const ys=yearsList(s),yo=v=>ys.map(y=>opt(y,y,v)).join("");
-  const per=`<div class="stx-f"><label>Période<select data-sx="per" aria-label="Type de période">${opt("dates","De date à date",s.per)}${opt("year","Une année",s.per)}${opt("years","D’année en année",s.per)}</select></label>
-   ${s.per==="dates"?`<label>Du<input type="date" data-sx="d1" value="${esc(s.d1)}"></label><label>Au<input type="date" data-sx="d2" value="${esc(s.d2)}"></label>`
-     :s.per==="year"?`<label>Année<select data-sx="y1" aria-label="Année">${yo(s.y1)}</select></label>`
-     :`<label>De<select data-sx="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sx="y2" aria-label="Dernière année">${yo(s.y2)}</select></label>`}
-   <div class="stx-q" role="group" aria-label="Raccourcis"><button type="button" data-sxq="m">Ce mois</button><button type="button" data-sxq="12">12 derniers mois</button><button type="button" data-sxq="y">Cette année</button><button type="button" data-sxq="py">Année dernière</button></div></div>`;
-  const head=`<h2>Statistiques</h2><div class="stx-f"><div class="stx-seg" role="group" aria-label="Analyser par"><button type="button" data-sxmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-sxmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjSel}${subSel}</div>${accs}${per}`;
-  if(R.bad)return head+`<p class="empty">Choisissez les deux dates de la période.</p>`;
-  if(!ops.length)return head+`<p class="empty">Aucune opération pour ces critères.</p>`;
-
-  const g=agg(ops),k=kindOf2(g),tot=val(g,k);
-  const ya=+R.a.slice(0,4),yb=+R.b.slice(0,4),ma=+R.a.slice(5,7)-1,mb=+R.b.slice(5,7)-1;
-  const nm=Math.max(1,(yb-ya)*12+mb-ma+1);
-  const cards=(k==="net"?[["Dépenses",g.d,"dep"],["Revenus",g.r,"rev"],["Net",tot,"net"]]:[[k==="dep"?"Dépenses":"Revenus",tot,k]])
-    .map(([l,v,kk])=>`<div class="stx-c"><span class="sub">${l}</span><b class="stx-v ${col(v,kk)}">${fv(v,kk)}</b></div>`).join("")
-    +`<div class="stx-c"><span class="sub">Opérations</span><b class="stx-v">${ops.length}</b></div><div class="stx-c"><span class="sub">Moyenne / mois</span><b class="stx-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>`;
-
-  /* ventilation : par année (années multiples ou période > 24 mois), sinon par mois */
-  const byYear=s.per==="years"||nm>24,B=[];
-  if(byYear){for(let y=ya;y<=yb;y++)B.push({key:String(y),l:String(y),o:[]})}
-  else{for(let y=ya,m=ma;y<yb||(y===yb&&m<=mb);m++){if(m>11){m=0;y++}B.push({key:y+"-"+String(m+1).padStart(2,"0"),l:mlab(y,m,s.per==="year"),o:[]})}}
-  const idx={};B.forEach(x=>idx[x.key]=x);
-  ops.forEach(t=>{const x=idx[byYear?t.date.slice(0,4):t.date.slice(0,7)];if(x)x.o.push(t)});
-  B.forEach(x=>x.v=val(agg(x.o),k));
-  const mx=Math.max(0.01,...B.map(x=>Math.abs(x.v)));
-  const bar=(v)=>`<div class="pb2" role="img" aria-label="${eur2(Math.abs(v))}"><i style="width:${(Math.abs(v)/mx*100).toFixed(1)}%;background:var(--${col(v,k)==="neg"?"neg":col(v,k)==="pos"?"pos":"accent"})"></i></div>`;
-  const rows=B.map((x,i)=>{
-    let p="";
-    if(byYear&&i>0&&B[i-1].v){const d=(x.v-B[i-1].v)/Math.abs(B[i-1].v)*100,good=k==="dep"?d<0:d>0;p=`<span class="${d===0?"":good?"pos":"neg"}" title="Variation par rapport à ${B[i-1].l}">${d>0?"▲":d<0?"▼":"="} ${sgn(d)}${Math.abs(Math.round(d))} %</span>`}
-    return `<div class="stx-r"><span class="l">${esc(x.l)}</span>${bar(x.v)}<span class="a ${col(x.v,k)}">${x.v?fv(x.v,k):"–"}</span><span class="p">${p}</span></div>`}).join("");
-
-  let byAcc="";
-  if(s.accs.length>1){
-    const ar=S.acc.map((a,i)=>({a,i,v:val(agg(ops.filter(t=>t.acc===a.id)),k),n:ops.filter(t=>t.acc===a.id).length})).filter(x=>x.n);
-    const amx=Math.max(0.01,...ar.map(x=>Math.abs(x.v)));
-    byAcc=`<h3>Par compte</h3>`+ar.map(x=>`<div class="stx-r"><span class="l"><i class="cd t${x.i}" style="background:var(--ac)"></i>${esc(x.a.name)}</span><div class="pb2"><i style="width:${(Math.abs(x.v)/amx*100).toFixed(1)}%;background:var(--ac)" class="t${x.i}"></i></div><span class="a ${col(x.v,k)}">${x.v?fv(x.v,k):"–"}</span><span class="p sub">${x.n} op.</span></div>`).join("");
-  }
-return head+`<div class="stx-k">${cards}</div>${byYear?`<h3>Par année</h3>${rows}`:""}${byAcc}<p style="margin:14px 0 0"><button type="button" data-sxops="1">Voir les opérations (${ops.length})</button></p>`;
-}
-
-/* ---------- Insertion dans le Tableau de bord ---------- */
-function on(){return !(typeof tset==="function")||tset("dash","s_sta",true)!==false}
-const od=drawDash;
-drawDash=function(){
-  od.apply(this,arguments);
-  if(!on())return;
-  const app=document.getElementById("app");if(!app)return;
-  const ref=app.querySelector(".dlast,.lhead"),after=ref&&ref.closest("section");
-  const sec=document.createElement("section");sec.id="stx";sec.className="dflex";sec.setAttribute("aria-label","Statistiques");
-  sec.innerHTML=inner();
-  if(after&&after.parentNode)after.parentNode.insertBefore(sec,after);else app.appendChild(sec);
-};
-function rerender(){
-  const el=document.getElementById("stx");if(!el)return;
-  const ae=document.activeElement;let q=null;
-  if(ae&&el.contains(ae)){const d=ae.dataset||{};q=d.sx?`[data-sx="${d.sx}"]`:d.sxa?`[data-sxa="${d.sxa}"]`:d.sxall?"[data-sxall]":null}
-  el.innerHTML=inner();
-  if(q){const n=el.querySelector(q);if(n)n.focus()}
-}
-
-/* ---------- Réglage « Statistiques » (bouton ⚙) ---------- */
-if(window.registerSettings)registerSettings("dash",{label:"Tableau de bord",
-  c:[["s_alr","Alertes de dépassement",true],["s_cpt","Mes comptes",true],["s_rng","Anneaux de dépenses",true],["s_sta","Statistiques",true],["s_lst","Dernières opérations",true],["s_cum","Solde cumulé budgétaire",true],["s_abo","Suivi des abonnements",true]],
-  n:[["n","Nombre de dernières opérations (3 à 8)",3,8,8,""]]});
-
-/* ---------- Fenêtre « Voir les opérations » ---------- */
-function showOps(){
-  const s=ST(),R=sel(s),ops=R.ops,g=agg(ops),k=kindOf2(g),tot=val(g,k);
-  let py=new Date().getFullYear();
-  const rows=ops.map(t=>{
-    const c=S.cats.find(x=>x.id===t.cat),sb=c&&c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier),ac=S.acc.find(x=>x.id===t.acc),ai=S.acc.findIndex(x=>x.id===t.acc),dd=dco(t.date,py);py=+t.date.slice(0,4);
-    return `<tr class="${ai>=0?"ta t"+ai:""}"><td title="${dfr(t.date)}">${dd}</td><td>${ac?esc(ac.name):""}</td><td>${ti?esc(ti.name):""}</td><td>${c?dot(c.id)+esc(c.name)+(sb?" → "+esc(sb.name):""):"Sans catégorie"}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td><td class="c"><span aria-hidden="true">${t.p?"✓":"○"}</span><span class="vh">${t.p?"Pointée":"Non pointée"}</span></td></tr>`}).join("");
-  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
-  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Opérations de la sélection"><div class="mh"><h2>Opérations · ${dfr(R.a)} → ${dfr(R.b)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${ops.length} opération(s) · Total : <b>${fv(tot,k)}</b></p><div class="tw2"><table class="lt mcat" aria-label="Opérations"><thead><tr><th>Date</th><th>Compte</th><th>Tiers</th><th>Catégorie</th><th class="r">Montant</th><th class="c">Pointée</th></tr></thead><tbody>${rows}</tbody></table></div><div><button class="primary" data-r="0">Fermer</button></div></div>`;
-  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
-  o.onclick=e=>{if(e.target===o||e.target.closest("[data-r]"))end()};
-  o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button")],f=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f.focus()}}};
-  document.body.appendChild(o);o.querySelector("button").focus();
-}
-
-/* ---------- Evénements ---------- */
-document.addEventListener("change",e=>{
-  const t=e.target;if(!t.closest||!t.closest("#stx"))return;
-  const s=ST(),D=t.dataset;
-  if(D.sx){
-    s[D.sx]=(D.sx==="y1"||D.sx==="y2")?+t.value:t.value;
-    if(D.sx==="id")s.sub="";
-  }else if(D.sxa!==undefined){
-    const a=new Set(s.accs);t.checked?a.add(D.sxa):a.delete(D.sxa);
-    s.accs=S.acc.map(x=>x.id).filter(id=>a.has(id));
-    if(!s.accs.length)s.accs=S.acc.map(x=>x.id);
-  }else if(D.sxall!==undefined){
-    s.accs=t.checked?S.acc.map(x=>x.id):[S.acc[0].id];
-  }else return;
-  save();rerender();
-});
-document.addEventListener("click",e=>{
-  const b=e.target.closest&&e.target.closest("#stx button");if(!b)return;
-  const s=ST(),D=b.dataset,n=new Date(),y=n.getFullYear(),m=n.getMonth();
-  if(D.sxmode){if(s.mode!==D.sxmode){s.mode=D.sxmode;s.id="";s.sub=""}}
-  else if(D.sxq){
-    s.per="dates";
-    if(D.sxq==="m"){s.d1=iso(new Date(y,m,1));s.d2=iso(new Date(y,m+1,0))}
-    else if(D.sxq==="12"){s.d1=iso(new Date(y,m-12,n.getDate()+1));s.d2=today()}
-    else if(D.sxq==="y"){s.d1=y+"-01-01";s.d2=y+"-12-31"}
-    else{s.d1=(y-1)+"-01-01";s.d2=(y-1)+"-12-31"}
-  }
-  else if(D.sxops){showOps();return}
-  else return;
-  save();rerender();
-});
-})();
-</script> 
 <script>
-/* dashboard_compact.js — Tableau de bord compact.
-   À charger EN DERNIER (après stats.js et comptes_fixe.js).
-   Attention : ne jamais écrire la balise de fermeture de script dans un commentaire, sinon la page coupe le code.
-
-   - « Solde total du jour » plus petit.
-   - « Reste à dépenser » remplacé par « Solde fin de mois total » (somme des comptes jusqu'au dernier jour du mois).
-   - Colonne de droite plus large ; bloc « Statistiques » à sa hauteur naturelle.
-   - Anneaux de dépenses réduits, côte à côte, avec défilement interne.
-   - « Dernières opérations » réduit à 5 lignes (réglable dans ⚙ > Tableau de bord), défilement interne.
-   - Suivi des abonnements : prend toute la hauteur libre de la colonne de droite, défilement interne.
-   Aucune donnée n'est modifiée. */
-(()=>{
-"use strict";
-const st=document.createElement("style");
-st.id="dashcompact-css";
-st.textContent=`
-/* ---- cartes de soldes compactes ---- */
-.hero.hc2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-div.hero.hc2{margin-top:16px;margin-bottom:16px;gap:16px 28px}
-.hero.hc2 section{padding:10px 16px}
-.hero.hc2 .hcard h2{font-size:var(--fs-sm);margin:0 0 2px}
-.hero.hc2 .hbig{font-size:1.5rem;margin:0 0 2px}
-.hero.hc2 .hcard p{margin:1px 0;font-size:var(--fs-sm)}
-
-/* ---- page figée : colonne de droite plus large ---- */
-#app.dfit{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:12px}
-.dfit .dcol{gap:10px}
-.dfit section{padding:10px 14px}
-.dfit .hero{gap:10px!important}
-
-/* anneaux : côte à côte, réduits, défilement interne */
-.dfit .dcol>.dgrid2{grid-template-columns:1fr 1fr!important;gap:10px!important;max-height:26vh}
-.dfit .dcol>.dgrid2>section{overflow:auto;max-height:26vh;padding:8px 12px}
-.dfit .dgrid2 h2{font-size:var(--fs-md);margin:0 0 6px}
-.dfit .dring{gap:10px;flex-wrap:nowrap;align-items:flex-start}
-.dfit .donut{width:96px;height:96px}
-.dfit .dleg{min-width:0;row-gap:4px;column-gap:8px;font-size:var(--fs-sm)}
-
-/* statistiques : hauteur naturelle (le détail par mois a été retiré), défilement interne si besoin */
-.dfit .dcol>#stx{flex:0 1 auto;min-height:150px;overflow:auto;order:1}   /* MODIFIÉ */
-/* abonnements : prend toute la hauteur restante de la colonne */
-.dfit .dcol>#abo{flex:1 1 0;min-height:110px;max-height:none;overflow:auto;order:2}   /* MODIFIÉ */
-.dfit #abo h2{font-size:var(--fs-md);margin:0 0 6px}
-
-/* dernières opérations : réduit, défilement interne */
-.dfit .dcol>section.dflex:has(.dlast){padding:8px 12px}
-.dfit .dlast th,.dfit .dlast td{padding-top:3px;padding-bottom:3px}
-.dfit section:has(.dlast) .lhead{margin-bottom:4px}
-/* statistiques : plus de barres de progression par mois (ni par compte) ; lignes plus compactes */
-#stx .stx-r .pb2{display:none}
-#stx .stx-r{grid-template-columns:minmax(80px,150px) auto 64px;justify-content:start;column-gap:18px;padding:2px 0}
-
-/* mes comptes : bloc divisé en quatre emplacements (2 x 2), un compte par emplacement */
-#app section>.dgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#app section>.dgrid .dcard{width:100%}
-.dfit section>.dgrid .dcard{padding:8px 12px;gap:1px}
-.dfit section>.dgrid .dv{font-size:1.2rem}
-`;
-document.head.appendChild(st);
-
-/* Réglages ⚙ > Tableau de bord : on garde « Statistiques » et on aligne le nombre de lignes par défaut (5) */
-if(window.registerSettings)registerSettings("dash",{label:"Tableau de bord",
-  c:[["s_alr","Alertes de dépassement",true],["s_cpt","Mes comptes",true],["s_rng","Anneaux de dépenses",true],["s_sta","Statistiques",true],["s_lst","Dernières opérations",true],["s_cum","Solde cumulé budgétaire",true],["s_abo","Suivi des abonnements",true]],
-    n:[["n","Nombre de dernières opérations (3 à 8)",3,8,5,""]]});
-
-const r2=n=>Math.round(n*100)/100;
-
-function compact(){
-  const app=document.getElementById("app");if(!app)return;
-  const hero=app.querySelector(".hero");if(!hero)return;
-  hero.classList.add("hc2");
-
-  /* carte 1 : « Solde total du jour » — on retire la ligne « Prévu en fin de mois » (désormais dans la carte 2) */
-  const a=hero.children[0];
-  if(a){const ps=a.querySelectorAll("p.sub");if(ps.length>1&&/fin de mois/i.test(ps[0].textContent))ps[0].remove()}
-
-  /* carte 2 : « Solde fin de mois total » */
-  const n0=new Date(),lim=iso(new Date(n0.getFullYear(),n0.getMonth()+1,0));
-  const P=r2(S.tx.filter(t=>t.date<=lim).reduce((s,t)=>s+t.v,0)),cl=P>0?"pos":P<0?"neg":"";
-  const b=hero.children[1];
-  const html=`<h2>Solde fin de mois total</h2><div class="hbig ${cl}">${eur2(P)}</div><p class="sub">Tous comptes confondus, au ${dfr(lim)}</p>`;
-  if(b){b.className="hcard";b.innerHTML=html}
-  else{const s=document.createElement("section");s.className="hcard";s.innerHTML=html;hero.appendChild(s)}
-
-  /* dernières opérations : 5 lignes par défaut (réglable dans ⚙ > Tableau de bord) */
-  const n=(typeof tset==="function"?+tset("dash","n",5):5)||5;
-  app.querySelectorAll(".dlast tbody tr").forEach((r,i)=>{r.style.display=i>=n?"none":""});
-  if(!document.getElementById("stx")&&(typeof tset!=="function"||tset("dash","s_sta",true)!==false))console.warn("dashboard_compact.js : le bloc Statistiques (stats.js) est absent — vérifiez que stats.js est bien chargé.");
-}
-
-const od=drawDash;
-drawDash=function(){od.apply(this,arguments);try{compact()}catch(e){console.error("dashboard_compact.js :",e)}};
-
-if(typeof T!=="undefined"&&T==="dash")draw();
-})(); 
-</script>
- <script>
- /* anneau_unique.js : un seul anneau de dépenses, avec sélecteur « Ce mois / Cumul année ».
-   À charger EN DERNIER, après dashboard_compact.js (dans un nouveau bloc script, juste avant la fermeture du body).
-   - 5 premières catégories + « Autres » (non cliquable).
-   - Légende plus aérée, barre de budget plus fine.
-   Aucune donnée n'est modifiée. */
-(()=>{
-"use strict";
-let RGP="m";
-
-const st=document.createElement("style");
-st.id="anneau-unique-css";
-st.textContent=`
-.dgrid2.rg1,.dfit .dcol>.dgrid2.rg1{grid-template-columns:1fr!important;max-height:none!important}
-.dfit .dgrid2.rg1>section,#rgs{max-height:none!important;overflow:visible!important}
-#rgs .rg-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-#rgs .rg-h h2{margin:0}
-#rgs .rg-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
-#rgs .rg-seg button{border:0;border-radius:0;height:36px;padding:0 14px;background:var(--surface);color:var(--mute);font-weight:600}
-#rgs .rg-seg button+button{border-left:1px solid var(--line)}
-#rgs .rg-seg button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}
-#rgs .donut,.dfit #rgs .donut{width:130px;height:130px}
-#rgs .dring,.dfit #rgs .dring{gap:20px;flex-wrap:wrap;align-items:center}
-#rgs .dleg,.dfit #rgs .dleg{row-gap:16px;column-gap:14px;font-size:var(--fs-md)}
-#rgs .dleg .pb2,.dfit #rgs .dleg .pb2{height:5px;border-radius:3px}
-`;
-document.head.appendChild(st);
-
-function data(per){
-  const n0=new Date(),yr=n0.getFullYear(),mo=n0.getMonth(),ym=today().slice(0,7),lim=iso(new Date(yr,mo+1,0));
-  const valid=new Set();S.cats.forEach(c=>{c.subs.forEach(s=>valid.add(c.id+":"+s.id));valid.add(c.id+":")});
-  const b={},r={};
-  for(const key in S.budget){
-    const[y,k]=key.split("|");if(+y!==yr||!valid.has(k))continue;
-    const cid=k.split(":")[0];if(kindOf(cid)!=="dep")continue;
-    const a=S.budget[key]||[];
-    b[cid]=(b[cid]||0)+(per==="m"?(+a[mo]||0):a.slice(0,mo+1).reduce((s,v)=>s+(+v||0),0));
-  }
-  S.tx.forEach(t=>{
-    if(!t.cat||kindOf(t.cat)!=="dep")return;
-    const ok=per==="m"?t.date.slice(0,7)===ym:(t.date.slice(0,4)===String(yr)&&t.date<=lim);
-    if(ok)r[t.cat]=(r[t.cat]||0)-t.v;
-  });
-  const rows=S.cats.filter(c=>c.kind==="dep").map(c=>({id:c.id,n:c.name,r:r[c.id]||0,b:b[c.id]||0,col:cco(c.id)}))
-    .filter(x=>x.r>0).sort((x,y)=>y.r-x.r);
-  const top=rows.slice(0,5),rest=rows.slice(5);
-  if(rest.length)top.push({id:"",n:"Autres ("+rest.length+")",r:rest.reduce((s,x)=>s+x.r,0),b:rest.reduce((s,x)=>s+x.b,0),col:"var(--mute)",other:true});
-  return{top,yr,mo};
-}
-
-function inner(){
-  const{top,yr,mo}=data(RGP),TP=top.reduce((s,x)=>s+x.r,0),CIR=2*Math.PI*44;
-  let off=0;
-  const ring=TP>0?`<svg viewBox="0 0 120 120" class="donut" role="img" aria-label="Répartition des dépenses">${top.map(x=>{
-    const L=x.r/TP*CIR,at=x.other?"":` data-dcat="${x.id}" data-dper="${RGP}"`,
-      el=`<circle cx="60" cy="60" r="44" fill="none"${at} stroke="${x.col}" stroke-width="18" stroke-dasharray="${L.toFixed(2)} ${(CIR-L).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"><title>${esc(x.n)} : ${eur2(x.r)}</title></circle>`;
-    off+=L;return el}).join("")}<text x="60" y="59" text-anchor="middle" style="font-size:12px;font-weight:800;fill:var(--ink)">${f(TP)} €</text><text x="60" y="73" text-anchor="middle" style="font-size:8px;fill:var(--mute)">dépensés</text></svg>`:"";
-  const leg=TP>0?`<ul class="dleg">${top.map(x=>{
-    const at=x.other?"":` data-dcat="${x.id}" data-dper="${RGP}" tabindex="0" title="Voir les opérations de cette catégorie"`;
-    const bar=x.b>0
-      ?`<div class="pb2${x.r>x.b?" ov":""}" role="img" title="${eur2(x.r)} sur ${eur2(x.b)} budgétés (${Math.round(x.r/x.b*100)} %)" aria-label="${Math.round(x.r/x.b*100)} % du budget utilisé"><i style="width:${Math.min(100,x.r/x.b*100).toFixed(1)}%${x.r>x.b?"":";background:"+x.col}"></i></div>`
-      :`<div class="pb2 nb" role="img" title="Aucun budget défini" aria-label="Aucun budget défini"></div>`;
-    return `<li${at}><i class="cd" style="background:${x.col}"></i><span>${esc(x.n)}</span><b>${Math.round(x.r/TP*100)} %</b><span class="sub lamt">${eur2(x.r)}</span>${bar}</li>`}).join("")}</ul>`
-    :`<p class="empty">Aucune dépense enregistrée sur cette période.</p>`;
-  const lbl=RGP==="m"?cap(new Date(yr,mo,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"})):"Cumul "+yr;
-  return `<div class="rg-h"><h2>Dépenses · ${esc(lbl)}</h2><div class="rg-seg" role="group" aria-label="Période"><button type="button" data-rgp="m" aria-pressed="${RGP==="m"}">Ce mois</button><button type="button" data-rgp="y" aria-pressed="${RGP==="y"}">Cumul année</button></div></div><div class="dring">${ring}${leg}</div>`;
-}
-
-const od=drawDash;
-drawDash=function(){
-  od.apply(this,arguments);
-  try{
-    const g=document.querySelector("#app .dgrid2");if(!g)return;
-    g.classList.add("rg1");
-    g.innerHTML=`<section id="rgs">${inner()}</section>`;
-  }catch(e){console.error("anneau_unique.js :",e)}
-};
-
-document.addEventListener("click",e=>{
-  const b=e.target.closest&&e.target.closest("[data-rgp]");if(!b)return;
-  RGP=b.dataset.rgp;
-  const s=document.getElementById("rgs");if(!s)return;
-  s.innerHTML=inner();
-  const n=s.querySelector(`[data-rgp="${RGP}"]`);if(n)n.focus();
-});
-
-if(typeof T!=="undefined"&&T==="dash")draw();
-})();
- </script>
- <script>
 /* stats_plus.js : bloc « Statistiques » compact.
-   À charger EN DERNIER (après anneau_unique.js / dashboard_compact.js). Ne retire rien : stats.js reste en place,
-   ce script remplace simplement son bloc par la nouvelle version et réutilise les mêmes critères (S.stats).
-   - Filtres dans un panneau à gauche (menu « Comptes », raccourcis de dates dans « Période »)
-   - Bande de résultats : total (avec comparaison à la période précédente), opérations, moyenne / mois
-   - Mise en page à deux colonnes : filtres à gauche, résultats à droite (total, opérations, répartition, par compte)
-   - « Par compte » en ligne compacte */
+   À charger EN DERNIER (après anneau_unique.js / dashboard_compact.js).
+   - Mode « Catégorie » (par défaut) : en haut les catégories de REVENUS les plus élevées, en bas celles de DÉPENSES
+   - Mode « Tiers » : classement unique des tiers */
 (()=>{
 "use strict";
+
+/* Nombre de lignes affichées dans chaque bloc (revenus / dépenses) */
+const NTOP=3;
 
 /* ---------- Style ---------- */
 const st=document.createElement("style");
@@ -3478,7 +3093,6 @@ st.textContent=`
 #stp .sp-w{display:grid;grid-template-columns:minmax(280px,420px) minmax(0,1fr);gap:16px 28px;align-items:start}
 #stp .sp-w.one{grid-template-columns:minmax(280px,420px)}
 @container (max-width:620px){#stp .sp-w,#stp .sp-w.one{grid-template-columns:1fr}}
-/* colonne des filtres */
 #stp .sp-fl{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;padding:12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 7%,var(--surface))}
 #stp .sp-fl label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
 #stp .sp-fl select,#stp .sp-fl input[type=date]{height:38px;width:100%;min-width:0;color:var(--ink);background:var(--surface)}
@@ -3497,7 +3111,6 @@ st.textContent=`
 #stp .sp-m label{flex-direction:row;align-items:center;gap:8px;padding:5px 6px;color:var(--ink);font-size:var(--fs-md);cursor:pointer;border-radius:6px}
 #stp .sp-m label:hover,#stp .sp-m button:hover{background:var(--bg)}
 #stp .sp-m button{border:0;background:transparent;text-align:left;padding:6px 8px;font-size:var(--fs-md)}
-/* colonne des résultats */
 #stp .sp-rs{display:flex;flex-direction:column;gap:14px;min-width:0}
 #stp .sp-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}
 #stp .sp-c{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
@@ -3520,8 +3133,8 @@ st.textContent=`
 `;
 document.head.appendChild(st);
 
-/* ---------- Etat (même structure que stats.js, donc mêmes critères mémorisés) ---------- */
-const DEF=()=>{const y=new Date().getFullYear();return{mode:"tiers",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
+/* ---------- Etat ---------- */
+const DEF=()=>{const y=new Date().getFullYear();return{mode:"cat",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
 function pqDates(q){
   const n=new Date(),y=n.getFullYear(),m=n.getMonth();
   if(q==="m")return[iso(new Date(y,m,1)),iso(new Date(y,m+1,0))];
@@ -3538,7 +3151,7 @@ function ST(){
   if(!s.accs.length)s.accs=S.acc.map(a=>a.id);
   return s;
 }
-let OPEN=null;/* menu déroulant ouvert : "acc" */
+let OPEN=null;
 
 /* ---------- Calculs ---------- */
 const r2=n=>Math.round(n*100)/100;
@@ -3561,7 +3174,6 @@ const val=(g,k)=>k==="dep"?g.d:k==="rev"?g.r:r2(g.r-g.d);
 const sgn=n=>n>0?"+":n<0?"−":"";
 const col=(v,k)=>k==="dep"?"neg":k==="rev"?"pos":v>0?"pos":v<0?"neg":"";
 const fv=(v,k)=>k==="net"?sgn(v)+eur2(Math.abs(v)):eur2(Math.abs(v));
-const mlab=(y,m,long)=>cap(new Date(y,m,1).toLocaleDateString("fr-FR",long?{month:"long"}:{month:"short",year:"numeric"}));
 const pd=x=>{const[y,m,d]=x.split("-").map(Number);return new Date(y,m-1,d)};
 
 /* ---------- Rendu ---------- */
@@ -3578,6 +3190,33 @@ function accBlock(s,ops,k){
     return `<div class="sp-a">${nm}<b class="${col(v,k)}">${fv(v,k)}</b><small>${o.length} op.</small></div>`});
   return `<div class="sp-ac" aria-label="Par compte">${L.join("")}</div>`;
 }
+
+/* Répartition : revenus en haut / dépenses en bas (mode catégorie), classement des tiers sinon */
+function rankHtml(s,ops,k){
+  const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
+  if(dim==="cat"){
+    ops.forEach(t=>{const key=t.cat||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
+    const G={rev:[],dep:[]};
+    M.forEach((o,key)=>{
+      const a=agg(o),net=r2(a.r-a.d),c=S.cats.find(x=>x.id===key),
+        kd=c?c.kind:(net>=0?"rev":"dep"),v=kd==="rev"?net:r2(-net);
+      if(v>0)G[kd].push({key,v,n:o.length});
+    });
+    const nameOf=key=>key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name);
+    const blk=(kd,lbl,cl)=>{
+      const L=G[kd].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
+      return `<div><h3>Top ${sh.length||NTOP} ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
+    return blk("rev","catégories de revenus","pos")+blk("dep","catégories de dépenses","neg");
+  }
+  ops.forEach(t=>{const key=t.tier||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
+  const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
+  const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
+  R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
+  const nameOf=key=>esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name);
+  const ttl=s.id===""?"Top "+Math.min(5,R.length)+" tiers":"Répartition par tiers";
+  return R.length?`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`:"";
+}
+
 function inner(){
   const s=ST(),{a,b}=period(s);
   const subjSel=s.mode==="tiers"
@@ -3605,7 +3244,6 @@ function inner(){
   const ya=+a.slice(0,4),yb=+b.slice(0,4),ma=+a.slice(5,7)-1,mb=+b.slice(5,7)-1;
   const nm=Math.max(1,(yb-ya)*12+mb-ma+1);
 
-  /* comparaison avec la période précédente de même durée */
   const len=Math.round((pd(b)-pd(a))/864e5)+1,pB=new Date(pd(a));pB.setDate(pB.getDate()-1);
   const pA=new Date(pB);pA.setDate(pA.getDate()-(len-1));
   const prev=val(agg(filt(s,iso(pA),iso(pB))),k);
@@ -3619,36 +3257,7 @@ function inner(){
   const extra=`<div class="sp-c"><span class="sub" title="Plus grosse opération">Plus grosse op.</span><b class="sp-v ${big.v>0?"pos":"neg"}">${sv(big)}</b><small>${dfr(big.date)}</small></div><div class="sp-c"><span class="sub" title="Dernière opération">Dernière op.</span><b class="sp-v ${lst.v>0?"pos":"neg"}">${sv(lst)}</b><small>${dfr(lst.date)}</small></div>`;
   const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>${extra}</div>`;
 
-  /* répartition : top 5 du sujet ; si un sujet est choisi, répartition selon l'autre axe (catégories d'un tiers, tiers d'une catégorie) */
-  /* répartition : catégories → deux blocs (revenus en haut, dépenses en bas) ; tiers → classement unique */
-  let rank="";
-  {
-    const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
-    const NTOP=4;/* mettre 3 pour n'afficher que 3 lignes par bloc */
-    if(dim==="cat"){
-      ops.forEach(t=>{const key=t.cat||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
-      const G={rev:[],dep:[]};
-      M.forEach((o,key)=>{
-        const a=agg(o),net=r2(a.r-a.d),c=S.cats.find(x=>x.id===key),
-          kd=c?c.kind:(net>=0?"rev":"dep"),v=kd==="rev"?net:r2(-net);
-        if(v>0)G[kd].push({key,v,n:o.length});
-      });
-      const nameOf=key=>key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name);
-      const blk=(kd,lbl,cl)=>{
-        const L=G[kd].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
-        return `<div><h3>Top ${sh.length||NTOP} ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
-      rank=blk("rev","catégories de revenus","pos")+blk("dep","catégories de dépenses","neg");
-    }else{
-      ops.forEach(t=>{const key=t.tier||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
-      const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
-      const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
-      R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
-      const nameOf=key=>esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name);
-      const ttl=s.id===""?"Top "+Math.min(5,R.length)+" tiers":"Répartition par tiers";
-      if(R.length)rank=`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
-    }
-  }
-
+  const rank=rankHtml(s,ops,k);
   const byAcc=accBlock(s,ops,k);
   return wrap(ops.length,band+byAcc,rank);
 }
@@ -3699,12 +3308,11 @@ document.addEventListener("toggle",e=>{
   else if(OPEN===d.dataset.spdd)OPEN=null;
 },true);
 document.addEventListener("click",e=>{
-  /* clic en dehors d'un menu : on le referme */
   if(!(e.target.closest&&e.target.closest("details.sp-dd"))){
     document.querySelectorAll("#stp details.sp-dd[open]").forEach(o=>o.open=false);OPEN=null;
   }
   const b=e.target.closest&&e.target.closest("#stp button");if(!b)return;
-  const s=ST(),D=b.dataset,n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  const s=ST(),D=b.dataset;
   if(D.spmode){if(s.mode!==D.spmode){s.mode=D.spmode;s.id="";s.sub=""}}
   else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
   else return;
@@ -3733,11 +3341,6 @@ document.addEventListener("change",e=>{
 
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
- </script>
- <script>
-(()=>{const s=document.createElement("style");
-s.textContent='#app:has(.hero) section:not(.dalert){box-shadow:var(--sh),0 0 0 1px color-mix(in srgb,var(--accent) 40%,var(--surface))}';
-document.head.appendChild(s)})();
 </script>
  </body>
 
