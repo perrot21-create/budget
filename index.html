@@ -561,7 +561,14 @@ html body #bt#bt#bt tbody tr.tcum td:last-child{
   border-bottom:0!important;
   border-right:0!important;
 }
+   border-right:0!important;
+}
+/* Tableau de bord : léger encadrement de tous les blocs à la couleur du thème */
+#app:has(.hero) section:not(.dalert){
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
+}
 </style>
+</head></style>
 </head>
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
