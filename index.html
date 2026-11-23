@@ -3238,34 +3238,38 @@ function accBlock(s,ops,k){
 }
 
 /* Répartition : revenus en haut / dépenses en bas, pour les catégories comme pour les tiers */
-function rankHtml(s,ops,k){
+/* Regroupe les opérations par catégorie (ou par tiers) puis par type : revenus / dépenses */
+function groupsOf(s,ops){
   const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
-  /* type d'une opération : celui de sa catégorie, sinon déduit du signe */
   const kd=t=>(t.cat&&kindOf(t.cat))||(t.v>0?"rev":"dep");
   const key=t=>dim==="cat"?(t.cat||"_"):(t.tier||"_");
   ops.forEach(t=>{const q=key(t);(M.get(q)||M.set(q,[]).get(q)).push(t)});
-
-  /* montants par type : revenus = somme des revenus, dépenses = somme des dépenses */
   const G={rev:[],dep:[]};
   M.forEach((o,q)=>{
     ["rev","dep"].forEach(type=>{
-      const L=o.filter(t=>kd(t)===type),v=r2(L.reduce((a,t)=>a+(type==="rev"?t.v:-t.v),0));
-      if(v>0)G[type].push({key:q,v,n:L.length});
+      const L=o.filter(t=>kd(t)===type);
+      if(L.length)G[type].push({key:q,v:r2(L.reduce((a,t)=>a+(type==="rev"?t.v:-t.v),0)),n:L.length,ops:L});
     });
   });
-
   const nameOf=q=>dim==="cat"
     ?(q==="_"?"Sans catégorie":dot(q)+esc((S.cats.find(x=>x.id===q)||{name:"Catégorie supprimée"}).name))
     :esc(q==="_"?"Sans tiers":(S.tiers.find(x=>x.id===q)||{name:"Tiers supprimé"}).name);
-  const noun=dim==="cat"?"catégories":"tiers";
-  /* si un sujet est choisi, on masque un bloc vide ; sinon les deux blocs restent affichés */
-  const hideEmpty=s.id!==""&&(G.rev.length||G.dep.length);
+  const plain=q=>dim==="cat"
+    ?(q==="_"?"Sans catégorie":(S.cats.find(x=>x.id===q)||{name:"Catégorie supprimée"}).name)
+    :(q==="_"?"Sans tiers":(S.tiers.find(x=>x.id===q)||{name:"Tiers supprimé"}).name);
+  return{dim,G,nameOf,plain,noun:dim==="cat"?"catégories":"tiers"};
+}
 
+/* Répartition : revenus en haut / dépenses en bas */
+function rankHtml(s,ops,k){
+  const{G,nameOf,noun}=groupsOf(s,ops);
+  const P={rev:G.rev.filter(x=>x.v>0),dep:G.dep.filter(x=>x.v>0)};
+  const hideEmpty=s.id!==""&&(P.rev.length||P.dep.length);
   const blk=(type,lbl,cl)=>{
-    const L=G[type].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
+    const L=P[type].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
     if(hideEmpty&&!sh.length)return "";
-    return `<div><h3>Top ${sh.length||NTOP} ${noun} de ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
-
+    const ttl=`Top ${sh.length||NTOP} ${noun} de ${lbl}`;
+    return `<div><h3>${sh.length?`<button type="button" class="sp-top" data-sptop="${type}" title="Voir toutes les ${noun} de ${lbl}">${ttl}</button>`:ttl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
   return blk("rev","revenus","pos")+blk("dep","dépenses","neg");
 }
 
