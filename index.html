@@ -3474,13 +3474,16 @@ st.textContent=`
 #stp{container-type:inline-size}
 #stp .sp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 #stp .sp-h h2{margin:0}
-#stp .sp-w{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:20px 28px;align-items:stretch}
-@container (max-width:620px){#stp .sp-w{grid-template-columns:1fr}}
+#stp .sp-top{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+#stp .sp-w{display:grid;grid-template-columns:minmax(280px,420px) minmax(0,1fr);gap:16px 28px;align-items:start}
+#stp .sp-w.one{grid-template-columns:minmax(280px,420px)}
+@container (max-width:620px){#stp .sp-w,#stp .sp-w.one{grid-template-columns:1fr}}
 /* colonne des filtres */
-#stp .sp-fl{display:flex;flex-direction:column;justify-content:flex-start;gap:10px;min-width:0;padding:12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 7%,var(--surface))}
+#stp .sp-fl{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0;padding:12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 7%,var(--surface))}
 #stp .sp-fl label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
 #stp .sp-fl select,#stp .sp-fl input[type=date]{height:38px;width:100%;min-width:0;color:var(--ink);background:var(--surface)}
-#stp .sp-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#stp .sp-2{display:contents}
+#stp .sp-fl .sp-seg,#stp .sp-fl .sp-full{grid-column:1/-1}
 #stp .sp-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
 #stp .sp-seg button{flex:1;border:0;border-radius:0;height:38px;background:var(--surface);color:var(--mute);font-weight:600}
 #stp .sp-seg button+button{border-left:1px solid var(--line)}
@@ -3496,24 +3499,24 @@ st.textContent=`
 #stp .sp-m button{border:0;background:transparent;text-align:left;padding:6px 8px;font-size:var(--fs-md)}
 /* colonne des résultats */
 #stp .sp-rs{display:flex;flex-direction:column;gap:14px;min-width:0}
-#stp .sp-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-#stp .sp-c{display:flex;flex-direction:column;gap:1px;padding:10px 12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
-#stp .sp-c .sub{font-size:var(--fs-sm)}
-#stp .sp-v{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.2}
+#stp .sp-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}
+#stp .sp-c{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
+#stp .sp-c .sub{font-size:var(--fs-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stp .sp-v{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.2}
 #stp .sp-c small{font-size:var(--fs-sm);color:var(--mute)}
 #stp .sp-c small.pos{color:var(--pos);font-weight:600}#stp .sp-c small.neg{color:var(--neg);font-weight:600}
 #stp h3{margin:0 0 6px;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
-#stp .sp-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:5px 2px;font-size:var(--fs-md);border-top:1px solid var(--line)}
+#stp .sp-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 2px;font-size:var(--fs-md);border-top:1px solid var(--line)}
 #stp .sp-r:first-of-type{border-top:0}
 #stp .sp-r span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #stp .sp-r .a{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-#stp .sp-ac{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
-#stp .sp-a{display:flex;flex-direction:column;gap:1px;padding:8px 12px;border-radius:var(--rc2,12px);border:1px solid var(--line);min-width:0}
+#stp .sp-ac{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px}
+#stp .sp-a{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:var(--rc2,12px);border:1px solid var(--line);min-width:0}
 #stp .sp-a span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);color:var(--mute)}
-#stp .sp-a b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+#stp .sp-a b{font-size:1rem;font-variant-numeric:tabular-nums}
 #stp .sp-na{opacity:.7}#stp .sp-na b{font-size:var(--fs-md);font-weight:600}
 #stp .sp-a small{font-size:var(--fs-sm);color:var(--mute)}
-.dfit .dcol>#stp{flex:0 1 auto;min-height:130px;overflow:auto;order:1}
+.dfit .dcol>#stp{flex:0 0 auto;min-height:0;overflow:visible;order:1}
 `;
 document.head.appendChild(st);
 
@@ -3573,7 +3576,7 @@ function accBlock(s,ops,k){
     if(!o.length)return `<div class="sp-a sp-na">${nm}<b class="sub">Aucune donnée</b><small>${inc?"0 op.":"Compte non inclus"}</small></div>`;
     const v=val(agg(o),k);
     return `<div class="sp-a">${nm}<b class="${col(v,k)}">${fv(v,k)}</b><small>${o.length} op.</small></div>`});
-  return `<div><h3>Par compte</h3><div class="sp-ac">${L.join("")}</div></div>`;
+  return `<div class="sp-ac" aria-label="Par compte">${L.join("")}</div>`;
 }
 function inner(){
   const s=ST(),{a,b}=period(s);
@@ -3582,20 +3585,21 @@ function inner(){
     :`<label>Catégorie<select data-sp="id" aria-label="Catégorie">${opt("","Toutes les catégories",s.id)}${[["rev","Revenus"],["dep","Dépenses"]].map(([k,l])=>`<optgroup label="${l}">${S.cats.filter(c=>c.kind===k).map(c=>opt(c.id,c.name,s.id)).join("")}</optgroup>`).join("")}</select></label>`;
   const cat=s.mode==="cat"&&S.cats.find(c=>c.id===s.id);
   const subSel=cat&&cat.subs.length?`<label>Sous-catégorie<select data-sp="sub" aria-label="Sous-catégorie">${opt("","Toutes",s.sub)}${cat.subs.map(x=>opt(x.id,x.name,s.sub)).join("")}</select></label>`:"";
+  const subjF=subSel?subjSel:subjSel.replace("<label>",'<label class="sp-full">');
   const allOn=s.accs.length===S.acc.length;
   const accLbl=allOn?"Tous les comptes":s.accs.length===1?(S.acc.find(x=>x.id===s.accs[0])||{}).name:s.accs.length+" comptes";
   const accMenu=`<details class="sp-dd" data-spdd="acc"${OPEN==="acc"?" open":""}><summary>${esc(accLbl||"Comptes")}</summary><div class="sp-m"><label><input type="checkbox" data-spall="1"${allOn?" checked":""}>Tous les comptes</label>${S.acc.map((x,i)=>`<label><input type="checkbox" data-spa="${x.id}"${s.accs.includes(x.id)?" checked":""}><i class="cd t${i}" style="background:var(--ac);margin:0"></i>${esc(x.name)}</label>`).join("")}</div></details>`;
   const ys=yearsList(s),yo=v=>ys.map(y=>opt(y,y,v)).join("");
-  const row1=`<div class="sp-fl"><div class="sp-seg" role="group" aria-label="Analyser par"><button type="button" data-spmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-spmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjSel}${subSel}<div><span class="sub" style="font-size:var(--fs-sm)">Comptes</span>${accMenu}</div>
+  const row1=`<div class="sp-fl"><div class="sp-seg" role="group" aria-label="Analyser par"><button type="button" data-spmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-spmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjF}${subSel}<div><span class="sub" style="font-size:var(--fs-sm)">Comptes</span>${accMenu}</div>
   <label>Période<select data-sp="per" aria-label="Type de période">${[["q:m","Ce mois"],["q:12","12 derniers mois"],["q:y","Cette année"],["q:py","Année dernière"],["dates","De date à date"],["year","Une année"],["years","D’année en année"]].map(([v,l])=>opt(v,l,s.per==="dates"&&s.pq?"q:"+s.pq:s.per)).join("")}</select></label>${
     s.per==="dates"?`<div class="sp-2"><label>Du<input type="date" data-sp="d1" value="${esc(s.d1)}"></label><label>Au<input type="date" data-sp="d2" value="${esc(s.d2)}"></label></div>`
     :s.per==="year"?`<label>Année<select data-sp="y1" aria-label="Année">${yo(s.y1)}</select></label>`
     :`<div class="sp-2"><label>De<select data-sp="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sp="y2" aria-label="Dernière année">${yo(s.y2)}</select></label></div>`}</div>`;
   const head=(n)=>`<div class="sp-h"><h2>Statistiques</h2>${n?`<button type="button" data-spops="1">Voir les opérations (${n})</button>`:""}</div>`;
-  const wrap=(n,right)=>head(n)+`<div class="sp-w">${row1}<div class="sp-rs">${right}</div></div>`;
-  if(!a||!b)return wrap(0,`<p class="empty">Choisissez les deux dates de la période.</p>`+accBlock(s,[],"net"));
+  const wrap=(n,top,right)=>head(n)+`<div class="sp-top">${top}</div><div class="sp-w${right?"":" one"}">${row1}${right?`<div class="sp-rs">${right}</div>`:""}</div>`;
+  if(!a||!b)return wrap(0,`<p class="empty">Choisissez les deux dates de la période.</p>`+accBlock(s,[],"net"),"");
   const ops=filt(s,a,b);
-  if(!ops.length)return wrap(0,`<p class="empty">Aucune opération pour ces critères.</p>`+accBlock(s,[],"net"));
+  if(!ops.length)return wrap(0,`<p class="empty">Aucune opération pour ces critères.</p>`+accBlock(s,[],"net"),"");
 
   const g=agg(ops),k=kindOf2(g),tot=val(g,k);
   const ya=+a.slice(0,4),yb=+b.slice(0,4),ma=+a.slice(5,7)-1,mb=+b.slice(5,7)-1;
@@ -3612,7 +3616,7 @@ function inner(){
   }
   const sub2=k==="net"?`<small>Dép. ${eur2(g.d)} · Rev. ${eur2(g.r)}</small>`:"";
   const big=ops.reduce((m,t)=>Math.abs(t.v)>Math.abs(m.v)?t:m,ops[0]),lst=ops[0],sv=t=>`${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}`;
-  const extra=`<div class="sp-c"><span class="sub">Plus grosse opération</span><b class="sp-v ${big.v>0?"pos":"neg"}">${sv(big)}</b><small>${dfr(big.date)}</small></div><div class="sp-c"><span class="sub">Dernière opération</span><b class="sp-v ${lst.v>0?"pos":"neg"}">${sv(lst)}</b><small>${dfr(lst.date)}</small></div>`;
+  const extra=`<div class="sp-c"><span class="sub" title="Plus grosse opération">Plus grosse op.</span><b class="sp-v ${big.v>0?"pos":"neg"}">${sv(big)}</b><small>${dfr(big.date)}</small></div><div class="sp-c"><span class="sub" title="Dernière opération">Dernière op.</span><b class="sp-v ${lst.v>0?"pos":"neg"}">${sv(lst)}</b><small>${dfr(lst.date)}</small></div>`;
   const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>${extra}</div>`;
 
   /* répartition : top 5 du sujet ; si un sujet est choisi, répartition selon l'autre axe (catégories d'un tiers, tiers d'une catégorie) */
@@ -3629,7 +3633,7 @@ function inner(){
   }
 
   const byAcc=accBlock(s,ops,k);
-  return wrap(ops.length,band+rank+byAcc);
+  return wrap(ops.length,band+byAcc,rank);
 }
 
 /* ---------- Insertion : remplace le bloc de stats.js ---------- */
