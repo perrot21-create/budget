@@ -2530,7 +2530,23 @@ function fit(){
   if(bottom+8<=innerHeight)r.classList.add("accfix");
  }
 }
-const later=()=>{if(busy)return;busy=1;requestAnimationFrame(()=>{busy=0;fit()})};
+/* Mémorise le défilement juste avant chaque action (phase de capture : avant les autres gestionnaires) */
+let SAVE=null;
+const keep=()=>{
+  const a=document.getElementById("abo"),w=document.querySelector(".tw3"),b=document.getElementById("bt");
+  SAVE={y:scrollY,abo:a?a.scrollTop:0,tw:w?w.scrollTop:0,bt:b?b.scrollTop:0,bl:b?b.scrollLeft:0,t:Date.now()};
+};
+["click","change","input","keydown"].forEach(ev=>document.addEventListener(ev,keep,true));
+/* Rétablit le défilement après le recalcul de mise en page (valable 1,5 s après l'action) */
+const restore=()=>{
+  if(!SAVE||Date.now()-SAVE.t>1500)return;
+  const a=document.getElementById("abo"),w=document.querySelector(".tw3"),b=document.getElementById("bt");
+  if(a)a.scrollTop=SAVE.abo;
+  if(w)w.scrollTop=SAVE.tw;
+  if(b){b.scrollTop=SAVE.bt;b.scrollLeft=SAVE.bl}
+  scrollTo(0,SAVE.y);
+};
+const later=()=>{if(busy)return;busy=1;requestAnimationFrame(()=>{busy=0;fit();restore()})};
 
 const od=drawOps;drawOps=function(){od.apply(this,arguments);later()};
 const odb=drawBud;drawBud=function(){const d=document.querySelector("#bch details"),was=!!d&&!d.open;odb.apply(this,arguments);if(was){const n=document.querySelector("#bch details");if(n)n.open=false}later()};
