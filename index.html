@@ -3473,6 +3473,10 @@ st.id="stats-plus-css";
 st.textContent=`
 #stp .sp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 #stp .sp-h h2{margin:0}
+#stp .sp-fw{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin-bottom:8px}
+#stp .sp-fw>.sp-f{display:contents}
+#stp .sp-rk{columns:2 300px;column-gap:40px}
+#stp .sp-r{break-inside:avoid}
 #stp .sp-f{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;margin-bottom:8px}
 #stp .sp-f label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
 #stp .sp-f select,#stp .sp-f input[type=date]{height:38px;min-width:0;color:var(--ink);background:var(--surface)}
@@ -3574,9 +3578,9 @@ function inner(){
     :s.per==="year"?`<label>Année<select data-sp="y1" aria-label="Année">${yo(s.y1)}</select></label>`
     :`<label>De<select data-sp="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sp="y2" aria-label="Dernière année">${yo(s.y2)}</select></label>`}${qMenu}</div>`;
   const head=(n)=>`<div class="sp-h"><h2>Statistiques</h2>${n?`<button type="button" data-spops="1">Voir les opérations (${n})</button>`:""}</div>`;
-  if(!a||!b)return head(0)+row1+row2+`<p class="empty">Choisissez les deux dates de la période.</p>`;
+  if(!a||!b)return head(0)+'<div class="sp-fw">'+row1+row2+'</div>'+`<p class="empty">Choisissez les deux dates de la période.</p>`;
   const ops=filt(s,a,b);
-  if(!ops.length)return head(0)+row1+row2+`<p class="empty">Aucune opération pour ces critères.</p>`;
+  if(!ops.length)return head(0)+'<div class="sp-fw">'+row1+row2+'</div>'+`<p class="empty">Aucune opération pour ces critères.</p>`;
 
   const g=agg(ops),k=kindOf2(g),tot=val(g,k);
   const ya=+a.slice(0,4),yb=+b.slice(0,4),ma=+a.slice(5,7)-1,mb=+b.slice(5,7)-1;
@@ -3594,19 +3598,6 @@ function inner(){
   const sub2=k==="net"?`<small>Dép. ${eur2(g.d)} · Rev. ${eur2(g.r)}</small>`:"";
   const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div></div>`;
 
-  /* histogramme */
-  const byYear=s.per==="years"||nm>24,B=[];
-  if(byYear){for(let y=ya;y<=yb;y++)B.push({key:String(y),l:String(y),o:[]})}
-  else{for(let y=ya,m=ma;y<yb||(y===yb&&m<=mb);m++){if(m>11){m=0;y++}B.push({key:y+"-"+String(m+1).padStart(2,"0"),l:mlab(y,m,true),o:[]})}}
-  const idx={};B.forEach(x=>idx[x.key]=x);
-  ops.forEach(t=>{const x=idx[byYear?t.date.slice(0,4):t.date.slice(0,7)];if(x)x.o.push(t)});
-  B.forEach(x=>x.v=val(agg(x.o),k));
-  const mx=Math.max(.01,...B.map(x=>Math.abs(x.v)));
-  const few=B.length<=14;
-  const hist=`<div><h3>${byYear?"Par année":"Par mois"} · cliquez une barre pour voir ses opérations</h3><div class="sp-hist">${B.map((x,i)=>{
-    const c=col(x.v,k),cv=c==="neg"?"var(--neg)":c==="pos"?"var(--pos)":"var(--accent)",lab=few||i%3===0?(byYear?x.l:x.l.slice(0,3)):"";
-    return `<div class="sp-col"><button type="button" class="sp-b" data-spb="${x.key}" title="${esc(x.l)} : ${x.v?fv(x.v,k):"aucune opération"}" aria-label="${esc(x.l)} : ${x.v?fv(x.v,k):"aucune opération"}"${x.o.length?"":" disabled"}><i style="height:${x.v?Math.max(4,Math.abs(x.v)/mx*100).toFixed(1):0}%;background:${cv}"></i></button><span class="sp-l">${esc(lab)}</span></div>`}).join("")}</div></div>`;
-
   /* classement des 5 premiers (seulement quand rien n'est filtré sur le sujet) */
   let rank="";
   if(s.id===""){
@@ -3616,7 +3607,7 @@ function inner(){
     const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
     R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
     const nameOf=key=>s.mode==="tiers"?(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name):(key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name));
-    if(R.length)rank=`<div><h3>Top ${Math.min(5,R.length)} ${s.mode==="tiers"?"tiers":"catégories"}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${s.mode==="tiers"?esc(nameOf(x.key)):nameOf(x.key)}</span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
+    if(R.length)rank=`<div><h3>Top ${Math.min(5,R.length)} ${s.mode==="tiers"?"tiers":"catégories"}</h3><div class="sp-rk">${R.slice(0,5).map(x=>`<div class="sp-r"><span>${s.mode==="tiers"?esc(nameOf(x.key)):nameOf(x.key)}</span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div></div>`;
   }
 
   /* par compte : ligne compacte */
@@ -3626,7 +3617,7 @@ function inner(){
       .map(z=>`<span><i class="cd t${z.i}" style="background:var(--ac)"></i>${esc(z.x.name)} <b class="${col(val(agg(z.o),k),k)}">${fv(val(agg(z.o),k),k)}</b></span>`);
     if(L.length>1)byAcc=`<div class="sp-acc"><span class="sub">Par compte :</span>${L.join("")}</div>`;
   }
-  return head(ops.length)+row1+row2+band+`<div class="sp-g${rank?"":" one"}">${hist}${rank}</div>${byAcc}`;
+  return head(ops.length)+'<div class="sp-fw">'+row1+row2+'</div>'+band+`${rank?`<div class="sp-g one">${rank}</div>`:""}${byAcc}`;
 }
 
 /* ---------- Insertion : remplace le bloc de stats.js ---------- */
@@ -3691,13 +3682,6 @@ document.addEventListener("click",e=>{
     OPEN=null;
   }
   else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
-  else if(D.spb){
-    const{a,b:bb}=period(s),all=filt(s,a,bb),o=all.filter(t=>t.date.startsWith(D.spb));
-    let da=o.reduce((q,t)=>t.date<q?t.date:q,"9999"),db=o.reduce((q,t)=>t.date>q?t.date:q,"0000");
-    const yr=D.spb.length===4;
-    if(yr){da=D.spb+"-01-01";db=D.spb+"-12-31"}else{const[yy,mm]=D.spb.split("-").map(Number);da=iso(new Date(yy,mm-1,1));db=iso(new Date(yy,mm,0))}
-    showOps(o,da,db,yr?D.spb:mlab(+D.spb.slice(0,4),+D.spb.slice(5)-1,true)+" "+D.spb.slice(0,4));return;
-  }
   else return;
   save();rerender();
 });
@@ -3718,7 +3702,7 @@ document.addEventListener("change",e=>{
 });
 
 if(typeof T!=="undefined"&&T==="dash")draw();
-})(); 
+})();
  </script>
  </body>
 
