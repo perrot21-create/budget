@@ -3456,6 +3456,270 @@ document.addEventListener("click",e=>{
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
  </script>
+ <script>
+ /* stats_plus.js : bloc « Statistiques » compact.
+   À charger EN DERNIER (après anneau_unique.js / dashboard_compact.js). Ne retire rien : stats.js reste en place,
+   ce script remplace simplement son bloc par la nouvelle version et réutilise les mêmes critères (S.stats).
+   - Filtres sur 2 lignes (menus « Comptes » et « Raccourcis »)
+   - Bande de résultats : total (avec comparaison à la période précédente), opérations, moyenne / mois
+   - Mini histogramme cliquable + classement des 5 premiers quand rien n'est filtré
+   - « Par compte » en ligne compacte */
+(()=>{
+"use strict";
+
+/* ---------- Style ---------- */
+const st=document.createElement("style");
+st.id="stats-plus-css";
+st.textContent=`
+#stp .sp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+#stp .sp-h h2{margin:0}
+#stp .sp-f{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;margin-bottom:8px}
+#stp .sp-f label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
+#stp .sp-f select,#stp .sp-f input[type=date]{height:38px;min-width:0;color:var(--ink);background:var(--surface)}
+#stp .sp-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
+#stp .sp-seg button{border:0;border-radius:0;height:38px;background:var(--surface);color:var(--mute);font-weight:600}
+#stp .sp-seg button+button{border-left:1px solid var(--line)}
+#stp .sp-seg button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}
+#stp details.sp-dd{position:relative}
+#stp details.sp-dd>summary{list-style:none;display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;cursor:pointer;border:1px solid var(--line);border-radius:var(--rb,8px);background:var(--surface);color:var(--ink);white-space:nowrap}
+#stp details.sp-dd>summary::-webkit-details-marker{display:none}
+#stp details.sp-dd>summary::after{content:"▾";color:var(--mute)}
+#stp details.sp-dd[open]>summary{border-color:var(--accent)}
+#stp .sp-m{position:absolute;left:0;top:calc(100% + 4px);z-index:20;display:flex;flex-direction:column;gap:2px;min-width:190px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--rb,8px);box-shadow:var(--sh)}
+#stp .sp-m label{flex-direction:row;align-items:center;gap:8px;padding:5px 6px;color:var(--ink);font-size:var(--fs-md);cursor:pointer;border-radius:6px}
+#stp .sp-m label:hover,#stp .sp-m button:hover{background:var(--bg)}
+#stp .sp-m button{border:0;background:transparent;text-align:left;padding:6px 8px;font-size:var(--fs-md)}
+#stp .sp-band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+#stp .sp-c{display:flex;flex-direction:column;gap:1px;padding:8px 12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface));min-width:0}
+#stp .sp-c .sub{font-size:var(--fs-sm)}
+#stp .sp-v{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.2}
+#stp .sp-c small{font-size:var(--fs-sm);color:var(--mute)}
+#stp .sp-c small.pos{color:var(--pos);font-weight:600}#stp .sp-c small.neg{color:var(--neg);font-weight:600}
+#stp .sp-g{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+#stp .sp-g.one{grid-template-columns:1fr}
+#stp h3{margin:0 0 6px;font-size:var(--fs-sm);font-weight:600;color:var(--mute)}
+#stp .sp-hist{display:flex;gap:4px;align-items:flex-end}
+#stp .sp-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:2px}
+#stp .sp-b{display:flex;align-items:flex-end;height:56px;padding:0;border:0;border-radius:4px;background:color-mix(in srgb,var(--mute) 8%,transparent)}
+#stp .sp-b:hover:not(:disabled){background:color-mix(in srgb,var(--accent) 18%,transparent);box-shadow:none}
+#stp .sp-b i{display:block;width:100%;border-radius:3px 3px 0 0;min-height:2px}
+#stp .sp-b:disabled{cursor:default;opacity:.6}
+#stp .sp-l{font-size:.68rem;color:var(--mute);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:clip;min-height:1em}
+#stp .sp-r{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:2px 0;font-size:var(--fs-md)}
+#stp .sp-r span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#stp .sp-r .a{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+#stp .sp-acc{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:10px;font-size:var(--fs-md)}
+#stp .sp-acc span{white-space:nowrap}
+.dfit .dcol>#stp{flex:0 1 auto;min-height:130px;overflow:auto;order:1}
+@media(max-width:700px){#stp .sp-band{grid-template-columns:1fr 1fr}#stp .sp-g{grid-template-columns:1fr}}
+`;
+document.head.appendChild(st);
+
+/* ---------- Etat (même structure que stats.js, donc mêmes critères mémorisés) ---------- */
+const DEF=()=>{const y=new Date().getFullYear();return{mode:"tiers",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
+function ST(){
+  let s=S.stats;if(!s||typeof s!=="object")s=S.stats=DEF();
+  const d=DEF();Object.keys(d).forEach(k=>{if(s[k]===undefined)s[k]=d[k]});
+  s.accs=(s.accs||[]).filter(id=>S.acc.some(a=>a.id===id));
+  if(!s.accs.length)s.accs=S.acc.map(a=>a.id);
+  return s;
+}
+let OPEN=null;/* menu déroulant ouvert : "acc" ou "q" */
+
+/* ---------- Calculs ---------- */
+const r2=n=>Math.round(n*100)/100;
+function period(s){
+  let a,b;
+  if(s.per==="dates"){a=s.d1;b=s.d2;if(a&&b&&a>b)[a,b]=[b,a]}
+  else if(s.per==="year"){a=s.y1+"-01-01";b=s.y1+"-12-31"}
+  else{let y1=+s.y1,y2=+s.y2;if(y1>y2)[y1,y2]=[y2,y1];a=y1+"-01-01";b=y2+"-12-31"}
+  return{a,b};
+}
+function filt(s,a,b){
+  const set=new Set(s.accs);
+  return S.tx.filter(t=>set.has(t.acc)&&t.date>=a&&t.date<=b&&(s.mode==="tiers"
+    ?(s.id===""||(s.id==="_"?!t.tier:t.tier===s.id))
+    :((s.id===""||t.cat===s.id)&&(!s.sub||t.sub===s.sub)))).sort((x,y)=>y.date.localeCompare(x.date));
+}
+const agg=ops=>{let r=0,d=0;ops.forEach(t=>{if(t.v>0)r+=t.v;else d-=t.v});return{r:r2(r),d:r2(d)}};
+const kindOf2=g=>g.d>0&&!g.r?"dep":g.r>0&&!g.d?"rev":"net";
+const val=(g,k)=>k==="dep"?g.d:k==="rev"?g.r:r2(g.r-g.d);
+const sgn=n=>n>0?"+":n<0?"−":"";
+const col=(v,k)=>k==="dep"?"neg":k==="rev"?"pos":v>0?"pos":v<0?"neg":"";
+const fv=(v,k)=>k==="net"?sgn(v)+eur2(Math.abs(v)):eur2(Math.abs(v));
+const mlab=(y,m,long)=>cap(new Date(y,m,1).toLocaleDateString("fr-FR",long?{month:"long"}:{month:"short",year:"numeric"}));
+const pd=x=>{const[y,m,d]=x.split("-").map(Number);return new Date(y,m-1,d)};
+
+/* ---------- Rendu ---------- */
+const opt=(v,l,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(l)}</option>`;
+function yearsList(s){
+  const y=new Set([new Date().getFullYear(),+s.y1,+s.y2]);S.tx.forEach(t=>y.add(+t.date.slice(0,4)));
+  return[...y].filter(Boolean).sort((a,b)=>a-b);
+}
+function inner(){
+  const s=ST(),{a,b}=period(s);
+  const subjSel=s.mode==="tiers"
+    ?`<label>Tiers<select data-sp="id" aria-label="Tiers">${opt("","Tous les tiers",s.id)}${opt("_","Sans tiers",s.id)}${[...S.tiers].sort((x,y)=>x.name.localeCompare(y.name,"fr",{sensitivity:"base"})).map(t=>opt(t.id,t.name,s.id)).join("")}</select></label>`
+    :`<label>Catégorie<select data-sp="id" aria-label="Catégorie">${opt("","Toutes les catégories",s.id)}${[["rev","Revenus"],["dep","Dépenses"]].map(([k,l])=>`<optgroup label="${l}">${S.cats.filter(c=>c.kind===k).map(c=>opt(c.id,c.name,s.id)).join("")}</optgroup>`).join("")}</select></label>`;
+  const cat=s.mode==="cat"&&S.cats.find(c=>c.id===s.id);
+  const subSel=cat&&cat.subs.length?`<label>Sous-catégorie<select data-sp="sub" aria-label="Sous-catégorie">${opt("","Toutes",s.sub)}${cat.subs.map(x=>opt(x.id,x.name,s.sub)).join("")}</select></label>`:"";
+  const allOn=s.accs.length===S.acc.length;
+  const accLbl=allOn?"Tous les comptes":s.accs.length===1?(S.acc.find(x=>x.id===s.accs[0])||{}).name:s.accs.length+" comptes";
+  const accMenu=`<details class="sp-dd" data-spdd="acc"${OPEN==="acc"?" open":""}><summary>${esc(accLbl||"Comptes")}</summary><div class="sp-m"><label><input type="checkbox" data-spall="1"${allOn?" checked":""}>Tous les comptes</label>${S.acc.map((x,i)=>`<label><input type="checkbox" data-spa="${x.id}"${s.accs.includes(x.id)?" checked":""}><i class="cd t${i}" style="background:var(--ac);margin:0"></i>${esc(x.name)}</label>`).join("")}</div></details>`;
+  const ys=yearsList(s),yo=v=>ys.map(y=>opt(y,y,v)).join("");
+  const qMenu=`<details class="sp-dd" data-spdd="q"${OPEN==="q"?" open":""}><summary>Raccourcis</summary><div class="sp-m"><button type="button" data-spq="m">Ce mois</button><button type="button" data-spq="12">12 derniers mois</button><button type="button" data-spq="y">Cette année</button><button type="button" data-spq="py">Année dernière</button></div></details>`;
+  const row1=`<div class="sp-f"><div class="sp-seg" role="group" aria-label="Analyser par"><button type="button" data-spmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-spmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjSel}${subSel}${accMenu}</div>`;
+  const row2=`<div class="sp-f"><label>Période<select data-sp="per" aria-label="Type de période">${opt("dates","De date à date",s.per)}${opt("year","Une année",s.per)}${opt("years","D’année en année",s.per)}</select></label>${
+    s.per==="dates"?`<label>Du<input type="date" data-sp="d1" value="${esc(s.d1)}"></label><label>Au<input type="date" data-sp="d2" value="${esc(s.d2)}"></label>`
+    :s.per==="year"?`<label>Année<select data-sp="y1" aria-label="Année">${yo(s.y1)}</select></label>`
+    :`<label>De<select data-sp="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sp="y2" aria-label="Dernière année">${yo(s.y2)}</select></label>`}${qMenu}</div>`;
+  const head=(n)=>`<div class="sp-h"><h2>Statistiques</h2>${n?`<button type="button" data-spops="1">Voir les opérations (${n})</button>`:""}</div>`;
+  if(!a||!b)return head(0)+row1+row2+`<p class="empty">Choisissez les deux dates de la période.</p>`;
+  const ops=filt(s,a,b);
+  if(!ops.length)return head(0)+row1+row2+`<p class="empty">Aucune opération pour ces critères.</p>`;
+
+  const g=agg(ops),k=kindOf2(g),tot=val(g,k);
+  const ya=+a.slice(0,4),yb=+b.slice(0,4),ma=+a.slice(5,7)-1,mb=+b.slice(5,7)-1;
+  const nm=Math.max(1,(yb-ya)*12+mb-ma+1);
+
+  /* comparaison avec la période précédente de même durée */
+  const len=Math.round((pd(b)-pd(a))/864e5)+1,pB=new Date(pd(a));pB.setDate(pB.getDate()-1);
+  const pA=new Date(pB);pA.setDate(pA.getDate()-(len-1));
+  const prev=val(agg(filt(s,iso(pA),iso(pB))),k);
+  let cmp="";
+  if(prev){
+    const d=(tot-prev)/Math.abs(prev)*100,good=k==="dep"?d<0:d>0;
+    cmp=`<small class="${Math.round(d)===0?"":good?"pos":"neg"}" title="Période précédente (${dfr(iso(pA))} → ${dfr(iso(pB))}) : ${fv(prev,k)}">${d>0?"▲":d<0?"▼":"="} ${sgn(Math.round(d))}${Math.abs(Math.round(d))} % vs période préc.</small>`;
+  }
+  const sub2=k==="net"?`<small>Dép. ${eur2(g.d)} · Rev. ${eur2(g.r)}</small>`:"";
+  const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div></div>`;
+
+  /* histogramme */
+  const byYear=s.per==="years"||nm>24,B=[];
+  if(byYear){for(let y=ya;y<=yb;y++)B.push({key:String(y),l:String(y),o:[]})}
+  else{for(let y=ya,m=ma;y<yb||(y===yb&&m<=mb);m++){if(m>11){m=0;y++}B.push({key:y+"-"+String(m+1).padStart(2,"0"),l:mlab(y,m,true),o:[]})}}
+  const idx={};B.forEach(x=>idx[x.key]=x);
+  ops.forEach(t=>{const x=idx[byYear?t.date.slice(0,4):t.date.slice(0,7)];if(x)x.o.push(t)});
+  B.forEach(x=>x.v=val(agg(x.o),k));
+  const mx=Math.max(.01,...B.map(x=>Math.abs(x.v)));
+  const few=B.length<=14;
+  const hist=`<div><h3>${byYear?"Par année":"Par mois"} · cliquez une barre pour voir ses opérations</h3><div class="sp-hist">${B.map((x,i)=>{
+    const c=col(x.v,k),cv=c==="neg"?"var(--neg)":c==="pos"?"var(--pos)":"var(--accent)",lab=few||i%3===0?(byYear?x.l:x.l.slice(0,3)):"";
+    return `<div class="sp-col"><button type="button" class="sp-b" data-spb="${x.key}" title="${esc(x.l)} : ${x.v?fv(x.v,k):"aucune opération"}" aria-label="${esc(x.l)} : ${x.v?fv(x.v,k):"aucune opération"}"${x.o.length?"":" disabled"}><i style="height:${x.v?Math.max(4,Math.abs(x.v)/mx*100).toFixed(1):0}%;background:${cv}"></i></button><span class="sp-l">${esc(lab)}</span></div>`}).join("")}</div></div>`;
+
+  /* classement des 5 premiers (seulement quand rien n'est filtré sur le sujet) */
+  let rank="";
+  if(s.id===""){
+    const M=new Map();
+    ops.forEach(t=>{const key=s.mode==="tiers"?(t.tier||"_"):(t.cat||"_");(M.get(key)||M.set(key,[]).get(key)).push(t)});
+    const R=[...M].map(([key,o])=>({key,v:val(agg(o),k)})).filter(x=>x.v!==0);
+    const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
+    R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
+    const nameOf=key=>s.mode==="tiers"?(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name):(key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name));
+    if(R.length)rank=`<div><h3>Top ${Math.min(5,R.length)} ${s.mode==="tiers"?"tiers":"catégories"}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${s.mode==="tiers"?esc(nameOf(x.key)):nameOf(x.key)}</span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
+  }
+
+  /* par compte : ligne compacte */
+  let byAcc="";
+  if(s.accs.length>1){
+    const L=S.acc.map((x,i)=>({x,i,o:ops.filter(t=>t.acc===x.id)})).filter(z=>z.o.length)
+      .map(z=>`<span><i class="cd t${z.i}" style="background:var(--ac)"></i>${esc(z.x.name)} <b class="${col(val(agg(z.o),k),k)}">${fv(val(agg(z.o),k),k)}</b></span>`);
+    if(L.length>1)byAcc=`<div class="sp-acc"><span class="sub">Par compte :</span>${L.join("")}</div>`;
+  }
+  return head(ops.length)+row1+row2+band+`<div class="sp-g${rank?"":" one"}">${hist}${rank}</div>${byAcc}`;
+}
+
+/* ---------- Insertion : remplace le bloc de stats.js ---------- */
+const on=()=>!(typeof tset==="function")||tset("dash","s_sta",true)!==false;
+const od=drawDash;
+drawDash=function(){
+  od.apply(this,arguments);
+  try{
+    const old=document.getElementById("stx");
+    if(old)old.remove();
+    if(!on())return;
+    const app=document.getElementById("app");if(!app)return;
+    const ref=app.querySelector(".dlast,.lhead"),after=ref&&ref.closest("section");
+    const sec=document.createElement("section");sec.id="stp";sec.className="dflex";sec.setAttribute("aria-label","Statistiques");
+    sec.innerHTML=inner();
+    if(after&&after.parentNode)after.parentNode.insertBefore(sec,after);else app.appendChild(sec);
+  }catch(e){console.error("stats_plus.js :",e)}
+};
+function rerender(){
+  const el=document.getElementById("stp");if(!el)return;
+  const ae=document.activeElement;let q=null;
+  if(ae&&el.contains(ae)){const d=ae.dataset||{};q=d.sp?`[data-sp="${d.sp}"]`:d.spa?`[data-spa="${d.spa}"]`:d.spall?"[data-spall]":null}
+  el.innerHTML=inner();
+  if(q){const n=el.querySelector(q);if(n)n.focus()}
+}
+
+/* ---------- Fenêtre « Voir les opérations » ---------- */
+function showOps(ops,a,b,titre){
+  const g=agg(ops),k=kindOf2(g),tot=val(g,k);
+  let py=new Date().getFullYear();
+  const rows=ops.map(t=>{
+    const c=S.cats.find(x=>x.id===t.cat),sb=c&&c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier),ac=S.acc.find(x=>x.id===t.acc),ai=S.acc.findIndex(x=>x.id===t.acc),dd=dco(t.date,py);py=+t.date.slice(0,4);
+    return `<tr class="${ai>=0?"ta t"+ai:""}"><td title="${dfr(t.date)}">${dd}</td><td>${ac?esc(ac.name):""}</td><td>${ti?esc(ti.name):""}</td><td>${c?dot(c.id)+esc(c.name)+(sb?" → "+esc(sb.name):""):"Sans catégorie"}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td><td class="c"><span aria-hidden="true">${t.p?"✓":"○"}</span><span class="vh">${t.p?"Pointée":"Non pointée"}</span></td></tr>`}).join("");
+  const prevF=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Opérations de la sélection"><div class="mh"><h2>${esc(titre||"Opérations")} · ${dfr(a)} → ${dfr(b)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><p class="sub">${ops.length} opération(s) · Total : <b>${fv(tot,k)}</b></p><div class="tw2"><table class="lt mcat" aria-label="Opérations"><thead><tr><th>Date</th><th>Compte</th><th>Tiers</th><th>Catégorie</th><th class="r">Montant</th><th class="c">Pointée</th></tr></thead><tbody>${rows}</tbody></table></div><div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prevF&&prevF.focus&&document.contains(prevF))prevF.focus()};
+  o.onclick=e=>{if(e.target===o||e.target.closest("[data-r]"))end()};
+  o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Tab"){const bs=[...o.querySelectorAll("button")],f0=bs[0],l=bs[bs.length-1];if(e.shiftKey&&document.activeElement===f0){e.preventDefault();l.focus()}else if(!e.shiftKey&&document.activeElement===l){e.preventDefault();f0.focus()}}};
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
+
+/* ---------- Evénements ---------- */
+document.addEventListener("toggle",e=>{
+  const d=e.target;if(!d.dataset||d.dataset.spdd===undefined)return;
+  if(d.open){OPEN=d.dataset.spdd;document.querySelectorAll("#stp details.sp-dd[open]").forEach(o=>{if(o!==d)o.open=false})}
+  else if(OPEN===d.dataset.spdd)OPEN=null;
+},true);
+document.addEventListener("click",e=>{
+  /* clic en dehors d'un menu : on le referme */
+  if(!(e.target.closest&&e.target.closest("details.sp-dd"))){
+    document.querySelectorAll("#stp details.sp-dd[open]").forEach(o=>o.open=false);OPEN=null;
+  }
+  const b=e.target.closest&&e.target.closest("#stp button");if(!b)return;
+  const s=ST(),D=b.dataset,n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  if(D.spmode){if(s.mode!==D.spmode){s.mode=D.spmode;s.id="";s.sub=""}}
+  else if(D.spq){
+    s.per="dates";
+    if(D.spq==="m"){s.d1=iso(new Date(y,m,1));s.d2=iso(new Date(y,m+1,0))}
+    else if(D.spq==="12"){s.d1=iso(new Date(y,m-12,n.getDate()+1));s.d2=today()}
+    else if(D.spq==="y"){s.d1=y+"-01-01";s.d2=y+"-12-31"}
+    else{s.d1=(y-1)+"-01-01";s.d2=(y-1)+"-12-31"}
+    OPEN=null;
+  }
+  else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
+  else if(D.spb){
+    const{a,b:bb}=period(s),all=filt(s,a,bb),o=all.filter(t=>t.date.startsWith(D.spb));
+    let da=o.reduce((q,t)=>t.date<q?t.date:q,"9999"),db=o.reduce((q,t)=>t.date>q?t.date:q,"0000");
+    const yr=D.spb.length===4;
+    if(yr){da=D.spb+"-01-01";db=D.spb+"-12-31"}else{const[yy,mm]=D.spb.split("-").map(Number);da=iso(new Date(yy,mm-1,1));db=iso(new Date(yy,mm,0))}
+    showOps(o,da,db,yr?D.spb:mlab(+D.spb.slice(0,4),+D.spb.slice(5)-1,true)+" "+D.spb.slice(0,4));return;
+  }
+  else return;
+  save();rerender();
+});
+document.addEventListener("change",e=>{
+  const t=e.target;if(!t.closest||!t.closest("#stp"))return;
+  const s=ST(),D=t.dataset;
+  if(D.sp){
+    s[D.sp]=(D.sp==="y1"||D.sp==="y2")?+t.value:t.value;
+    if(D.sp==="id")s.sub="";
+  }else if(D.spa!==undefined){
+    const a=new Set(s.accs);t.checked?a.add(D.spa):a.delete(D.spa);
+    s.accs=S.acc.map(x=>x.id).filter(id=>a.has(id));
+    if(!s.accs.length)s.accs=S.acc.map(x=>x.id);
+  }else if(D.spall!==undefined){
+    s.accs=t.checked?S.acc.map(x=>x.id):[S.acc[0].id];
+  }else return;
+  save();rerender();
+});
+
+if(typeof T!=="undefined"&&T==="dash")draw();
+})(); 
+ </script>
  </body>
 
 </html>
