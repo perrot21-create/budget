@@ -3457,12 +3457,12 @@ if(typeof T!=="undefined"&&T==="dash")draw();
 })();
  </script>
  <script>
- /* stats_plus.js : bloc « Statistiques » compact.
+/* stats_plus.js : bloc « Statistiques » compact.
    À charger EN DERNIER (après anneau_unique.js / dashboard_compact.js). Ne retire rien : stats.js reste en place,
    ce script remplace simplement son bloc par la nouvelle version et réutilise les mêmes critères (S.stats).
    - Filtres sur 2 lignes (menus « Comptes » et « Raccourcis »)
    - Bande de résultats : total (avec comparaison à la période précédente), opérations, moyenne / mois
-   - Mise en page à deux colonnes : filtres à gauche, résultats à droite (total, top 5, par compte)
+   - Mise en page à deux colonnes : filtres à gauche, résultats à droite (total, opérations, répartition, par compte)
    - « Par compte » en ligne compacte */
 (()=>{
 "use strict";
@@ -3474,10 +3474,10 @@ st.textContent=`
 #stp{container-type:inline-size}
 #stp .sp-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 #stp .sp-h h2{margin:0}
-#stp .sp-w{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:20px 28px;align-items:start}
+#stp .sp-w{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:20px 28px;align-items:stretch}
 @container (max-width:620px){#stp .sp-w{grid-template-columns:1fr}}
 /* colonne des filtres */
-#stp .sp-fl{display:flex;flex-direction:column;gap:10px;min-width:0;padding:12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 7%,var(--surface))}
+#stp .sp-fl{display:flex;flex-direction:column;justify-content:flex-start;gap:10px;min-width:0;padding:12px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 7%,var(--surface))}
 #stp .sp-fl label{display:flex;flex-direction:column;gap:2px;font-size:var(--fs-sm);color:var(--mute);min-width:0}
 #stp .sp-fl select,#stp .sp-fl input[type=date]{height:38px;width:100%;min-width:0;color:var(--ink);background:var(--surface)}
 #stp .sp-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -3594,18 +3594,21 @@ function inner(){
     cmp=`<small class="${Math.round(d)===0?"":good?"pos":"neg"}" title="Période précédente (${dfr(iso(pA))} → ${dfr(iso(pB))}) : ${fv(prev,k)}">${d>0?"▲":d<0?"▼":"="} ${sgn(Math.round(d))}${Math.abs(Math.round(d))} % vs période préc.</small>`;
   }
   const sub2=k==="net"?`<small>Dép. ${eur2(g.d)} · Rev. ${eur2(g.r)}</small>`:"";
-  const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div></div>`;
+  const big=ops.reduce((m,t)=>Math.abs(t.v)>Math.abs(m.v)?t:m,ops[0]),lst=ops[0],sv=t=>`${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}`;
+  const extra=`<div class="sp-c"><span class="sub">Plus grosse opération</span><b class="sp-v ${big.v>0?"pos":"neg"}">${sv(big)}</b><small>${dfr(big.date)}</small></div><div class="sp-c"><span class="sub">Dernière opération</span><b class="sp-v ${lst.v>0?"pos":"neg"}">${sv(lst)}</b><small>${dfr(lst.date)}</small></div>`;
+  const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>${extra}</div>`;
 
-  /* classement des 5 premiers (seulement quand rien n'est filtré sur le sujet) */
+  /* répartition : top 5 du sujet ; si un sujet est choisi, répartition selon l'autre axe (catégories d'un tiers, tiers d'une catégorie) */
   let rank="";
-  if(s.id===""){
-    const M=new Map();
-    ops.forEach(t=>{const key=s.mode==="tiers"?(t.tier||"_"):(t.cat||"_");(M.get(key)||M.set(key,[]).get(key)).push(t)});
-    const R=[...M].map(([key,o])=>({key,v:val(agg(o),k)})).filter(x=>x.v!==0);
+  {
+    const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
+    ops.forEach(t=>{const key=dim==="tiers"?(t.tier||"_"):(t.cat||"_");(M.get(key)||M.set(key,[]).get(key)).push(t)});
+    const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
     const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
     R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
-    const nameOf=key=>s.mode==="tiers"?esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name):(key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name));
-    if(R.length)rank=`<div><h3>Top ${Math.min(5,R.length)} ${s.mode==="tiers"?"tiers":"catégories"}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)}</span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
+    const nameOf=key=>dim==="tiers"?esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name):(key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name));
+    const ttl=s.id===""?"Top "+Math.min(5,R.length)+" "+(dim==="tiers"?"tiers":"catégories"):"Répartition par "+(dim==="tiers"?"tiers":"catégorie");
+    if(R.length)rank=`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
   }
 
   /* par compte : petites cartes */
