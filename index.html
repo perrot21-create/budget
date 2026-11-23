@@ -2532,9 +2532,11 @@ function fit(){
 }
 /* Mémorise le défilement juste avant chaque action (phase de capture : avant les autres gestionnaires) */
 let SAVE=null;
-const keep=()=>{
+const keep=(e)=>{
   const a=document.getElementById("abo"),w=document.querySelector(".tw3"),b=document.getElementById("bt");
-  SAVE={y:scrollY,abo:a?a.scrollTop:0,tw:w?w.scrollTop:0,bt:b?b.scrollTop:0,bl:b?b.scrollLeft:0,t:Date.now()};
+  const nox=!!(e&&e.target&&e.target.closest&&e.target.closest("[data-go],[data-tm],#yr,#bpv"));
+  SAVE={y:scrollY,abo:a?a.scrollTop:0,tw:w?w.scrollTop:0,bt:b?b.scrollTop:0,bl:b?b.scrollLeft:0,nox,t:Date.now()};
+};
 };
 ["click","change","input","keydown"].forEach(ev=>document.addEventListener(ev,keep,true));
 /* Rétablit le défilement après le recalcul de mise en page (valable 1,5 s après l'action) */
