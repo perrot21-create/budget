@@ -3365,6 +3365,97 @@ const od=drawDash;
 drawDash=function(){od.apply(this,arguments);try{compact()}catch(e){console.error("dashboard_compact.js :",e)}};
 
 if(typeof T!=="undefined"&&T==="dash")draw();
-})(); </script>
+})(); 
+</script>
+ <script>
+ /* anneau_unique.js : un seul anneau de dépenses, avec sélecteur « Ce mois / Cumul année ».
+   À charger EN DERNIER, après dashboard_compact.js (dans un nouveau bloc script, juste avant la fermeture du body).
+   - 5 premières catégories + « Autres » (non cliquable).
+   - Légende plus aérée, barre de budget plus fine.
+   Aucune donnée n'est modifiée. */
+(()=>{
+"use strict";
+let RGP="m";
+
+const st=document.createElement("style");
+st.id="anneau-unique-css";
+st.textContent=`
+.dgrid2.rg1,.dfit .dcol>.dgrid2.rg1{grid-template-columns:1fr!important;max-height:none!important}
+.dfit .dgrid2.rg1>section,#rgs{max-height:none!important;overflow:visible!important}
+#rgs .rg-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+#rgs .rg-h h2{margin:0}
+#rgs .rg-seg{display:flex;border:1px solid var(--line);border-radius:var(--rb,8px);overflow:hidden}
+#rgs .rg-seg button{border:0;border-radius:0;height:36px;padding:0 14px;background:var(--surface);color:var(--mute);font-weight:600}
+#rgs .rg-seg button+button{border-left:1px solid var(--line)}
+#rgs .rg-seg button[aria-pressed=true]{background:var(--accent);color:var(--onacc);font-weight:700}
+#rgs .donut,.dfit #rgs .donut{width:130px;height:130px}
+#rgs .dring,.dfit #rgs .dring{gap:20px;flex-wrap:wrap;align-items:center}
+#rgs .dleg,.dfit #rgs .dleg{row-gap:16px;column-gap:14px;font-size:var(--fs-md)}
+#rgs .dleg .pb2,.dfit #rgs .dleg .pb2{height:5px;border-radius:3px}
+`;
+document.head.appendChild(st);
+
+function data(per){
+  const n0=new Date(),yr=n0.getFullYear(),mo=n0.getMonth(),ym=today().slice(0,7),lim=iso(new Date(yr,mo+1,0));
+  const valid=new Set();S.cats.forEach(c=>{c.subs.forEach(s=>valid.add(c.id+":"+s.id));valid.add(c.id+":")});
+  const b={},r={};
+  for(const key in S.budget){
+    const[y,k]=key.split("|");if(+y!==yr||!valid.has(k))continue;
+    const cid=k.split(":")[0];if(kindOf(cid)!=="dep")continue;
+    const a=S.budget[key]||[];
+    b[cid]=(b[cid]||0)+(per==="m"?(+a[mo]||0):a.slice(0,mo+1).reduce((s,v)=>s+(+v||0),0));
+  }
+  S.tx.forEach(t=>{
+    if(!t.cat||kindOf(t.cat)!=="dep")return;
+    const ok=per==="m"?t.date.slice(0,7)===ym:(t.date.slice(0,4)===String(yr)&&t.date<=lim);
+    if(ok)r[t.cat]=(r[t.cat]||0)-t.v;
+  });
+  const rows=S.cats.filter(c=>c.kind==="dep").map(c=>({id:c.id,n:c.name,r:r[c.id]||0,b:b[c.id]||0,col:cco(c.id)}))
+    .filter(x=>x.r>0).sort((x,y)=>y.r-x.r);
+  const top=rows.slice(0,5),rest=rows.slice(5);
+  if(rest.length)top.push({id:"",n:"Autres ("+rest.length+")",r:rest.reduce((s,x)=>s+x.r,0),b:rest.reduce((s,x)=>s+x.b,0),col:"var(--mute)",other:true});
+  return{top,yr,mo};
+}
+
+function inner(){
+  const{top,yr,mo}=data(RGP),TP=top.reduce((s,x)=>s+x.r,0),CIR=2*Math.PI*44;
+  let off=0;
+  const ring=TP>0?`<svg viewBox="0 0 120 120" class="donut" role="img" aria-label="Répartition des dépenses">${top.map(x=>{
+    const L=x.r/TP*CIR,at=x.other?"":` data-dcat="${x.id}" data-dper="${RGP}"`,
+      el=`<circle cx="60" cy="60" r="44" fill="none"${at} stroke="${x.col}" stroke-width="18" stroke-dasharray="${L.toFixed(2)} ${(CIR-L).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"><title>${esc(x.n)} : ${eur2(x.r)}</title></circle>`;
+    off+=L;return el}).join("")}<text x="60" y="59" text-anchor="middle" style="font-size:12px;font-weight:800;fill:var(--ink)">${f(TP)} €</text><text x="60" y="73" text-anchor="middle" style="font-size:8px;fill:var(--mute)">dépensés</text></svg>`:"";
+  const leg=TP>0?`<ul class="dleg">${top.map(x=>{
+    const at=x.other?"":` data-dcat="${x.id}" data-dper="${RGP}" tabindex="0" title="Voir les opérations de cette catégorie"`;
+    const bar=x.b>0
+      ?`<div class="pb2${x.r>x.b?" ov":""}" role="img" title="${eur2(x.r)} sur ${eur2(x.b)} budgétés (${Math.round(x.r/x.b*100)} %)" aria-label="${Math.round(x.r/x.b*100)} % du budget utilisé"><i style="width:${Math.min(100,x.r/x.b*100).toFixed(1)}%${x.r>x.b?"":";background:"+x.col}"></i></div>`
+      :`<div class="pb2 nb" role="img" title="Aucun budget défini" aria-label="Aucun budget défini"></div>`;
+    return `<li${at}><i class="cd" style="background:${x.col}"></i><span>${esc(x.n)}</span><b>${Math.round(x.r/TP*100)} %</b><span class="sub lamt">${eur2(x.r)}</span>${bar}</li>`}).join("")}</ul>`
+    :`<p class="empty">Aucune dépense enregistrée sur cette période.</p>`;
+  const lbl=RGP==="m"?cap(new Date(yr,mo,1).toLocaleDateString("fr-FR",{month:"long",year:"numeric"})):"Cumul "+yr;
+  return `<div class="rg-h"><h2>Dépenses · ${esc(lbl)}</h2><div class="rg-seg" role="group" aria-label="Période"><button type="button" data-rgp="m" aria-pressed="${RGP==="m"}">Ce mois</button><button type="button" data-rgp="y" aria-pressed="${RGP==="y"}">Cumul année</button></div></div><div class="dring">${ring}${leg}</div>`;
+}
+
+const od=drawDash;
+drawDash=function(){
+  od.apply(this,arguments);
+  try{
+    const g=document.querySelector("#app .dgrid2");if(!g)return;
+    g.classList.add("rg1");
+    g.innerHTML=`<section id="rgs">${inner()}</section>`;
+  }catch(e){console.error("anneau_unique.js :",e)}
+};
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-rgp]");if(!b)return;
+  RGP=b.dataset.rgp;
+  const s=document.getElementById("rgs");if(!s)return;
+  s.innerHTML=inner();
+  const n=s.querySelector(`[data-rgp="${RGP}"]`);if(n)n.focus();
+});
+
+if(typeof T!=="undefined"&&T==="dash")draw();
+})();
+ </script>
  </body>
+
 </html>
