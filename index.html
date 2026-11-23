@@ -3191,30 +3191,36 @@ function accBlock(s,ops,k){
   return `<div class="sp-ac" aria-label="Par compte">${L.join("")}</div>`;
 }
 
-/* Répartition : revenus en haut / dépenses en bas (mode catégorie), classement des tiers sinon */
+/* Répartition : revenus en haut / dépenses en bas, pour les catégories comme pour les tiers */
 function rankHtml(s,ops,k){
   const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
-  if(dim==="cat"){
-    ops.forEach(t=>{const key=t.cat||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
-    const G={rev:[],dep:[]};
-    M.forEach((o,key)=>{
-      const a=agg(o),net=r2(a.r-a.d),c=S.cats.find(x=>x.id===key),
-        kd=c?c.kind:(net>=0?"rev":"dep"),v=kd==="rev"?net:r2(-net);
-      if(v>0)G[kd].push({key,v,n:o.length});
+  /* type d'une opération : celui de sa catégorie, sinon déduit du signe */
+  const kd=t=>(t.cat&&kindOf(t.cat))||(t.v>0?"rev":"dep");
+  const key=t=>dim==="cat"?(t.cat||"_"):(t.tier||"_");
+  ops.forEach(t=>{const q=key(t);(M.get(q)||M.set(q,[]).get(q)).push(t)});
+
+  /* montants par type : revenus = somme des revenus, dépenses = somme des dépenses */
+  const G={rev:[],dep:[]};
+  M.forEach((o,q)=>{
+    ["rev","dep"].forEach(type=>{
+      const L=o.filter(t=>kd(t)===type),v=r2(L.reduce((a,t)=>a+(type==="rev"?t.v:-t.v),0));
+      if(v>0)G[type].push({key:q,v,n:L.length});
     });
-    const nameOf=key=>key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name);
-    const blk=(kd,lbl,cl)=>{
-      const L=G[kd].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
-      return `<div><h3>Top ${sh.length||NTOP} ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
-    return blk("rev","catégories de revenus","pos")+blk("dep","catégories de dépenses","neg");
-  }
-  ops.forEach(t=>{const key=t.tier||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
-  const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
-  const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
-  R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
-  const nameOf=key=>esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name);
-  const ttl=s.id===""?"Top "+Math.min(5,R.length)+" tiers":"Répartition par tiers";
-  return R.length?`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`:"";
+  });
+
+  const nameOf=q=>dim==="cat"
+    ?(q==="_"?"Sans catégorie":dot(q)+esc((S.cats.find(x=>x.id===q)||{name:"Catégorie supprimée"}).name))
+    :esc(q==="_"?"Sans tiers":(S.tiers.find(x=>x.id===q)||{name:"Tiers supprimé"}).name);
+  const noun=dim==="cat"?"catégories":"tiers";
+  /* si un sujet est choisi, on masque un bloc vide ; sinon les deux blocs restent affichés */
+  const hideEmpty=s.id!==""&&(G.rev.length||G.dep.length);
+
+  const blk=(type,lbl,cl)=>{
+    const L=G[type].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
+    if(hideEmpty&&!sh.length)return "";
+    return `<div><h3>Top ${sh.length||NTOP} ${noun} de ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
+
+  return blk("rev","revenus","pos")+blk("dep","dépenses","neg");
 }
 
 function inner(){
