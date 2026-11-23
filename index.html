@@ -1569,7 +1569,7 @@ function syMenu(){
 </script>
 <script>
 /* Onglet « Actions » : calculatrice d’achat et de revente d’actions.
-   À charger APRÈS le script principal : <script src="actions.js"></script> juste avant </body>.
+   
    Les données sont rangées dans S.actions : sauvegarde, fichier partagé et annulation incluses. */
 (function(){
 "use strict";
@@ -1916,7 +1916,7 @@ document.addEventListener("click",function(e){
 })();
 </script>
 <script>
-/* pret.js — onglet « Prêts entre proches » (JS + CSS). À charger dans index.html avec : <script src="pret.js"></script> */
+/* pret.js — onglet « Prêts entre proches » */
 (()=>{if(document.getElementById("pq-css"))return;const s=document.createElement("style");s.id="pq-css";s.textContent=`
 /* Prêts entre proches (v4 — « Par proche » en 4 carrés) */
 .pq-info{margin:0 0 14px;color:var(--mute);font-size:var(--fs-md)}.pq-info p{margin:6px 0 0;border-left:3px solid var(--accent);padding-left:10px}
@@ -2197,7 +2197,7 @@ addEventListener("resize",pqFit);
   document.readyState==="loading"?document.addEventListener("DOMContentLoaded",hook):hook()})();
 </script>
  <script>
-/* reglages.js v3 — Réglages par onglet. À charger APRÈS pret.js : <script src="reglages.js"></script> */
+/* reglages.js v3 — Réglages par onglet. */
 (()=>{
 const NM={dash:"Tableau de bord",acc:"Comptes",bud:"Budget annuel",lst:"Tiers et catégories",act:"Actions",pre:"Prêts entre proches",sav:"Sauvegarde"};
 const BEH={
@@ -2359,9 +2359,9 @@ draw();
 })();
 </script>
  <script>
-  /* tiers.js — Onglet « Tiers et catégories » compact (menus déroulants).
-   À charger APRÈS reglages.js : <script src="tiers.js"></script>
-   Pour revenir à l'ancien affichage : supprimer cette ligne <script> (et le fichier). */
+  /* tiers.js — Onglet « Tiers et catégories » compact (menus déroulants). */
+  
+   
 (()=>{
 let LSEL="";const OPEN=new Set();
 
@@ -2440,8 +2440,8 @@ if(T==="lst")drawLst();
      seuls Dernières opérations et Suivi des abonnements défilent en interne.
    - Tiers et catégories, Actions, Sauvegarde : page figée dès que son contenu tient à l'écran
      (sinon elle défile normalement pour que rien ne soit caché).
-   À charger APRÈS reglages.js (et tiers.js) : <script src="comptes_fixe.js"></script>
-   Pour revenir à l'ancien comportement : supprimer cette ligne <script> (et le fichier). */
+   
+   */
 (()=>{
 const PAGES=["dash","lst","sav","act"];
 const st=document.createElement("style");
@@ -2547,7 +2547,7 @@ fit();
 </script> 
 <script> 
 /* budget_plus.js : refonte visuelle et dynamique du « Budget annuel »
-   À charger EN DERNIER : <script src="budget_plus.js"></script> (après comptes_fixe.js) */
+    */
 (()=>{
 "use strict";
 console.info("budget_plus : bouton Écarts (v8)");
@@ -2931,9 +2931,9 @@ if(typeof T!=="undefined"&&T==="bud")draw();
 </script>   
 <script>  
 /* synthese_plus.js (v2)
-   À charger APRÈS budget_plus.js, tout à la fin de index.html :
+   
    <script src="synthese_plus.js"></script>
-   Pour annuler : retirer cette ligne.
+   
 
    - « Classement par tiers » : menu déroulant, fermé à l'ouverture, ouvert/fermé au clic.
    - Synthèse : libellés explicatifs, montants prévus en bleu, report réel en violet italique,
@@ -3073,8 +3073,8 @@ if(typeof T!=="undefined"&&T==="bud")draw();
 </script> 
 <script> 
 /* stats.js — bloc « Statistiques » du Tableau de bord.
-   À charger EN DERNIER (après synthese_plus.js) : <script src="stats.js"></script>
-   Pour annuler : retirer cette ligne <script> (et le fichier).
+   
+   
 
    Total d'un tiers ou d'une catégorie (et sous-catégorie) sur une période :
    de date à date, une année, ou d'année en année, sur un, plusieurs ou tous les comptes.
