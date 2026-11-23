@@ -3667,7 +3667,7 @@ document.addEventListener("toggle",e=>{
   else if(OPEN===d.dataset.spdd)OPEN=null;
 },true);
 document.addEventListener("click",e=>{
-  /* clic en dehors d'un menu : on le referme */
+  /* clic en dehors d'un menu : on le referme */ 
   if(!(e.target.closest&&e.target.closest("details.sp-dd"))){
     document.querySelectorAll("#stp details.sp-dd[open]").forEach(o=>o.open=false);OPEN=null;
   }
@@ -3705,6 +3705,11 @@ document.addEventListener("change",e=>{
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
  </script>
+ <script>
+(()=>{const s=document.createElement("style");
+s.textContent='#app:has(.hero) section:not(.dalert){box-shadow:var(--sh),0 0 0 1px color-mix(in srgb,var(--accent) 40%,var(--surface))}';
+document.head.appendChild(s)})();
+</script>
  </body>
 
 </html>
