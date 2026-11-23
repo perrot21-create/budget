@@ -3460,7 +3460,7 @@ if(typeof T!=="undefined"&&T==="dash")draw();
 /* stats_plus.js : bloc « Statistiques » compact.
    À charger EN DERNIER (après anneau_unique.js / dashboard_compact.js). Ne retire rien : stats.js reste en place,
    ce script remplace simplement son bloc par la nouvelle version et réutilise les mêmes critères (S.stats).
-   - Filtres sur 2 lignes (menus « Comptes » et « Raccourcis »)
+   - Filtres dans un panneau à gauche (menu « Comptes », raccourcis de dates dans « Période »)
    - Bande de résultats : total (avec comparaison à la période précédente), opérations, moyenne / mois
    - Mise en page à deux colonnes : filtres à gauche, résultats à droite (total, opérations, répartition, par compte)
    - « Par compte » en ligne compacte */
@@ -3511,6 +3511,7 @@ st.textContent=`
 #stp .sp-a{display:flex;flex-direction:column;gap:1px;padding:8px 12px;border-radius:var(--rc2,12px);border:1px solid var(--line);min-width:0}
 #stp .sp-a span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);color:var(--mute)}
 #stp .sp-a b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+#stp .sp-na{opacity:.7}#stp .sp-na b{font-size:var(--fs-md);font-weight:600}
 #stp .sp-a small{font-size:var(--fs-sm);color:var(--mute)}
 .dfit .dcol>#stp{flex:0 1 auto;min-height:130px;overflow:auto;order:1}
 `;
@@ -3518,14 +3519,23 @@ document.head.appendChild(st);
 
 /* ---------- Etat (même structure que stats.js, donc mêmes critères mémorisés) ---------- */
 const DEF=()=>{const y=new Date().getFullYear();return{mode:"tiers",id:"",sub:"",accs:[],per:"dates",d1:y+"-01-01",d2:today(),y1:y,y2:y}};
+function pqDates(q){
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth();
+  if(q==="m")return[iso(new Date(y,m,1)),iso(new Date(y,m+1,0))];
+  if(q==="12")return[iso(new Date(y,m-12,n.getDate()+1)),today()];
+  if(q==="y")return[y+"-01-01",y+"-12-31"];
+  if(q==="py")return[(y-1)+"-01-01",(y-1)+"-12-31"];
+  return null;
+}
 function ST(){
   let s=S.stats;if(!s||typeof s!=="object")s=S.stats=DEF();
   const d=DEF();Object.keys(d).forEach(k=>{if(s[k]===undefined)s[k]=d[k]});
+  if(s.per==="dates"&&s.pq){const r=pqDates(s.pq);if(r){s.d1=r[0];s.d2=r[1]}else s.pq=""}
   s.accs=(s.accs||[]).filter(id=>S.acc.some(a=>a.id===id));
   if(!s.accs.length)s.accs=S.acc.map(a=>a.id);
   return s;
 }
-let OPEN=null;/* menu déroulant ouvert : "acc" ou "q" */
+let OPEN=null;/* menu déroulant ouvert : "acc" */
 
 /* ---------- Calculs ---------- */
 const r2=n=>Math.round(n*100)/100;
@@ -3557,6 +3567,14 @@ function yearsList(s){
   const y=new Set([new Date().getFullYear(),+s.y1,+s.y2]);S.tx.forEach(t=>y.add(+t.date.slice(0,4)));
   return[...y].filter(Boolean).sort((a,b)=>a-b);
 }
+function accBlock(s,ops,k){
+  const L=S.acc.map((x,i)=>{
+    const inc=s.accs.includes(x.id),o=inc?ops.filter(t=>t.acc===x.id):[],nm=`<span><i class="cd t${i}" style="background:var(--ac)"></i>${esc(x.name)}</span>`;
+    if(!o.length)return `<div class="sp-a sp-na">${nm}<b class="sub">Aucune donnée</b><small>${inc?"0 op.":"Compte non inclus"}</small></div>`;
+    const v=val(agg(o),k);
+    return `<div class="sp-a">${nm}<b class="${col(v,k)}">${fv(v,k)}</b><small>${o.length} op.</small></div>`});
+  return `<div><h3>Par compte</h3><div class="sp-ac">${L.join("")}</div></div>`;
+}
 function inner(){
   const s=ST(),{a,b}=period(s);
   const subjSel=s.mode==="tiers"
@@ -3568,17 +3586,16 @@ function inner(){
   const accLbl=allOn?"Tous les comptes":s.accs.length===1?(S.acc.find(x=>x.id===s.accs[0])||{}).name:s.accs.length+" comptes";
   const accMenu=`<details class="sp-dd" data-spdd="acc"${OPEN==="acc"?" open":""}><summary>${esc(accLbl||"Comptes")}</summary><div class="sp-m"><label><input type="checkbox" data-spall="1"${allOn?" checked":""}>Tous les comptes</label>${S.acc.map((x,i)=>`<label><input type="checkbox" data-spa="${x.id}"${s.accs.includes(x.id)?" checked":""}><i class="cd t${i}" style="background:var(--ac);margin:0"></i>${esc(x.name)}</label>`).join("")}</div></details>`;
   const ys=yearsList(s),yo=v=>ys.map(y=>opt(y,y,v)).join("");
-  const qMenu=`<details class="sp-dd" data-spdd="q"${OPEN==="q"?" open":""}><summary>Raccourcis</summary><div class="sp-m"><button type="button" data-spq="m">Ce mois</button><button type="button" data-spq="12">12 derniers mois</button><button type="button" data-spq="y">Cette année</button><button type="button" data-spq="py">Année dernière</button></div></details>`;
   const row1=`<div class="sp-fl"><div class="sp-seg" role="group" aria-label="Analyser par"><button type="button" data-spmode="tiers" aria-pressed="${s.mode==="tiers"}">Tiers</button><button type="button" data-spmode="cat" aria-pressed="${s.mode==="cat"}">Catégorie</button></div>${subjSel}${subSel}<div><span class="sub" style="font-size:var(--fs-sm)">Comptes</span>${accMenu}</div>
-  <label>Période<select data-sp="per" aria-label="Type de période">${opt("dates","De date à date",s.per)}${opt("year","Une année",s.per)}${opt("years","D’année en année",s.per)}</select></label>${
+  <label>Période<select data-sp="per" aria-label="Type de période">${[["q:m","Ce mois"],["q:12","12 derniers mois"],["q:y","Cette année"],["q:py","Année dernière"],["dates","De date à date"],["year","Une année"],["years","D’année en année"]].map(([v,l])=>opt(v,l,s.per==="dates"&&s.pq?"q:"+s.pq:s.per)).join("")}</select></label>${
     s.per==="dates"?`<div class="sp-2"><label>Du<input type="date" data-sp="d1" value="${esc(s.d1)}"></label><label>Au<input type="date" data-sp="d2" value="${esc(s.d2)}"></label></div>`
     :s.per==="year"?`<label>Année<select data-sp="y1" aria-label="Année">${yo(s.y1)}</select></label>`
-    :`<div class="sp-2"><label>De<select data-sp="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sp="y2" aria-label="Dernière année">${yo(s.y2)}</select></label></div>`}${qMenu}</div>`;
+    :`<div class="sp-2"><label>De<select data-sp="y1" aria-label="Première année">${yo(s.y1)}</select></label><label>à<select data-sp="y2" aria-label="Dernière année">${yo(s.y2)}</select></label></div>`}</div>`;
   const head=(n)=>`<div class="sp-h"><h2>Statistiques</h2>${n?`<button type="button" data-spops="1">Voir les opérations (${n})</button>`:""}</div>`;
   const wrap=(n,right)=>head(n)+`<div class="sp-w">${row1}<div class="sp-rs">${right}</div></div>`;
-  if(!a||!b)return wrap(0,`<p class="empty">Choisissez les deux dates de la période.</p>`);
+  if(!a||!b)return wrap(0,`<p class="empty">Choisissez les deux dates de la période.</p>`+accBlock(s,[],"net"));
   const ops=filt(s,a,b);
-  if(!ops.length)return wrap(0,`<p class="empty">Aucune opération pour ces critères.</p>`);
+  if(!ops.length)return wrap(0,`<p class="empty">Aucune opération pour ces critères.</p>`+accBlock(s,[],"net"));
 
   const g=agg(ops),k=kindOf2(g),tot=val(g,k);
   const ya=+a.slice(0,4),yb=+b.slice(0,4),ma=+a.slice(5,7)-1,mb=+b.slice(5,7)-1;
@@ -3611,13 +3628,7 @@ function inner(){
     if(R.length)rank=`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
   }
 
-  /* par compte : petites cartes */
-  let byAcc="";
-  if(s.accs.length>1){
-    const L=S.acc.map((x,i)=>({x,i,o:ops.filter(t=>t.acc===x.id)})).filter(z=>z.o.length)
-      .map(z=>{const v=val(agg(z.o),k);return `<div class="sp-a"><span><i class="cd t${z.i}" style="background:var(--ac)"></i>${esc(z.x.name)}</span><b class="${col(v,k)}">${fv(v,k)}</b><small>${z.o.length} op.</small></div>`});
-    if(L.length>1)byAcc=`<div><h3>Par compte</h3><div class="sp-ac">${L.join("")}</div></div>`;
-  }
+  const byAcc=accBlock(s,ops,k);
   return wrap(ops.length,band+rank+byAcc);
 }
 
@@ -3667,21 +3678,13 @@ document.addEventListener("toggle",e=>{
   else if(OPEN===d.dataset.spdd)OPEN=null;
 },true);
 document.addEventListener("click",e=>{
-  /* clic en dehors d'un menu : on le referme */ 
+  /* clic en dehors d'un menu : on le referme */
   if(!(e.target.closest&&e.target.closest("details.sp-dd"))){
     document.querySelectorAll("#stp details.sp-dd[open]").forEach(o=>o.open=false);OPEN=null;
   }
   const b=e.target.closest&&e.target.closest("#stp button");if(!b)return;
   const s=ST(),D=b.dataset,n=new Date(),y=n.getFullYear(),m=n.getMonth();
   if(D.spmode){if(s.mode!==D.spmode){s.mode=D.spmode;s.id="";s.sub=""}}
-  else if(D.spq){
-    s.per="dates";
-    if(D.spq==="m"){s.d1=iso(new Date(y,m,1));s.d2=iso(new Date(y,m+1,0))}
-    else if(D.spq==="12"){s.d1=iso(new Date(y,m-12,n.getDate()+1));s.d2=today()}
-    else if(D.spq==="y"){s.d1=y+"-01-01";s.d2=y+"-12-31"}
-    else{s.d1=(y-1)+"-01-01";s.d2=(y-1)+"-12-31"}
-    OPEN=null;
-  }
   else if(D.spops){const{a,b:bb}=period(s);showOps(filt(s,a,bb),a,bb);return}
   else return;
   save();rerender();
@@ -3690,7 +3693,12 @@ document.addEventListener("change",e=>{
   const t=e.target;if(!t.closest||!t.closest("#stp"))return;
   const s=ST(),D=t.dataset;
   if(D.sp){
-    s[D.sp]=(D.sp==="y1"||D.sp==="y2")?+t.value:t.value;
+    if(D.sp==="per"&&t.value.startsWith("q:")){s.per="dates";s.pq=t.value.slice(2);const r=pqDates(s.pq);if(r){s.d1=r[0];s.d2=r[1]}}
+    else{
+      s[D.sp]=(D.sp==="y1"||D.sp==="y2")?+t.value:t.value;
+      if(D.sp==="per")s.pq="";
+      if(D.sp==="d1"||D.sp==="d2")s.pq="";
+    }
     if(D.sp==="id")s.sub="";
   }else if(D.spa!==undefined){
     const a=new Set(s.accs);t.checked?a.add(D.spa):a.delete(D.spa);
