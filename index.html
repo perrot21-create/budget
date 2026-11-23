@@ -3620,16 +3620,33 @@ function inner(){
   const band=`<div class="sp-band"><div class="sp-c"><span class="sub">${k==="dep"?"Dépenses":k==="rev"?"Revenus":"Net"}</span><b class="sp-v ${col(tot,k)}">${fv(tot,k)}</b>${cmp||sub2}</div><div class="sp-c"><span class="sub">Opérations</span><b class="sp-v">${ops.length}</b></div><div class="sp-c"><span class="sub">Moyenne / mois</span><b class="sp-v ${col(tot/nm,k)}">${fv(r2(tot/nm),k)}</b></div>${extra}</div>`;
 
   /* répartition : top 5 du sujet ; si un sujet est choisi, répartition selon l'autre axe (catégories d'un tiers, tiers d'une catégorie) */
+  /* répartition : catégories → deux blocs (revenus en haut, dépenses en bas) ; tiers → classement unique */
   let rank="";
   {
     const dim=s.id===""?s.mode:(s.mode==="tiers"?"cat":"tiers"),M=new Map();
-    ops.forEach(t=>{const key=dim==="tiers"?(t.tier||"_"):(t.cat||"_");(M.get(key)||M.set(key,[]).get(key)).push(t)});
-    const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
-    const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
-    R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
-    const nameOf=key=>dim==="tiers"?esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name):(key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name));
-    const ttl=s.id===""?"Top "+Math.min(5,R.length)+" "+(dim==="tiers"?"tiers":"catégories"):"Répartition par "+(dim==="tiers"?"tiers":"catégorie");
-    if(R.length)rank=`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
+    const NTOP=4;/* mettre 3 pour n'afficher que 3 lignes par bloc */
+    if(dim==="cat"){
+      ops.forEach(t=>{const key=t.cat||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
+      const G={rev:[],dep:[]};
+      M.forEach((o,key)=>{
+        const a=agg(o),net=r2(a.r-a.d),c=S.cats.find(x=>x.id===key),
+          kd=c?c.kind:(net>=0?"rev":"dep"),v=kd==="rev"?net:r2(-net);
+        if(v>0)G[kd].push({key,v,n:o.length});
+      });
+      const nameOf=key=>key==="_"?"Sans catégorie":dot(key)+esc((S.cats.find(x=>x.id===key)||{name:"Catégorie supprimée"}).name);
+      const blk=(kd,lbl,cl)=>{
+        const L=G[kd].sort((x,y)=>y.v-x.v),sum=L.reduce((q,x)=>q+x.v,0)||1,sh=L.slice(0,NTOP);
+        return `<div><h3>Top ${sh.length||NTOP} ${lbl}</h3>${sh.length?sh.map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${cl}">${eur2(x.v)} <span class="sub">· ${Math.round(x.v/sum*100)} %</span></span></div>`).join(""):`<p class="sub">Aucune opération.</p>`}</div>`};
+      rank=blk("rev","catégories de revenus","pos")+blk("dep","catégories de dépenses","neg");
+    }else{
+      ops.forEach(t=>{const key=t.tier||"_";(M.get(key)||M.set(key,[]).get(key)).push(t)});
+      const R=[...M].map(([key,o])=>({key,v:val(agg(o),k),n:o.length})).filter(x=>x.v!==0);
+      const sum=R.reduce((q,x)=>q+Math.abs(x.v),0)||1;
+      R.sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
+      const nameOf=key=>esc(key==="_"?"Sans tiers":(S.tiers.find(x=>x.id===key)||{name:"Tiers supprimé"}).name);
+      const ttl=s.id===""?"Top "+Math.min(5,R.length)+" tiers":"Répartition par tiers";
+      if(R.length)rank=`<div><h3>${ttl}</h3>${R.slice(0,5).map(x=>`<div class="sp-r"><span>${nameOf(x.key)} <span class="sub">· ${x.n} op.</span></span><span class="a ${col(x.v,k)}">${fv(x.v,k)} <span class="sub">· ${Math.round(Math.abs(x.v)/sum*100)} %</span></span></div>`).join("")}</div>`;
+    }
   }
 
   const byAcc=accBlock(s,ops,k);
