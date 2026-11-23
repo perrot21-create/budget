@@ -3271,7 +3271,7 @@ document.addEventListener("click",e=>{
 })();
 </script> 
 <script>
-  /* dashboard_compact.js — Tableau de bord compact.
+/* dashboard_compact.js — Tableau de bord compact.
    À charger EN DERNIER (après stats.js et comptes_fixe.js).
    Attention : ne jamais écrire la balise de fermeture de script dans un commentaire, sinon la page coupe le code.
 
@@ -3312,13 +3312,22 @@ div.hero.hc2{margin-top:16px;margin-bottom:16px;gap:16px 28px}
 /* statistiques : prend toute la hauteur libre de la colonne de droite */
 .dfit .dcol>#stx{flex:1 1 0;min-height:150px;overflow:auto;order:1}
 /* abonnements : bandeau compact */
-.dfit .dcol>#abo{flex:0 1 auto;min-height:0;max-height:110px;overflow:auto;order:2}
+.dfit .dcol>#abo{flex:0 1 auto;min-height:0;max-height:190px;overflow:auto;order:2}
 .dfit #abo h2{font-size:var(--fs-md);margin:0 0 6px}
 
 /* dernières opérations : réduit, défilement interne */
 .dfit .dcol>section.dflex:has(.dlast){padding:8px 12px}
 .dfit .dlast th,.dfit .dlast td{padding-top:3px;padding-bottom:3px}
 .dfit section:has(.dlast) .lhead{margin-bottom:4px}
+/* statistiques : plus de barres de progression par mois (ni par compte) ; lignes plus compactes */
+#stx .stx-r .pb2{display:none}
+#stx .stx-r{grid-template-columns:minmax(80px,150px) auto 64px;justify-content:start;column-gap:18px;padding:2px 0}
+
+/* mes comptes : bloc divisé en quatre emplacements (2 x 2), un compte par emplacement */
+#app section>.dgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#app section>.dgrid .dcard{width:100%}
+.dfit section>.dgrid .dcard{padding:8px 12px;gap:1px}
+.dfit section>.dgrid .dv{font-size:1.2rem}
 `;
 document.head.appendChild(st);
 
