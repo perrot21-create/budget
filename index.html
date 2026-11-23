@@ -2545,7 +2545,7 @@ const restore=()=>{
   const a=document.getElementById("abo"),w=document.querySelector(".tw3"),b=document.getElementById("bt");
   if(a)a.scrollTop=SAVE.abo;
   if(w)w.scrollTop=SAVE.tw;
-  if(b){b.scrollTop=SAVE.bt;b.scrollLeft=SAVE.bl}
+if(b){b.scrollTop=SAVE.bt;if(!SAVE.nox)b.scrollLeft=SAVE.bl}
   scrollTo(0,SAVE.y);
 };
 const later=()=>{if(busy)return;busy=1;requestAnimationFrame(()=>{busy=0;fit();restore()})};
