@@ -3286,10 +3286,17 @@ drawDash=function(){
 };
 function rerender(){
   const el=document.getElementById("stp");if(!el)return;
+  /* on retient la position de défilement de la page et de ses conteneurs */
+  const pos=[];for(let n=el;n;n=n.parentElement)if(n.scrollTop>0)pos.push([n,n.scrollTop]);
+  const wy=window.scrollY;
   const ae=document.activeElement;let q=null;
   if(ae&&el.contains(ae)){const d=ae.dataset||{};q=d.sp?`[data-sp="${d.sp}"]`:d.spa?`[data-spa="${d.spa}"]`:d.spall?"[data-spall]":null}
   el.innerHTML=inner();
-  if(q){const n=el.querySelector(q);if(n)n.focus()}
+  if(q){const n=el.querySelector(q);if(n)n.focus({preventScroll:true})}
+  /* on rétablit la position après le recalcul de mise en page de comptes_fixe.js */
+  const back=()=>{pos.forEach(([n,t])=>{if(document.contains(n))n.scrollTop=t});scrollTo(0,wy)};
+  requestAnimationFrame(()=>{back();requestAnimationFrame(back)});
+  setTimeout(back,150);
 }
 
 /* ---------- Fenêtre « Voir les opérations » ---------- */
