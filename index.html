@@ -3270,5 +3270,87 @@ document.addEventListener("click",e=>{
 });
 })();
 </script> 
-</body>
+ <script
+  /* dashboard_compact.js — Tableau de bord compact.
+   À charger EN DERNIER (après stats.js et comptes_fixe.js) :
+   <script src="dashboard_compact.js"></script>
+
+   - « Solde total du jour » plus petit.
+   - « Reste à dépenser » remplacé par « Solde fin de mois total » (somme des comptes jusqu'au dernier jour du mois).
+   - Colonne de droite plus large ; bloc « Statistiques » agrandi (il prend toute la hauteur libre).
+   - Anneaux de dépenses réduits, côte à côte, avec défilement interne.
+   - « Dernières opérations » réduit à 5 lignes (réglable dans ⚙ > Tableau de bord), défilement interne.
+   - Suivi des abonnements en bandeau compact, défilement interne.
+   Aucune donnée n'est modifiée. */
+(()=>{
+"use strict";
+const st=document.createElement("style");
+st.id="dashcompact-css";
+st.textContent=`
+/* ---- cartes de soldes compactes ---- */
+.hero.hc2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+div.hero.hc2{margin-top:16px;margin-bottom:16px;gap:16px 28px}
+.hero.hc2 section{padding:10px 16px}
+.hero.hc2 .hcard h2{font-size:var(--fs-sm);margin:0 0 2px}
+.hero.hc2 .hbig{font-size:1.5rem;margin:0 0 2px}
+.hero.hc2 .hcard p{margin:1px 0;font-size:var(--fs-sm)}
+
+/* ---- page figée : colonne de droite plus large ---- */
+#app.dfit{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:12px}
+.dfit .dcol{gap:10px}
+.dfit section{padding:10px 14px}
+.dfit .hero{gap:10px!important}
+
+/* anneaux : côte à côte, réduits, défilement interne */
+.dfit .dcol>.dgrid2{grid-template-columns:1fr 1fr!important;gap:10px!important;max-height:32vh}
+.dfit .dcol>.dgrid2>section{overflow:auto;max-height:32vh;padding:8px 12px}
+.dfit .dgrid2 h2{font-size:var(--fs-md);margin:0 0 6px}
+.dfit .dring{gap:10px;flex-wrap:nowrap;align-items:flex-start}
+.dfit .donut{width:96px;height:96px}
+.dfit .dleg{min-width:0;row-gap:4px;column-gap:8px;font-size:var(--fs-sm)}
+
+/* statistiques : prend toute la hauteur libre de la colonne de droite */
+.dfit .dcol>#stx{flex:1 1 0;min-height:240px;overflow:auto}
+/* abonnements : bandeau compact */
+.dfit .dcol>#abo{flex:0 1 auto;min-height:0;max-height:140px;overflow:auto}
+.dfit #abo h2{font-size:var(--fs-md);margin:0 0 6px}
+
+/* dernières opérations : réduit, défilement interne */
+.dfit .dcol>section.dflex:has(.dlast){padding:8px 12px}
+.dfit .dlast th,.dfit .dlast td{padding-top:3px;padding-bottom:3px}
+.dfit section:has(.dlast) .lhead{margin-bottom:4px}
+`;
+document.head.appendChild(st);
+
+const r2=n=>Math.round(n*100)/100;
+
+function compact(){
+  const app=document.getElementById("app");if(!app)return;
+  const hero=app.querySelector(".hero");if(!hero)return;
+  hero.classList.add("hc2");
+
+  /* carte 1 : « Solde total du jour » — on retire la ligne « Prévu en fin de mois » (désormais dans la carte 2) */
+  const a=hero.children[0];
+  if(a){const ps=a.querySelectorAll("p.sub");if(ps.length>1&&/fin de mois/i.test(ps[0].textContent))ps[0].remove()}
+
+  /* carte 2 : « Solde fin de mois total » */
+  const n0=new Date(),lim=iso(new Date(n0.getFullYear(),n0.getMonth()+1,0));
+  const P=r2(S.tx.filter(t=>t.date<=lim).reduce((s,t)=>s+t.v,0)),cl=P>0?"pos":P<0?"neg":"";
+  const b=hero.children[1];
+  const html=`<h2>Solde fin de mois total</h2><div class="hbig ${cl}">${eur2(P)}</div><p class="sub">Tous comptes confondus, au ${dfr(lim)}</p>`;
+  if(b){b.className="hcard";b.innerHTML=html}
+  else{const s=document.createElement("section");s.className="hcard";s.innerHTML=html;hero.appendChild(s)}
+
+  /* dernières opérations : 5 lignes par défaut (réglable dans ⚙ > Tableau de bord) */
+  const n=(typeof tset==="function"?+tset("dash","n",5):5)||5;
+  app.querySelectorAll(".dlast tbody tr").forEach((r,i)=>{r.style.display=i>=n?"none":""});
+}
+
+const od=drawDash;
+drawDash=function(){od.apply(this,arguments);try{compact()}catch(e){console.error("dashboard_compact.js :",e)}};
+
+if(typeof T!=="undefined"&&T==="dash")draw();
+})();
+ </script>
+ </body>
 </html>
