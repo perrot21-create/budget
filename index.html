@@ -1008,7 +1008,7 @@ function drawBud(first){
   const sl=wrap.scrollLeft,over=true;wrap.innerHTML=`<div class="in"${over?` style="padding-right:calc(100% - ${NM+30}px)"`:""}><div class="vs" style="left:${NM-3}px"><i></i></div>${h}</div>`;{const t=wrap.querySelector("table"),i=wrap.querySelector(".vs i");if(t&&i)i.style.height=t.offsetHeight+"px"}wrap.scrollLeft=sl;{const t1=wrap.querySelector("thead tr");if(t1)wrap.style.setProperty("--th1",t1.offsetHeight+"px")}if(first)goMonth();
   const ov=lf.filter(l=>l.kd==="dep").map(l=>({l,d:M.reduce((s,m)=>s+R(l.key,m)-B(l.key,m),0),r:M.reduce((s,m)=>s+R(l.key,m),0)})).filter(x=>x.d>0&&x.r>0);
   $("#balert").innerHTML=ov.length?"⚠ <b>Dépassements "+Y+"</b> : "+ov.slice(0,8).map(x=>esc((S.cats.find(c=>c.id===x.l.key.split(":")[0])||{}).name||"")+(x.l.ind?" › "+esc(x.l.name):"")+" (+"+fe(x.d)+")").join(", ")+(ov.length>8?"…":""):"";
-  $("#bch").innerHTML=charts(rb,db,ra,da,op,rs,A);
+  
 }
 
 /* ---------- Tiers et catégories ---------- */
