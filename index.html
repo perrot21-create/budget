@@ -3362,6 +3362,171 @@ drawDash=function(){
 if(T==="stats"||T==="dash")draw();
 })();
 </script>
+/* comparaison_annees.js : bloc « Comparaison d'années » intégré à l'onglet Statistiques
+   À charger en dernier, après statistiques_v2.js.
+   Catégories / Tiers / Comptes / « Regrouper par » : ceux du bloc Statistiques (S.stats2).
+   Données propres : S.cya (années A et B, « Même période »), incluses dans la sauvegarde. */
+(()=>{
+"use strict";
+if(typeof draw!=="function"||!document.getElementById("app"))return;
+
+const st=document.createElement("style");
+st.textContent=`
+#cy .cy-h2{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}#cy .cy-h2 h2{margin:0}
+#cy .cy-btn{height:40px;padding:0 14px}
+#cy .cy-swap{height:40px;width:100%;font-size:var(--fs-xl);font-weight:700}
+#cy .cy-sw{display:flex;align-items:flex-end}
+#cy .cy-r,#cy .cy-s{cursor:pointer}
+#cy .cy-r:hover td,#cy .cy-s:hover td{background:color-mix(in srgb,var(--accent) 16%,var(--surface))!important}
+#cy .cy-s td{color:var(--mute)}#cy .cy-s td:first-child{padding-left:40px}
+#cy .cy-h td{font-weight:800;background:color-mix(in srgb,var(--mute) 14%,var(--surface))!important}
+#cy tr.cy-t td{font-weight:800;border-top:2px solid var(--accent);background:var(--surface)!important}
+#cy .gd{color:var(--pos);font-weight:600}#cy .bd{color:var(--neg);font-weight:600}
+#cy .cy-n{display:inline-block;width:1.2em}
+`;
+document.head.appendChild(st);
+
+const r2=n=>Math.round(n*100)/100,sgn=n=>n>0?"+":n<0?"−":"";
+const kd=t=>(t.cat&&kindOf(t.cat))||(t.v>0?"rev":"dep");
+let OPEN=null;const EXP=new Set();
+
+function C(){
+  let y=S.cya;if(!y||typeof y!=="object")y=S.cya={};
+  const cy=new Date().getFullYear(),f=S.stats2||{};
+  if(y.a===undefined)y.a=cy-1;if(y.b===undefined)y.b=cy;if(y.same===undefined)y.same=true;
+  y.a=+y.a||cy-1;y.b=+y.b||cy;
+  return{a:y.a,b:y.b,same:y.same,by:f.by==="tiers"?"tiers":"cat",
+    cats:(f.cats||[]).filter(id=>S.cats.some(c=>c.id===id)),
+    tiers:(f.tiers||[]).filter(id=>id==="_"||S.tiers.some(t=>t.id===id)),
+    accs:(f.accs||[]).filter(id=>S.acc.some(a=>a.id===id))};
+}
+const Y_=()=>{C();return S.cya};
+/* « Même période » : seulement si l'une des deux années est l'année en cours */
+const cutoff=s=>{const cy=new Date().getFullYear();return s.same&&(s.a===cy||s.b===cy)?today().slice(5):""};
+const cutLbl=c=>c.slice(3)+"/"+c.slice(0,2);
+function ops(s,y,cut){
+  const A=new Set(s.accs),Cs=new Set(s.cats),Ts=new Set(s.tiers);
+  return S.tx.filter(t=>+t.date.slice(0,4)===y&&(!cut||t.date.slice(5)<=cut)&&(!A.size||A.has(t.acc))&&(!Cs.size||Cs.has(t.cat))&&(!Ts.size||Ts.has(t.tier||"_")));
+}
+const gid=(by,t)=>by==="cat"?(t.cat||"_"):(t.tier||"_");
+const sid=(by,t)=>by==="cat"?(t.sub||""):(t.cat||"_");
+const gname=(by,id)=>by==="cat"?(id==="_"?"Sans catégorie":(S.cats.find(x=>x.id===id)||{name:"Catégorie supprimée"}).name):(id==="_"?"Sans tiers":(S.tiers.find(x=>x.id===id)||{name:"Tiers supprimé"}).name);
+const ghtml=(by,id)=>by==="cat"&&id!=="_"&&S.cats.some(x=>x.id===id)?dot(id)+esc(gname(by,id)):esc(gname(by,id));
+function sname(by,gi,si){
+  if(by==="cat"){if(si==="")return"Sans sous-catégorie";const c=S.cats.find(x=>x.id===gi),q=c&&c.subs.find(x=>x.id===si);return q?q.name:"Sous-catégorie supprimée"}
+  return si==="_"?"Sans catégorie":gname("cat",si);
+}
+const shtml=(by,gi,si)=>(by==="tiers"&&si!=="_"&&S.cats.some(x=>x.id===si)?dot(si):"")+esc(sname(by,gi,si));
+const canExp=r=>{const k=[...r.subs.keys()];return k.length>1||(k.length===1&&k[0]!==""&&k[0]!=="_")};
+
+function view(s){
+  const cut=cutoff(s),A=ops(s,s.a,cut),B=ops(s,s.b,cut),M=new Map();
+  const add=(w,t)=>{
+    const type=kd(t),id=gid(s.by,t),k=type+"|"+id,v=type==="rev"?t.v:-t.v;
+    let r=M.get(k);if(!r){r={k,type,id,a:0,b:0,subs:new Map()};M.set(k,r)}
+    r[w]+=v;const q0=sid(s.by,t);let q=r.subs.get(q0);if(!q){q={id:q0,a:0,b:0};r.subs.set(q0,q)}q[w]+=v;
+  };
+  A.forEach(t=>add("a",t));B.forEach(t=>add("b",t));
+  const rows=[...M.values()].filter(r=>r2(r.a)!==0||r2(r.b)!==0).sort((x,y)=>Math.max(y.a,y.b)-Math.max(x.a,x.b));
+  return{cut,rows,n:A.length+B.length};
+}
+function cells(a,b,type){
+  a=r2(a);b=r2(b);const d=r2(b-a),good=type==="dep"?d<0:d>0,c=d?(good?"gd":"bd"):"",pc=a?Math.round(d/Math.abs(a)*100):null;
+  return `<td class="r">${eur2(a)}</td><td class="r">${eur2(b)}</td><td class="r ${c}">${d?(d>0?"▲ ":"▼ ")+sgn(d)+eur2(Math.abs(d)):"="}</td><td class="r ${c}">${d?(a?sgn(d)+Math.abs(pc)+" %":"nouveau"):"–"}</td>`;
+}
+const opt=(v,l,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(l)}</option>`;
+function inner(){
+  const s=C(),v=view(s),by=s.by,cy=new Date().getFullYear(),isCur=s.a===cy||s.b===cy;
+  const ys=(()=>{const y=new Set([cy,s.a,s.b]);S.tx.forEach(t=>y.add(+t.date.slice(0,4)));return[...y].filter(Boolean).sort((p,q)=>p-q)})(),yo=x=>ys.map(y=>opt(y,y,x)).join("");
+  const exps=v.rows.filter(canExp),allOpen=exps.length&&exps.every(r=>EXP.has(r.k));
+  const end=y=>y+"-"+(v.cut||"12-31"),rg=y=>dfr(y+"-01-01")+" → "+dfr(end(y));
+  const nf=s.cats.length+s.tiers.length+s.accs.length;
+  const panel=`<div class="cy-h2"><h2>Comparaison d’années</h2>${exps.length?`<button type="button" class="cy-btn" data-cyexp="1">${allOpen?"Tout replier":"Tout déplier"}</button>`:""}</div>
+  <div class="sv-fl">
+  <label>Année A<select data-cy="a" aria-label="Année A">${yo(s.a)}</select></label>
+  <div class="sv-lb"><span>&nbsp;</span><button type="button" class="cy-swap" data-cyswap="1" title="Inverser A et B" aria-label="Inverser les années A et B">⇄</button></div>
+  <label>Année B<select data-cy="b" aria-label="Année B">${yo(s.b)}</select></label>
+  ${isCur?`<div class="cy-sw"><label class="sw2"><input type="checkbox" role="switch" data-cy="same"${s.same?" checked":""}><span class="trk" aria-hidden="true"></span><span class="sml"><b>Même période</b><small>${s.same?"Les deux années jusqu’au "+cutLbl(today().slice(5)):"Années entières"}</small></span></label></div>`:""}
+  </div>
+  <p class="sv-info">${s.a} : <b>${rg(s.a)}</b> · ${s.b} : <b>${rg(s.b)}</b>${isCur&&!v.cut?" · <span class=\"warn\">l’année en cours inclut les opérations à venir</span>":""}<br>Éléments comparés : ${nf?"selon les filtres Catégories / Tiers / Comptes":"toutes les opérations"} du bloc Statistiques, regroupés par ${by==="cat"?"catégorie":"tiers"}.</p>`;
+  if(!v.rows.length)return panel+`<p class="empty">Aucune opération pour ces critères.</p>`;
+
+  const rev=v.rows.filter(r=>r.type==="rev"),dep=v.rows.filter(r=>r.type==="dep"),both=rev.length&&dep.length;
+  const sum=(L,w)=>r2(L.reduce((q,r)=>q+r[w],0));
+  const rowHtml=r=>{
+    const ex=canExp(r),open=EXP.has(r.k);
+    let h=`<tr class="cy-r" data-cyrow="${esc(r.k)}" tabindex="0" title="Voir les opérations des deux années"><td>${ex?`<button type="button" class="tg" data-cytg="${esc(r.k)}" aria-expanded="${open}" aria-label="${open?"Replier":"Déplier"} le détail">${open?"▾":"▸"}</button>`:`<span class="cy-n"></span>`}${ghtml(by,r.id)}</td>${cells(r.a,r.b,r.type)}</tr>`;
+    if(ex&&open)h+=[...r.subs.values()].filter(q=>r2(q.a)!==0||r2(q.b)!==0).sort((x,y)=>Math.max(y.a,y.b)-Math.max(x.a,x.b))
+      .map(q=>`<tr class="cy-s" data-cyrow="${esc(r.k)}" data-cysub="${esc(q.id)}" tabindex="0" title="Voir les opérations des deux années"><td>${shtml(by,r.id,q.id)}</td>${cells(q.a,q.b,r.type)}</tr>`).join("");
+    return h;
+  };
+  const sect=(L,lbl,type)=>L.length?(both?`<tr class="cy-h"><td>${lbl}</td>${cells(sum(L,"a"),sum(L,"b"),type)}</tr>`:"")+L.map(rowHtml).join(""):"";
+  let tot;
+  if(both)tot=`<tr class="cy-t"><td>Solde net (revenus − dépenses)</td>${cells(r2(sum(rev,"a")-sum(dep,"a")),r2(sum(rev,"b")-sum(dep,"b")),"net")}</tr>`;
+  else{const L=rev.length?rev:dep,type=rev.length?"rev":"dep";tot=`<tr class="cy-t"><td>Total ${type==="rev"?"revenus":"dépenses"}</td>${cells(sum(L,"a"),sum(L,"b"),type)}</tr>`}
+  return panel+`<div class="tw2"><table class="lt" aria-label="Comparaison ${s.a} / ${s.b}"><thead><tr><th>${by==="cat"?"Catégorie":"Tiers"}</th><th class="r">${s.a}</th><th class="r">${s.b}</th><th class="r">Écart €</th><th class="r">Écart %</th></tr></thead><tbody>${sect(rev,"Revenus","rev")}${sect(dep,"Dépenses","dep")}${tot}</tbody></table></div>
+  <p class="sv-info">Écart = B − A. En vert : un résultat favorable (dépense en baisse, revenu en hausse) ; en rouge : défavorable. Cliquez sur une ligne pour voir les opérations des deux années.</p>`;
+}
+function rerender(){
+  const el=document.getElementById("cy");if(!el)return;
+  const wy=window.scrollY,ae=document.activeElement;let q=null;
+  if(ae&&el.contains(ae)){const d=ae.dataset||{};q=d.cy?`[data-cy="${d.cy}"]`:d.cys?`[data-cys="${d.cys}"]`:d.cyall?`[data-cyall="${d.cyall}"]`:null}
+  el.innerHTML=inner();
+  if(q){const n=el.querySelector(q);if(n)n.focus({preventScroll:true})}
+  scrollTo(0,wy);requestAnimationFrame(()=>scrollTo(0,wy));
+}
+
+/* Opérations des deux années, côte à côte */
+function openRow(k,si){
+  const s=C(),cut=cutoff(s),type=k.slice(0,3),id=k.slice(4),by=s.by;
+  const L=y=>ops(s,y,cut).filter(t=>kd(t)===type&&gid(by,t)===id&&(si===undefined||sid(by,t)===si)).sort((p,q)=>q.date.localeCompare(p.date));
+  const title=gname(by,id)+(si!==undefined?" › "+sname(by,id,si):"");
+  const col=y=>{
+    const l=L(y),tot=r2(l.reduce((q,t)=>q+(type==="rev"?t.v:-t.v),0));
+    const rows=l.map(t=>{const c=S.cats.find(x=>x.id===t.cat),sb=c&&c.subs.find(x=>x.id===t.sub),ti=S.tiers.find(x=>x.id===t.tier);
+      return `<tr><td>${dfr(t.date)}</td><td>${ti?esc(ti.name):""}</td><td>${c?dot(c.id)+esc(c.name)+(sb?" → "+esc(sb.name):""):"Sans catégorie"}</td><td class="r">${t.v>0?"+":"−"}${eur2(Math.abs(t.v))}</td></tr>`}).join("");
+    return `<div style="display:block;min-width:0"><h3 class="gh" style="margin-top:0">${y}${cut?" (jusqu’au "+cutLbl(cut)+")":""}</h3><p class="sub">${l.length} opération(s) · Total : <b>${eur2(tot)}</b></p>${l.length?`<div class="tw2"><table class="lt mcat"><thead><tr><th>Date</th><th>Tiers</th><th>Catégorie</th><th class="r">Montant</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="empty">Aucune opération.</p>`}</div>`;
+  };
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" style="max-width:1200px" role="dialog" aria-modal="true" aria-label="Opérations ${esc(title)}"><div class="mh"><h2>${esc(title)}</h2><button data-r="0" aria-label="Fermer">✕</button></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;justify-content:stretch">${col(s.a)}${col(s.b)}</div><div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  o.onclick=e=>{if(e.target===o||e.target.closest("[data-r]"))end()};
+  o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}};
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
+
+/* Événements */
+document.addEventListener("click",e=>{
+  if(!(e.target.closest&&e.target.closest("#cy")))return;
+  let x;
+  if(e.target.closest("[data-cyswap]")){const y=Y_();[y.a,y.b]=[y.b,y.a]}
+  else if(e.target.closest("[data-cyexp]")){const ks=view(C()).rows.filter(canExp).map(r=>r.k),all=ks.every(k=>EXP.has(k));ks.forEach(k=>all?EXP.delete(k):EXP.add(k));rerender();return}
+  else if(x=e.target.closest("[data-cytg]")){const k=x.dataset.cytg;EXP.has(k)?EXP.delete(k):EXP.add(k);rerender();return}
+  else if(x=e.target.closest("tr[data-cyrow]")){openRow(x.dataset.cyrow,x.dataset.cysub);return}
+  else return;
+  save();rerender();
+});
+document.addEventListener("keydown",e=>{
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("#cy tr[data-cyrow]")){e.preventDefault();openRow(e.target.dataset.cyrow,e.target.dataset.cysub)}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;if(!t.closest||!t.closest("#cy")||!t.dataset.cy)return;
+  Y_()[t.dataset.cy]=t.dataset.cy==="same"?t.checked:+t.value;
+  save();rerender();
+});
+
+/* Intégration à l'onglet Statistiques : le bloc est (ré)ajouté à chaque dessin de #sv2.
+   Quand les filtres du bloc Statistiques changent, #sv2 est redessiné : la comparaison suit. */
+function inject(){
+  const sv=document.getElementById("sv2");
+  if(!sv||sv.querySelector("#cy"))return;
+  const sec=document.createElement("section");sec.id="cy";sec.setAttribute("aria-label","Comparaison d’années");
+  sv.appendChild(sec);sec.innerHTML=inner();
+}
+const app=document.getElementById("app");
+if(window.MutationObserver)new MutationObserver(inject).observe(app,{childList:true,subtree:true});
+inject();
+})(); 
  </body>
 
 </html>
