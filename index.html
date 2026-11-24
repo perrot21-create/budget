@@ -3937,9 +3937,9 @@ addEventListener("resize",()=>requestAnimationFrame(()=>requestAnimationFrame(()
 if(T==="dash")draw();
 })();
 </script>
- <style>
- /* ---------- Tableau de bord : titres de blocs ---------- */
-/* 1. Titres plus grands et plus gras, y compris en mode compact */
+
+<style>
+/* ---------- Tableau de bord : titres de blocs ---------- */
 #app:has(.hero) section:not(.hcard) > h2,
 #app:has(.hero) section > .lhead > h2,
 #app:has(.hero) .sv-h2 > h2,
@@ -3951,7 +3951,6 @@ if(T==="dash")draw();
   color:var(--ink);
 }
 
-/* 2. Filet fin sous chaque titre (titre seul, ou ligne titre + bouton) */
 #app:has(.hero) section:not(.hcard) > h2,
 #app:has(.hero) section > .lhead,
 #app:has(.hero) .sv-h2{
@@ -3962,7 +3961,6 @@ if(T==="dash")draw();
 #app:has(.hero) section > .lhead > h2,
 #app:has(.hero) .sv-h2 > h2{margin:0}
 
-/* 6. Boutons « Tout voir › » et « Détail › » en liens discrets */
 #app:has(.hero) .lhead > button,
 #app:has(.hero) .sv-h2 > button{
   border:0;
@@ -3981,7 +3979,6 @@ if(T==="dash")draw();
   background:none;
   box-shadow:none;
 }
- </script>
- </body>
-
+</style>
+</body>
 </html>
