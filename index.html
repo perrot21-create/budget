@@ -3633,7 +3633,7 @@ st.textContent=`
 /* --- Solde cumulé budgétaire : seulement les ${YEARS} premières années --- */
 #app:has(.hero) .cbt tr>*:nth-child(n+${YEARS+2}){display:none}
 
-#app:has(.hero) .cbt{display:grid;grid-template-columns:repeat(${YEARS},120px);gap:0;width:max-content;max-width:100%;margin:0 auto}
+#app:has(.hero) .cbt{display:grid;grid-template-columns:repeat(${YEARS},100px);gap:0;width:max-content;min-width:0!important;max-width:100%;margin:0 auto;justify-content:center}
 #app:has(.hero) .cbt thead,#app:has(.hero) .cbt tbody,#app:has(.hero) .cbt tr{display:contents}
 #app:has(.hero) .cbt tr>:first-child{display:none}
 #app:has(.hero) .cbt th,#app:has(.hero) .cbt td{text-align:center!important;border:0!important;border-left:1px solid color-mix(in srgb,var(--mute) 30%,transparent)!important;background:transparent!important}
