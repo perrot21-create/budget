@@ -2996,14 +2996,16 @@ if(typeof T!=="undefined"&&T==="bud")draw();
   }
   /* Cellules « Budget » des 12 mois (d'après les en-têtes) + cellule du cumul annuel */
   function monthCells(tr) {
-    var heads = document.querySelectorAll("#bt thead tr:first-child th[data-mo]");
-    var cells = Array.prototype.slice.call(tr.children, 1), out = [], p = 0;
-    Array.prototype.forEach.call(heads, function (h) {
-      out.push(cells[p]);
-      p += parseInt(h.getAttribute("colspan") || "1", 10);
-    });
-    return { months: out, annual: cells[p] };
-  }
+  var heads = document.querySelectorAll("#bt thead tr:first-child th[data-mo]");
+  var nm = tr.querySelector("td.nm"), cells = [], c;
+  for (c = nm ? nm.nextElementSibling : null; c; c = c.nextElementSibling) cells.push(c);
+  var out = [], p = 0;
+  Array.prototype.forEach.call(heads, function (h) {
+    out.push(cells[p]);
+    p += parseInt(h.getAttribute("colspan") || "1", 10);
+  });
+  return { months: out, annual: cells[p] };
+}
   function isNeg(td) {
     return td.classList.contains("neg") || /^[-\u2212]/.test(td.textContent.trim());
   }
