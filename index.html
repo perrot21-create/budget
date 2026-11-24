@@ -2543,7 +2543,7 @@ const keep=(e)=>{
   const nox=!!(e&&e.target&&e.target.closest&&e.target.closest("[data-go],[data-tm],#yr,#bpv"));
   SAVE={y:scrollY,abo:a?a.scrollTop:0,tw:w?w.scrollTop:0,bt:b?b.scrollTop:0,bl:b?b.scrollLeft:0,nox,t:Date.now()};
 };
-};
+
 ["click","change","input","keydown"].forEach(ev=>document.addEventListener(ev,keep,true));
 /* Rétablit le défilement après le recalcul de mise en page (valable 1,5 s après l'action) */
 const restore=()=>{
