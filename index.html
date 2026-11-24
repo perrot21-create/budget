@@ -3362,6 +3362,7 @@ drawDash=function(){
 if(T==="stats"||T==="dash")draw();
 })();
 </script>
+ <script>
 /* comparaison_annees.js : bloc « Comparaison d'années » intégré à l'onglet Statistiques
    À charger en dernier, après statistiques_v2.js.
    Catégories / Tiers / Comptes / « Regrouper par » : ceux du bloc Statistiques (S.stats2).
@@ -3527,6 +3528,7 @@ const app=document.getElementById("app");
 if(window.MutationObserver)new MutationObserver(inject).observe(app,{childList:true,subtree:true});
 inject();
 })(); 
- </body>
+ </script>
+</body>
 
 </html>
