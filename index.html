@@ -3426,6 +3426,50 @@ document.addEventListener("change",e=>{
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
 </script>
+ <script>
+/* onglet_statistiques.js : onglet « Statistiques » dédié */
+(()=>{
+"use strict";
+if(typeof drawDash!=="function"||typeof draw!=="function"||!document.getElementById("tabs"))return;
+let want=false;
+
+const st=document.createElement("style");
+st.textContent="#statw #stp{--sph:380px}#statw>section{margin-bottom:0}";
+document.head.appendChild(st);
+
+const nav=document.getElementById("tabs");
+if(nav&&!nav.querySelector('[data-tab="stats"]')){
+  const b=document.createElement("button");
+  b.setAttribute("data-tab","stats");b.textContent="Statistiques";
+  nav.insertBefore(b,nav.querySelector('[data-tab="sav"]'));
+}
+
+const odd=drawDash;
+drawDash=function(){
+  odd.apply(this,arguments);
+  if(want)return;
+  const s=document.getElementById("stp");if(s)s.remove();
+};
+
+const od=draw;
+window.draw=draw=function(){
+  od.apply(this,arguments);
+  if(T!=="stats")return;
+  want=true;
+  try{drawDash()}finally{want=false}
+  const app=document.getElementById("app"),s=document.getElementById("stp");
+  app.innerHTML="";
+  const w=document.createElement("div");w.id="statw";
+  if(s)w.appendChild(s);
+  else w.innerHTML='<section><p class="empty">Le bloc Statistiques est introuvable : vérifiez que stats_plus.js est bien chargé avant ce script.</p></section>';
+  app.appendChild(w);
+  document.title="Statistiques — Mes comptes et budget";
+  document.querySelector("main").classList.add("narrow");
+  setTimeout(()=>{const sr=document.getElementById("sr");if(sr&&T==="stats")sr.textContent="Onglet Statistiques"},120);
+};
+if(T==="stats")draw();
+})();
+</script>
  </body>
 
 </html>
