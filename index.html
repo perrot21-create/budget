@@ -3642,7 +3642,13 @@ st.textContent=`
 #app:has(.hero) .cbt td{padding:0 6px 7px!important;font-size:1.05rem}
 #app:has(.hero) section:has(.cbt) .tw2{overflow:visible}
 #app:has(.hero) section:has(.cbt)>p.sub{display:none}
-
+/* --- Solde cumulé : toutes les années, avec défilement --- */
+#app:has(.hero) .cbt tr>*:nth-child(n){display:table-cell!important}
+#app:has(.hero) .cbt,#app:has(.hero) .cbt thead,#app:has(.hero) .cbt tbody,#app:has(.hero) .cbt tr{display:revert!important}
+#app:has(.hero) .cbt{display:table!important;table-layout:auto!important;width:max-content!important;max-width:none!important;margin:0 auto!important}
+#app:has(.hero) .cbt tr>:first-child{display:none!important}
+#app:has(.hero) .cbt th,#app:has(.hero) .cbt td{min-width:100px}
+#app:has(.hero) section:has(.cbt) .tw2{overflow-x:auto!important}
 /* --- Compaction --- */
 #app.dfit{gap:10px}
 #app.dfit .dcol{gap:10px}
