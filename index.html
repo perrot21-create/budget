@@ -3532,6 +3532,86 @@ inject();
 })(); 
  </script>
  <script>
+/* dashboard_plus.js : Top 5 catégories + répartition par compte (bloc Statistiques) et bloc « Prêts entre proches » */
+(()=>{
+"use strict";
+if(typeof drawDash!=="function")return;
+
+const st=document.createElement("style");
+st.textContent=`
+#sx{margin-top:10px;display:grid;gap:10px}
+#sx h3{margin:0 0 6px;font-size:var(--fs-md);font-weight:600;color:var(--mute)}
+#sx .sx-t{display:grid;gap:6px}
+#sx .sx-l{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+#sx .sx-l b{font-variant-numeric:tabular-nums}
+#sx .sx-l .pb2{grid-column:1/-1;margin:0;height:6px}
+#sx .sx-l .sub{font-size:var(--fs-sm)}
+#sx .sx-a{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+#sx .sx-c{padding:8px 10px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--ac) 12%,var(--surface))}
+#sx .sx-c .sub:first-child{font-weight:600;color:var(--ink)}
+#sx .sx-c b{display:block;font-size:1.1rem;font-variant-numeric:tabular-nums}
+#sx .sx-c .pb2{margin:4px 0 0;height:5px}
+#sx .sx-c .pb2 i{background:var(--ac)}
+#pqd .pd-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
+#pqd .pd-c{padding:8px 10px;border-radius:var(--rc2,12px);background:color-mix(in srgb,var(--mute) 10%,var(--surface))}
+#pqd .pd-c.p{background:color-mix(in srgb,var(--pos) 14%,var(--surface))}
+#pqd .pd-c.n{background:color-mix(in srgb,var(--neg) 12%,var(--surface))}
+#pqd .pd-c b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+#pqd .pd-l{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+#pqd .pd-l:first-of-type{border-top:0}
+`;
+document.head.appendChild(st);
+
+function bloc1(){
+  const n=new Date(),yr=n.getFullYear(),mo=n.getMonth(),ym=today().slice(0,7);
+  /* budget du mois, seulement pour les lignes encore existantes */
+  const valid=new Set();S.cats.forEach(c=>{c.subs.forEach(s=>valid.add(c.id+":"+s.id));valid.add(c.id+":")});
+  const bud={};
+  for(const key in S.budget){const[y,k]=key.split("|");if(+y!==yr||!valid.has(k))continue;
+    const cid=k.split(":")[0];if(kindOf(cid)!=="dep")continue;bud[cid]=(bud[cid]||0)+((S.budget[key]||[])[mo]||0)}
+  const rea={},acc={};
+  S.tx.forEach(t=>{if(t.date.slice(0,7)!==ym||!t.cat||kindOf(t.cat)!=="dep")return;
+    rea[t.cat]=(rea[t.cat]||0)-t.v;acc[t.acc]=(acc[t.acc]||0)-t.v});
+  const top=Object.keys(rea).map(id=>({id,r:rea[id],b:bud[id]||0})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r).slice(0,5);
+  const tot=Object.values(acc).reduce((s,v)=>s+Math.max(0,v),0)||1;
+  const cats=top.length?top.map(x=>{
+    const c=S.cats.find(z=>z.id===x.id),pct=x.b>0?Math.min(100,x.r/x.b*100):0,ov=x.b>0&&x.r>x.b;
+    return `<div class="sx-l"><span>${dot(x.id)}${esc(c?c.name:"")}</span><b class="${ov?"neg":""}">${eur2(x.r)}</b>
+      ${x.b>0?`<div class="pb2${ov?" ov":""}" role="img" aria-label="${Math.round(x.r/x.b*100)} % du budget"><i style="width:${pct.toFixed(1)}%${ov?"":";background:"+cco(x.id)}"></i></div><span class="sub">sur ${eur2(x.b)} budgétés (${Math.round(x.r/x.b*100)} %)</span>`:`<span class="sub">aucun budget défini</span>`}</div>`}).join("")
+    :`<p class="empty">Aucune dépense ce mois-ci.</p>`;
+  const accs=S.acc.map((a,i)=>{const v=Math.max(0,acc[a.id]||0);
+    return `<div class="sx-c t${i}"><span class="sub">${esc(a.name)}</span><b>${eur2(v)}</b><span class="sub">${Math.round(v/tot*100)} % des dépenses</span><div class="pb2"><i style="width:${(v/tot*100).toFixed(1)}%"></i></div></div>`}).join("");
+  return `<div id="sx"><div><h3>Top 5 des catégories de dépenses</h3><div class="sx-t">${cats}</div></div><div><h3>Dépenses par compte</h3><div class="sx-a">${accs}</div></div></div>`;
+}
+
+function bloc2(){
+  const G=typeof prGroups==="function"?prGroups():[];
+  const dueG=G.filter(g=>g.bal>0),oweG=G.filter(g=>g.bal<0),due=dueG.reduce((a,g)=>a+g.bal,0),owe=oweG.reduce((a,g)=>a-g.bal,0),net=due-owe;
+  const open=G.filter(g=>g.bal).sort((a,b)=>Math.abs(b.bal)-Math.abs(a.bal)).slice(0,4);
+  const cc=v=>v>0?"pos":v<0?"neg":"";
+  const list=open.length?open.map(g=>`<div class="pd-l"><span><b>${esc(g.name)}</b> <span class="sub">${g.bal>0?"me doit":"je dois"}</span></span><span>${g.due&&typeof pqDue==="function"?pqDue(g.due)+" ":""}<b class="${g.bal>0?"pos":"neg"}">${eur2(Math.abs(g.bal))}</b></span></div>`).join("")
+    :`<p class="empty">${G.length?"Tous les comptes sont soldés.":"Aucun prêt enregistré."}</p>`;
+  return `<section id="pqd" aria-label="Prêts entre proches"><div class="lhead"><h2>Prêts entre proches</h2><button type="button" data-tab="pre">Détail ›</button></div>
+  <div class="pd-k"><div class="pd-c p"><span class="sub">On me doit</span><b class="pos">${eur2(due)}</b></div><div class="pd-c n"><span class="sub">Je dois</span><b class="neg">${eur2(owe)}</b></div><div class="pd-c"><span class="sub">Solde net</span><b class="${cc(net)}">${(net>0?"+":net<0?"−":"")+eur2(Math.abs(net))}</b></div></div>${list}</section>`;
+}
+
+const od=drawDash;
+drawDash=function(){
+  od.apply(this,arguments);
+  try{
+    const app=document.getElementById("app");if(!app||!app.querySelector(".hero"))return;
+    const sta=document.getElementById("sv2d");
+    if(sta&&!sta.querySelector("#sx"))sta.insertAdjacentHTML("beforeend",bloc1());
+    if(!document.getElementById("pqd")){
+      const abo=document.getElementById("abo");
+      if(abo)abo.insertAdjacentHTML("afterend",bloc2());else app.insertAdjacentHTML("beforeend",bloc2());
+    }
+  }catch(e){console.error("dashboard_plus :",e)}
+};
+if(T==="dash")draw();
+})();
+</script>
+ <script>
 
 /* dashboard_une_page.js (v4) : Tableau de bord compact en 2 colonnes, 85 % de la largeur,
    blocs déplaçables et redimensionnables à la souris (bouton « Organiser » dans l'en-tête).
@@ -3543,9 +3623,8 @@ if(!app||typeof draw!=="function")return;
 
 const YEARS=5;          /* années affichées dans « Solde cumulé budgétaire » */
 const WIDTH="85%";      /* largeur de la page sur le tableau de bord */
-const DEF_COLS=[["hero","cmp","cum","sta"],["ops","abo"]];
-const DEF_FLEX={hero:"0 0 auto",cmp:"1 1 auto",cum:"0 0 auto",sta:"0 0 auto",ops:"3 1 0",abo:"2 1 0"};
-
+const DEF_COLS=[["hero","cmp","cum","sta"],["ops","abo","pre"]];
+const DEF_FLEX={hero:"0 0 auto",cmp:"1 1 auto",cum:"0 0 auto",sta:"0 0 auto",ops:"1 1 0",abo:"0 0 auto",pre:"0 0 auto"};
 const st=document.createElement("style");
 st.textContent=`
 /* --- Blocs retirés du tableau de bord --- */
@@ -3797,13 +3876,14 @@ function dz(){
   BASE=root.style.getPropertyValue("--k");
   const[L,R]=c,a1=[...L.children],a2=[...R.children],all=[...a1,...a2];
   const pick=f=>all.find(n=>n.nodeType===1&&f(n));
-  const B={
+    const B={
     hero:pick(n=>n.classList.contains("hero")),
     abo:pick(n=>n.id==="abo"),
     sta:pick(n=>n.id==="sv2d"),
-    ops:pick(n=>n.id!=="sv2d"&&!!n.querySelector(".lhead")),
+    ops:pick(n=>n.id!=="sv2d"&&n.id!=="pqd"&&!!n.querySelector(".lhead")),
     cmp:pick(n=>n.tagName==="SECTION"&&n.id!=="sv2d"&&!n.classList.contains("dalert")&&!!n.querySelector(".dgrid")),
-    cum:pick(n=>!!n.querySelector(".cbt"))
+    cum:pick(n=>!!n.querySelector(".cbt")),
+    pre:pick(n=>n.id==="pqd")
   };
   Object.keys(B).forEach(id=>{if(B[id])B[id].dataset.dz=id;else delete B[id]});
 
