@@ -3937,6 +3937,50 @@ addEventListener("resize",()=>requestAnimationFrame(()=>requestAnimationFrame(()
 if(T==="dash")draw();
 })();
 </script>
+ /* ---------- Tableau de bord : titres de blocs ---------- */
+/* 1. Titres plus grands et plus gras, y compris en mode compact */
+#app:has(.hero) section:not(.hcard) > h2,
+#app:has(.hero) section > .lhead > h2,
+#app:has(.hero) .sv-h2 > h2,
+#app.dfit section:not(.hcard) > h2,
+#app.dfit section > .lhead > h2,
+#app.dfit .sv-h2 > h2{
+  font-size:1.1rem;
+  font-weight:800;
+  color:var(--ink);
+}
+
+/* 2. Filet fin sous chaque titre (titre seul, ou ligne titre + bouton) */
+#app:has(.hero) section:not(.hcard) > h2,
+#app:has(.hero) section > .lhead,
+#app:has(.hero) .sv-h2{
+  padding-bottom:6px;
+  margin-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+#app:has(.hero) section > .lhead > h2,
+#app:has(.hero) .sv-h2 > h2{margin:0}
+
+/* 6. Boutons « Tout voir › » et « Détail › » en liens discrets */
+#app:has(.hero) .lhead > button,
+#app:has(.hero) .sv-h2 > button{
+  border:0;
+  background:none;
+  box-shadow:none;
+  padding:2px 4px;
+  min-height:0;
+  font-size:var(--fs-md);
+  font-weight:600;
+  color:var(--mute);
+}
+#app:has(.hero) .lhead > button:hover,
+#app:has(.hero) .sv-h2 > button:hover{
+  color:var(--accent);
+  text-decoration:underline;
+  background:none;
+  box-shadow:none;
+}
+ </script>
  </body>
 
 </html>
