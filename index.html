@@ -3632,7 +3632,15 @@ st.textContent=`
 
 /* --- Solde cumulé budgétaire : seulement les ${YEARS} premières années --- */
 #app:has(.hero) .cbt tr>*:nth-child(n+${YEARS+2}){display:none}
-#app:has(.hero) .cbt{min-width:0!important}
+
+#app:has(.hero) .cbt{display:grid;grid-template-columns:repeat(${YEARS},120px);gap:0;width:max-content;max-width:100%;margin:0 auto}
+#app:has(.hero) .cbt thead,#app:has(.hero) .cbt tbody,#app:has(.hero) .cbt tr{display:contents}
+#app:has(.hero) .cbt tr>:first-child{display:none}
+#app:has(.hero) .cbt th,#app:has(.hero) .cbt td{text-align:center!important;border:0!important;border-left:1px solid color-mix(in srgb,var(--mute) 30%,transparent)!important;background:transparent!important}
+#app:has(.hero) .cbt tr>:nth-child(2){border-left:0!important}
+#app:has(.hero) .cbt th{padding:5px 6px 0!important;font-size:var(--fs-sm);color:var(--mute)}
+#app:has(.hero) .cbt td{padding:0 6px 7px!important;font-size:1.05rem}
+#app:has(.hero) section:has(.cbt) .tw2{overflow:visible}
 #app:has(.hero) section:has(.cbt)>p.sub{display:none}
 
 /* --- Compaction --- */
