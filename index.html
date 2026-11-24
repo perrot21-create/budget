@@ -3533,15 +3533,19 @@ inject();
  </script>
  <script>
 <script>
-/* dashboard_une_page.js (v3) : Tableau de bord compact, 7 blocs, 2 colonnes, 85 % de la largeur.
-   À charger en dernier, après comparaison_annees.js. Remplace la v2. */
+<script>
+/* dashboard_une_page.js (v4) : Tableau de bord compact en 2 colonnes, 85 % de la largeur,
+   blocs déplaçables et redimensionnables à la souris (bouton « Organiser » dans l'en-tête).
+   À charger en dernier, après comparaison_annees.js. Remplace la v3. */
 (()=>{
 "use strict";
 const app=document.getElementById("app");
 if(!app||typeof draw!=="function")return;
 
-const YEARS=5;          /* nombre d'années affichées dans « Solde cumulé budgétaire » */
+const YEARS=5;          /* années affichées dans « Solde cumulé budgétaire » */
 const WIDTH="85%";      /* largeur de la page sur le tableau de bord */
+const DEF_COLS=[["hero","cmp","cum","sta"],["ops","abo"]];
+const DEF_FLEX={hero:"0 0 auto",cmp:"1 1 auto",cum:"0 0 auto",sta:"0 0 auto",ops:"3 1 0",abo:"2 1 0"};
 
 const st=document.createElement("style");
 st.textContent=`
@@ -3576,24 +3580,66 @@ st.textContent=`
 /* --- Disposition 2 colonnes --- */
 main:has(#app.dz),main.narrow:has(#app.dz){width:${WIDTH}!important}
 #app.dfit.dz{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
-#app.dz .dcol>section:has(>.dgrid){flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+#app.dz .dcol{position:relative}
+#app.dz .dcol>[data-dz]{min-width:0}
+#app.dz .dcol>section:has(>.dgrid){display:flex;flex-direction:column;min-height:0}
 #app.dz section:has(>.dgrid)>.dgrid{flex:1 1 auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
 #app.dz .dgrid .dcard{padding:8px 12px;justify-content:center}
 #app.dz .dgrid .dv{font-size:1.5rem}
-#app.dz .dcol>.dflex{flex:3 1 0}
-#app.dz .dcol>#abo.dflex{flex:2 1 0}
+
+/* --- Mode « Organiser » --- */
+#app:not(.dze) .dzl{display:none}
+.dzl{position:absolute;inset:0;pointer-events:none;z-index:40}
+.dzl .dzg{position:absolute;pointer-events:auto;touch-action:none;cursor:grab;width:30px;height:24px;padding:0;border:0;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--accent);color:var(--onacc);font-size:14px;line-height:1;box-shadow:var(--sh);user-select:none}
+.dzl .dzg:active{cursor:grabbing}
+.dzl .dzh{position:absolute;pointer-events:auto;touch-action:none;height:12px;cursor:row-resize}
+.dzl .dzh::after{content:"";position:absolute;left:30%;right:30%;top:4px;height:4px;border-radius:2px;background:var(--accent);opacity:.75}
+.dzl .dzv{position:absolute;pointer-events:auto;touch-action:none;width:14px;top:0;bottom:0;cursor:col-resize}
+.dzl .dzv::after{content:"";position:absolute;top:30%;bottom:30%;left:5px;width:4px;border-radius:2px;background:var(--accent);opacity:.75}
+#app.dze [data-dz]{outline:2px dashed color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:-2px}
+[data-dz].dzdrag{opacity:.45}
+.dzi{position:fixed;z-index:200;pointer-events:none;height:4px;border-radius:2px;background:var(--accent)}
+#dzb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--onacc);font-weight:700}
+#dzb[hidden],#dzr[hidden]{display:none}
 `;
 document.head.appendChild(st);
 
 const root=document.documentElement;
-let U=null,failKey="",BASE="";
+let U=null,failKey="",BASE="",EDIT=false;
 const key=()=>innerWidth+"x"+innerHeight;
 const cols=()=>[...app.querySelectorAll(":scope > .dcol")];
+const blocks=c=>[...c.children].filter(n=>n.dataset&&n.dataset.dz);
+const vis=c=>blocks(c).filter(b=>b.offsetParent!==null&&b.offsetHeight>0);
 const over=()=>cols().some(c=>c.scrollHeight>c.clientHeight+2);
 const setH=()=>{app.style.height=Math.max(200,Math.floor(innerHeight-(app.getBoundingClientRect().top+scrollY)-16))+"px"};
 const restoreK=()=>{BASE?root.style.setProperty("--k",BASE):root.style.removeProperty("--k")};
+const LAY=()=>{const t=S.tabset||(S.tabset={}),d=t.dash||(t.dash={});return d.lay||(d.lay={})};
 
-/* réduit la taille du texte par paliers de 5 % (minimum 70 %) jusqu'à ce que les colonnes tiennent */
+/* ---------- Boutons de l'en-tête ---------- */
+const tools=document.querySelector(".tools");
+let bOrg=null,bRes=null;
+if(tools&&!document.getElementById("dzb")){
+  bOrg=document.createElement("button");bOrg.id="dzb";bOrg.type="button";bOrg.hidden=true;
+  bOrg.textContent="⋮⋮ Organiser";bOrg.title="Déplacer et redimensionner les blocs du tableau de bord";bOrg.setAttribute("aria-pressed","false");
+  bRes=document.createElement("button");bRes.id="dzr";bRes.type="button";bRes.hidden=true;
+  bRes.textContent="↺ Disposition";bRes.title="Rétablir la disposition d’origine";
+  const ref=document.getElementById("rsg")||document.getElementById("syg")||tools.firstChild;
+  tools.insertBefore(bOrg,ref);tools.insertBefore(bRes,ref);
+  bOrg.onclick=()=>{EDIT=!EDIT;sync()};
+  bRes.onclick=async()=>{
+    if(!await ask("Rétablir la disposition d’origine du tableau de bord (emplacement et taille des blocs) ?","Remplacer"))return;
+    const o=(S.tabset||{}).dash;if(o)delete o.lay;save();draw();
+  };
+}
+function sync(){
+  const show=T==="dash"&&!!U;
+  if(bOrg){bOrg.hidden=!show;bOrg.setAttribute("aria-pressed",String(show&&EDIT))}
+  if(bRes)bRes.hidden=!(show&&EDIT);
+  app.classList.toggle("dze",show&&EDIT);
+  if(show)position();
+}
+
+/* ---------- Taille du texte : réduit par paliers de 5 % jusqu'à ce que tout tienne ---------- */
 function scale(){
   const b=parseFloat(BASE)||1;
   for(let f=1;f>=.699;f-=.05){
@@ -3604,46 +3650,196 @@ function scale(){
   return false;
 }
 
-function revert(){
-  if(!U)return;
-  U.a1.forEach(n=>U.L.appendChild(n));
-  U.a2.forEach(n=>U.R.appendChild(n));
-  app.classList.remove("dz");
-  U=null;restoreK();setH();
+/* ---------- Hauteurs des blocs ---------- */
+function applyFlex(){
+  const lay=LAY();
+  [U.L,U.R].forEach(col=>{
+    const all=blocks(col),bs=vis(col);
+    all.forEach(b=>{b.style.flex="";b.style.minHeight="";b.style.overflow=""});
+    const custom=bs.length&&lay.h&&bs.every(b=>lay.h[b.dataset.dz]>0);
+    if(custom){
+      bs.forEach(b=>{b.style.flex=lay.h[b.dataset.dz]+" 1 0";b.style.minHeight="0";b.style.overflow="auto"});
+    }else{
+      all.forEach(b=>{
+        const f=DEF_FLEX[b.dataset.dz]||"0 0 auto";b.style.flex=f;
+        if(/^[1-9]/.test(f)){b.style.minHeight="0";b.style.overflow="auto"}
+      });
+      if(bs.length&&!bs.some(b=>/^[1-9]/.test(DEF_FLEX[b.dataset.dz]||""))){
+        const l=bs[bs.length-1];l.style.flex="1 1 auto";l.style.minHeight="0";l.style.overflow="auto";
+      }
+    }
+  });
 }
 
+/* ---------- Poignées ---------- */
+function rebuild(){
+  [U.L,U.R].forEach((col,ci)=>{
+    const old=col.querySelector(":scope > .dzl");if(old)old.remove();
+    const ov=document.createElement("div");ov.className="dzl";
+    const bs=vis(col);let h="";
+    bs.forEach((b,i)=>{
+      h+=`<button type="button" class="dzg" data-b="${b.dataset.dz}" title="Déplacer ce bloc" aria-label="Déplacer ce bloc">⋮⋮</button>`;
+      if(bs[i+1])h+=`<div class="dzh" data-a="${b.dataset.dz}" data-n="${bs[i+1].dataset.dz}" title="Ajuster la hauteur des blocs"></div>`;
+    });
+    if(ci===0)h+=`<div class="dzv" title="Ajuster la largeur des colonnes"></div>`;
+    ov.innerHTML=h;col.appendChild(ov);
+  });
+  position();
+}
+function position(){
+  if(!U)return;
+  [U.L,U.R].forEach(col=>{
+    const ov=col.querySelector(":scope > .dzl");if(!ov)return;
+    const bs=vis(col);
+    bs.forEach((b,i)=>{
+      const g=ov.querySelector(`.dzg[data-b="${b.dataset.dz}"]`);
+      if(g){g.style.top=(b.offsetTop+4)+"px";g.style.left=(b.offsetLeft+b.offsetWidth-34)+"px"}
+      const n=bs[i+1],h=n&&ov.querySelector(`.dzh[data-a="${b.dataset.dz}"]`);
+      if(h){h.style.top=(b.offsetTop+b.offsetHeight+(n.offsetTop-b.offsetTop-b.offsetHeight)/2-6)+"px";h.style.left=b.offsetLeft+"px";h.style.width=b.offsetWidth+"px"}
+    });
+    const v=ov.querySelector(".dzv");if(v)v.style.left=(col.clientWidth-2)+"px";
+  });
+}
+
+/* ---------- Glisser-déposer ---------- */
+const track=(mv,up)=>{
+  const m=e=>mv(e),u=e=>{removeEventListener("pointermove",m);removeEventListener("pointerup",u);removeEventListener("pointercancel",u);up(e)};
+  addEventListener("pointermove",m);addEventListener("pointerup",u);addEventListener("pointercancel",u);
+};
+function saveCols(){const lay=LAY();lay.c=[blocks(U.L).map(b=>b.dataset.dz),blocks(U.R).map(b=>b.dataset.dz)];save()}
+
+function moveStart(e,b){
+  if(!b)return;
+  b.classList.add("dzdrag");document.body.style.userSelect="none";
+  const ind=document.createElement("div");ind.className="dzi";document.body.appendChild(ind);
+  let tgt=null;
+  const target=(x,y)=>{
+    const cs=[U.L,U.R],rs=cs.map(c=>c.getBoundingClientRect());
+    let ci=rs.findIndex(r=>x>=r.left&&x<=r.right);
+    if(ci<0)ci=Math.abs(x-(rs[0].left+rs[0].right)/2)<Math.abs(x-(rs[1].left+rs[1].right)/2)?0:1;
+    const col=cs[ci],list=vis(col).filter(n=>n!==b);
+    let before=null;
+    for(const n of list){const r=n.getBoundingClientRect();if(y<r.top+r.height/2){before=n;break}}
+    return{col,before,list,r:rs[ci]};
+  };
+  track(ev=>{
+    tgt=target(ev.clientX,ev.clientY);
+    let y;
+    if(tgt.before)y=tgt.before.getBoundingClientRect().top-5;
+    else if(tgt.list.length)y=tgt.list[tgt.list.length-1].getBoundingClientRect().bottom+3;
+    else y=tgt.r.top+2;
+    ind.style.left=tgt.r.left+"px";ind.style.width=tgt.r.width+"px";ind.style.top=(y-2)+"px";
+  },()=>{
+    ind.remove();b.classList.remove("dzdrag");document.body.style.userSelect="";
+    if(!tgt)return;
+    const src=b.parentNode;
+    tgt.col.insertBefore(b,tgt.before||tgt.col.querySelector(":scope > .dzl"));
+    const lay=LAY();
+    if(lay.h)[src,tgt.col].forEach(c=>blocks(c).forEach(n=>{delete lay.h[n.dataset.dz]}));
+    saveCols();applyFlex();rebuild();
+  });
+}
+function rowStart(e,g){
+  const col=g.closest(".dcol"),bs=vis(col),a=U.B[g.dataset.a],n=U.B[g.dataset.n];
+  if(!a||!n)return;
+  const pd=b=>{const s=getComputedStyle(b);return parseFloat(s.paddingTop)+parseFloat(s.paddingBottom)+parseFloat(s.borderTopWidth)+parseFloat(s.borderBottomWidth)};
+  const w={};bs.forEach(b=>{w[b.dataset.dz]=Math.max(40,b.offsetHeight-pd(b))});
+  const ia=a.dataset.dz,ib=n.dataset.dz,wa=w[ia],tot=wa+w[ib],y0=e.clientY;
+  const apply=()=>bs.forEach(b=>{b.style.flex=w[b.dataset.dz]+" 1 0";b.style.minHeight="0";b.style.overflow="auto"});
+  apply();
+  track(ev=>{
+    const na=Math.min(tot-40,Math.max(40,wa+ev.clientY-y0));
+    w[ia]=na;w[ib]=tot-na;apply();position();
+  },()=>{
+    const lay=LAY();lay.h=lay.h||{};
+    bs.forEach(b=>{lay.h[b.dataset.dz]=Math.round(w[b.dataset.dz]*10)/10});
+    save();
+  });
+}
+function colStart(e){
+  const wl=U.L.getBoundingClientRect().width,tot=wl+U.R.getBoundingClientRect().width,x0=e.clientX;
+  let w=wl/tot;
+  track(ev=>{
+    const nl=Math.min(tot*.75,Math.max(tot*.25,wl+ev.clientX-x0));w=nl/tot;
+    app.style.gridTemplateColumns=`minmax(0,${w.toFixed(4)}fr) minmax(0,${(1-w).toFixed(4)}fr)`;
+    position();
+  },()=>{LAY().w=Math.round(w*1000)/1000;save()});
+}
+document.addEventListener("pointerdown",e=>{
+  const g=e.target.closest&&e.target.closest(".dzg,.dzh,.dzv");
+  if(!g||!U||e.button>0)return;
+  e.preventDefault();
+  if(g.classList.contains("dzg"))moveStart(e,U.B[g.dataset.b]);
+  else if(g.classList.contains("dzh"))rowStart(e,g);
+  else colStart(e);
+});
+
+/* ---------- Construction / retour à la disposition d'origine ---------- */
+function reset(){
+  if(U&&U.ro)U.ro.disconnect();
+  U=null;app.classList.remove("dz");app.style.gridTemplateColumns="";
+}
+function revert(){
+  if(!U)return;
+  const u=U;
+  u.a1.forEach(n=>u.L.appendChild(n));u.a2.forEach(n=>u.R.appendChild(n));
+  [u.L,u.R].forEach(c=>{const o=c.querySelector(":scope > .dzl");if(o)o.remove()});
+  Object.values(u.B).forEach(n=>{n.style.flex="";n.style.minHeight="";n.style.overflow="";n.removeAttribute("data-dz")});
+  reset();restoreK();setH();
+}
 function dz(){
-  if(T!=="dash"||!app.classList.contains("dfit")){app.classList.remove("dz");U=null;return}
+  if(T!=="dash"||!app.classList.contains("dfit")){reset();return}
   const c=cols();
-  if(c.length!==2){app.classList.remove("dz");U=null;return}
-  if(app.classList.contains("dz")||failKey===key())return;
+  if(c.length!==2){reset();return}
+  if(U&&U.L===c[0])return;
+  if(failKey===key())return;
+  reset();
 
   BASE=root.style.getPropertyValue("--k");
   const[L,R]=c,a1=[...L.children],a2=[...R.children],all=[...a1,...a2];
   const pick=f=>all.find(n=>n.nodeType===1&&f(n));
-  const hero=pick(n=>n.classList.contains("hero")),
-    abo=pick(n=>n.id==="abo"),
-    sta=pick(n=>n.id==="sv2d"),
-    ops=pick(n=>n.id!=="sv2d"&&!!n.querySelector(".lhead")),
-    cmp=pick(n=>n.tagName==="SECTION"&&n.id!=="sv2d"&&!n.classList.contains("dalert")&&!!n.querySelector(".dgrid")),
-    cum=pick(n=>!!n.querySelector(".cbt"));
+  const B={
+    hero:pick(n=>n.classList.contains("hero")),
+    abo:pick(n=>n.id==="abo"),
+    sta:pick(n=>n.id==="sv2d"),
+    ops:pick(n=>n.id!=="sv2d"&&!!n.querySelector(".lhead")),
+    cmp:pick(n=>n.tagName==="SECTION"&&n.id!=="sv2d"&&!n.classList.contains("dalert")&&!!n.querySelector(".dgrid")),
+    cum:pick(n=>!!n.querySelector(".cbt"))
+  };
+  Object.keys(B).forEach(id=>{if(B[id])B[id].dataset.dz=id;else delete B[id]});
 
-  [hero,cmp,cum,sta].filter(Boolean).forEach(n=>L.appendChild(n));
-  [ops,abo].filter(Boolean).forEach(n=>R.appendChild(n));
+  const lay=LAY(),want=Array.isArray(lay.c)&&lay.c.length===2?lay.c:DEF_COLS,placed=new Set();
+  [L,R].forEach((col,i)=>(want[i]||[]).forEach(id=>{const n=B[id];if(n&&!placed.has(n)){placed.add(n);col.appendChild(n)}}));
+  Object.keys(B).forEach(id=>{
+    if(placed.has(B[id]))return;
+    (DEF_COLS[1].includes(id)?R:L).appendChild(B[id]);
+  });
+
   app.classList.add("dz");
-  U={L,R,a1,a2};
+  app.style.gridTemplateColumns=lay.w>0&&lay.w<1?`minmax(0,${lay.w}fr) minmax(0,${(1-lay.w).toFixed(4)}fr)`:"";
+  U={L,R,a1,a2,B};
+  applyFlex();rebuild();
 
-  if(!scale()){failKey=key();revert();return}
+  if(!scale()){failKey=key();revert();sync();return}
+  if(window.ResizeObserver){
+    let raf=0;
+    U.ro=new ResizeObserver(()=>{if(raf)return;raf=requestAnimationFrame(()=>{raf=0;position()})});
+    [L,R,...Object.values(B)].forEach(n=>U.ro.observe(n));
+  }
   dispatchEvent(new Event("resize"));
 }
 
 const od=draw;
-window.draw=draw=function(){failKey="";U=null;od.apply(this,arguments);dz()};
+window.draw=draw=function(){failKey="";reset();od.apply(this,arguments);dz();sync()};
 
 addEventListener("resize",()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
-  if(T==="dash"&&app.classList.contains("dz")&&cols().length===2){
+  if(T!=="dash"){sync();return}
+  const c=cols();
+  if(U&&c[0]!==U.L)reset();
+  if(U&&c.length===2){
     if(!scale()){failKey=key();revert()}
   }else dz();
+  sync();
 })));
 if(T==="dash")draw();
 })();
