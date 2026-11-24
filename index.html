@@ -3532,17 +3532,26 @@ inject();
 })(); 
  </script>
  <script>
-/* dashboard_une_page.js (v2) : Tableau de bord compact, 7 blocs, 2 colonnes, sans défilement de page.
-   À charger en dernier, après comparaison_annees.js. Remplace la v1. */
+<script>
+/* dashboard_une_page.js (v3) : Tableau de bord compact, 7 blocs, 2 colonnes, 85 % de la largeur.
+   À charger en dernier, après comparaison_annees.js. Remplace la v2. */
 (()=>{
 "use strict";
 const app=document.getElementById("app");
 if(!app||typeof draw!=="function")return;
 
+const YEARS=5;          /* nombre d'années affichées dans « Solde cumulé budgétaire » */
+const WIDTH="85%";      /* largeur de la page sur le tableau de bord */
+
 const st=document.createElement("style");
 st.textContent=`
 /* --- Blocs retirés du tableau de bord --- */
 #app:has(.hero) .dalert,#app:has(.hero) .dgrid2{display:none!important}
+
+/* --- Solde cumulé budgétaire : seulement les ${YEARS} premières années --- */
+#app:has(.hero) .cbt tr>*:nth-child(n+${YEARS+2}){display:none}
+#app:has(.hero) .cbt{min-width:0!important}
+#app:has(.hero) section:has(.cbt)>p.sub{display:none}
 
 /* --- Compaction --- */
 #app.dfit{gap:10px}
@@ -3559,44 +3568,58 @@ st.textContent=`
 #app.dfit .abf{margin-bottom:6px}
 #app.dfit .abt select,#app.dfit .abt input{min-width:110px;height:32px}
 #app.dfit .abt input[type=text]{min-width:120px}
-#app.dfit .cbt{min-width:1000px}
 #app.dfit .cbt th,#app.dfit .cbt td{padding:6px 4px}
 #app.dfit #sv2d .sv-k{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 #app.dfit #sv2d .sv-c{padding:8px 10px}
 #app.dfit #sv2d .sv-c .v{font-size:1.15rem}
 
 /* --- Disposition 2 colonnes --- */
-main:has(#app.dz),main.narrow:has(#app.dz){width:98%!important}
+main:has(#app.dz),main.narrow:has(#app.dz){width:${WIDTH}!important}
 #app.dfit.dz{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}
-/* Mes comptes : occupe la hauteur restante de la colonne de gauche */
 #app.dz .dcol>section:has(>.dgrid){flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
 #app.dz section:has(>.dgrid)>.dgrid{flex:1 1 auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
 #app.dz .dgrid .dcard{padding:8px 12px;justify-content:center}
 #app.dz .dgrid .dv{font-size:1.5rem}
-/* Colonne de droite : opérations 3/5, abonnements 2/5 */
 #app.dz .dcol>.dflex{flex:3 1 0}
 #app.dz .dcol>#abo.dflex{flex:2 1 0}
 `;
 document.head.appendChild(st);
 
-let U=null,failKey="";
+const root=document.documentElement;
+let U=null,failKey="",BASE="";
 const key=()=>innerWidth+"x"+innerHeight;
+const cols=()=>[...app.querySelectorAll(":scope > .dcol")];
+const over=()=>cols().some(c=>c.scrollHeight>c.clientHeight+2);
+const setH=()=>{app.style.height=Math.max(200,Math.floor(innerHeight-(app.getBoundingClientRect().top+scrollY)-16))+"px"};
+const restoreK=()=>{BASE?root.style.setProperty("--k",BASE):root.style.removeProperty("--k")};
+
+/* réduit la taille du texte par paliers de 5 % (minimum 70 %) jusqu'à ce que les colonnes tiennent */
+function scale(){
+  const b=parseFloat(BASE)||1;
+  for(let f=1;f>=.699;f-=.05){
+    root.style.setProperty("--k",String(Math.round(b*f*100)/100));
+    setH();
+    if(!over())return true;
+  }
+  return false;
+}
 
 function revert(){
   if(!U)return;
   U.a1.forEach(n=>U.L.appendChild(n));
   U.a2.forEach(n=>U.R.appendChild(n));
   app.classList.remove("dz");
-  U=null;
+  U=null;restoreK();setH();
 }
 
 function dz(){
   if(T!=="dash"||!app.classList.contains("dfit")){app.classList.remove("dz");U=null;return}
-  const cols=[...app.querySelectorAll(":scope > .dcol")];
-  if(cols.length!==2){app.classList.remove("dz");U=null;return}
+  const c=cols();
+  if(c.length!==2){app.classList.remove("dz");U=null;return}
   if(app.classList.contains("dz")||failKey===key())return;
 
-  const[L,R]=cols,a1=[...L.children],a2=[...R.children],all=[...a1,...a2];
+  BASE=root.style.getPropertyValue("--k");
+  const[L,R]=c,a1=[...L.children],a2=[...R.children],all=[...a1,...a2];
   const pick=f=>all.find(n=>n.nodeType===1&&f(n));
   const hero=pick(n=>n.classList.contains("hero")),
     abo=pick(n=>n.id==="abo"),
@@ -3610,17 +3633,21 @@ function dz(){
   app.classList.add("dz");
   U={L,R,a1,a2};
 
-  /* si une colonne déborde, on revient à la disposition d'origine */
-  if([L,R].some(c=>c.scrollHeight>c.clientHeight+2)){failKey=key();revert();return}
-  /* la largeur de la page a changé : comptes_fixe.js recalcule la hauteur */
+  if(!scale()){failKey=key();revert();return}
   dispatchEvent(new Event("resize"));
 }
 
 const od=draw;
 window.draw=draw=function(){failKey="";U=null;od.apply(this,arguments);dz()};
-addEventListener("resize",()=>requestAnimationFrame(()=>requestAnimationFrame(dz)));
+
+addEventListener("resize",()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(T==="dash"&&app.classList.contains("dz")&&cols().length===2){
+    if(!scale()){failKey=key();revert()}
+  }else dz();
+})));
 if(T==="dash")draw();
 })();
-</script></body>
+</script>
+</body>
 
 </html>
