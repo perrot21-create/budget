@@ -1314,7 +1314,10 @@ function uiW(fn){uiHist();const u=uiClean(S.ui);fn(u);S.ui=uiClean(u);save();app
 const uiSetC=(k,v)=>uiW(u=>{const m=uiEff();if(v)u.c[m][k]=v;else delete u.c[m][k]});
 const uiSetFc=(id,v)=>{const[cid,sid]=id.split(":"),c=S.cats.find(x=>x.id===cid);if(!c)return;const o=sid?c.subs.find(x=>x.id===sid):c;if(!o)return;const h=hx(v);if(h)o.fc=h;else delete o.fc;save()};
 const uiSetA=(i,v)=>uiW(u=>{const m=uiEff();if(v)u.a[m][i]=v;else delete u.a[m][i]});
-function uiPreset(id){const p=UPRE.find(x=>x.id===id);if(!p)return;uiW(u=>{u.c={light:Object.assign({},p.c.light),dark:Object.assign({},p.c.dark)}})}
+function uiPreset(id){const p=UPRE.find(x=>x.id===id);if(!p)return;
+ uiW(u=>{const k={light:u.c.light.inp,dark:u.c.dark.inp};
+  u.c={light:Object.assign({},p.c.light),dark:Object.assign({},p.c.dark)};
+  if(k.light)u.c.light.inp=k.light;if(k.dark)u.c.dark.inp=k.dark})}
 const uiExp=()=>JSON.stringify({app:"comptes-budget-theme",version:1,theme:S.theme||"",ink:S.ink||"",ui:uiClean(S.ui)});
 function uiImp(txt){uiHist();let o;try{o=JSON.parse(txt)}catch(e){return false}
  if(!o||o.app!=="comptes-budget-theme"||typeof o.ui!=="object"||!o.ui)return false;
