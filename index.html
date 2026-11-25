@@ -4034,7 +4034,28 @@ html #bt#bt#bt.lr tbody tr:not(.sec):not(.gsp) td:has(input.alr):not(.grp):not(.
 html #bt#bt#bt.lr tbody td.over,
 html #bt#bt#bt.lr tbody tr.k-dep td.v.neg:not(.z0),
 html #bt#bt#bt.lr tbody td:has(input.alr){opacity:1}
-</style>
+ 
+/* ===== Lecture rapide : soldes (7) et catégories discrètes (8) ===== */
+
+/* 7. Solde cumulé : fond marqué avec la couleur du thème */
+html #bt#bt#bt.lr tbody tr.tcum:not(.sec):not(.gsp) td:not(.grp):not(.grp0){
+  background-color:color-mix(in srgb,var(--accent) 14%,var(--surface))!important;
+}
+
+/* 7. Soldes négatifs (Solde du mois et Solde cumulé, colonnes Budget et Réel) : rouge plein */
+html #bt#bt#bt.lr tbody tr:is(.tsol,.tcum):not(.gsp) td:is(.g,.ri).neg:not(.grp):not(.grp0){
+  background-color:var(--neg)!important;
+  background-image:none!important;
+  color:var(--onneg)!important;
+  font-weight:800;
+  opacity:1;
+}
+
+/* 8. Catégories : noms en couleur normale (plus de rouge ni de vert), simple liseré fin à gauche, sans pastille */
+html #bt#bt#bt.lr{--fc-rc:var(--ink);--fc-dc:var(--ink);--fc-ds:var(--ink)}
+html #bt#bt#bt.lr tbody tr.cb td.nm{box-shadow:inset 3px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
+html #bt#bt#bt.lr tbody tr.hdr.cb td.nm{box-shadow:inset 4px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
+html #bt#bt#bt.lr tbody td.nm .cd{display:none}</style>
  <script>
 /* lecture_rapide : bouton « Lecture rapide » du Budget annuel (activé par défaut) */
 (()=>{
