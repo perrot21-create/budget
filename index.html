@@ -1290,7 +1290,7 @@ function uiClean(u){
 function applyUI(){
  const r=document.documentElement,st=r.style,u=uiClean(S.ui),eff=uiEff(),c=u.c[eff],a=u.a[eff];
  const set=(n,v)=>{v?st.setProperty(n,v):st.removeProperty(n)};
- ["bg","surface","ink","mute","line","accent","pos","neg","bl","reel","ptc","vsep"].forEach(k=>set("--"+k,c[k]));
+["bg","surface","ink","mute","line","accent","pos","neg","bl","reel","ptc","vsep","inp"].forEach(k=>set("--"+k,c[k]));
  set("--onacc",c.accent&&uon(c.accent));
  [["frc","--fc-rc"],["frs","--fc-rs"],["fdc","--fc-dc"],["fds","--fc-ds"]].forEach(([k,n])=>set(n,c[k]));
  [["rev","rev"],["dep","dep"]].forEach(([k,p])=>{const v=c[k];set(`--${p}-pa`,v);set(`--${p}-bg2`,v&&umix(v,55,"var(--surface)"));set(`--${p}-bg`,v&&umix(v,25,"var(--surface)"));set(`--${p}-sep`,v&&umix(v,80,"var(--ink)"))});
