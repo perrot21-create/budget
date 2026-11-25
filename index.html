@@ -3990,5 +3990,72 @@ if(T==="dash")draw();
   border-bottom:1px solid var(--line);
 }
 </style>
-</body>
+ <style>
+/* Les deux blocs côte à côte, même hauteur */
+.dpairw{container-type:inline-size;min-width:0}
+.dpair{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px;align-items:stretch}
+.dpair>section{margin:0!important;min-width:0;height:100%}
+@container (max-width:560px){.dpair{grid-auto-flow:row;grid-auto-columns:auto}}
+
+/* Abonnements : liste compacte + gestion repliée */
+#abo .ab-s0{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 6px;font-size:var(--fs-sm);color:var(--mute)}
+#abo .ab-l{display:grid;gap:0}
+#abo .ab-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 0;border-top:1px solid var(--line);min-width:0}
+#abo .ab-r:first-child{border-top:0}
+#abo .ab-n{min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#abo .ab-n small{display:block;font-weight:400;color:var(--mute);font-size:var(--fs-sm);overflow:hidden;text-overflow:ellipsis}
+#abo .ab-st{flex:none;font-size:var(--fs-sm);text-align:right}
+#abo .ab-m{margin:8px 0 0}
+#abo .ab-m .abf{margin:8px 0}
+#abo .ab-e{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+#abo .ab-e select{flex:1 1 130px;min-width:0}
+#abo .ab-e input[type=date]{flex:1 1 120px;min-width:0}
+#abo .ab-e input[type=text]{flex:2 1 140px;min-width:0}
+#abo .ab-e button{flex:none}
+
+/* Prêts : plus compact, 3 proches maximum */
+#pqd .pd-k{gap:6px}
+#pqd .pd-c{padding:6px 8px}
+#pqd .pd-c .sub{font-size:var(--fs-sm)}
+#pqd .pd-c b{font-size:1rem}
+#pqd .pd-l{flex-wrap:wrap;gap:2px 8px;min-width:0}
+#pqd>*:nth-child(n+6){display:none}
+</style>
+<script>
+(()=>{
+"use strict";
+if(typeof aboHtml!=="function"||typeof draw!=="function")return;
+let OPENM=false;
+
+window.aboHtml=aboHtml=function(){
+  const td=today(),gr=a=>!a.end?2:a.end>=td?0:1;
+  const L=[...aboList()].sort((a,b)=>gr(a)-gr(b)||(gr(a)===1?b.end.localeCompare(a.end):(a.end||"").localeCompare(b.end||"")));
+  const nm=a=>(S.tiers.find(t=>t.id===a.tier)||{name:"Tiers supprimé"}).name;
+  const soon=L.filter(a=>a.end&&a.end>=td&&aboDays(a.end)<=60).length;
+  const top=L.filter(a=>gr(a)!==1).slice(0,4);
+  const list=top.length?`<ul class="ab-l">${top.map(a=>`<li class="ab-r"><span class="ab-n" title="${esc(a.note||"")}">${esc(nm(a))}${a.note?`<small>${esc(a.note)}</small>`:""}</span><span class="ab-st">${aboStat(a.end)}</span></li>`).join("")}</ul>`:`<p class="empty">Aucun abonnement en cours.</p>`;
+  const form=S.tiers.length?`<form id="abof" class="abf"><label>Tiers<select name="t" required>${aboOpts("")}</select></label><label>Fin d’engagement<input type="date" name="d"></label><label>Note<input type="text" name="n" placeholder="Note…"></label><button class="primary">Ajouter</button></form>`:`<p class="empty">Ajoutez d’abord vos tiers dans « Tiers et catégories ».</p>`;
+  const rows=L.map(a=>`<div class="ab-e"><select data-abo="${a.id}:tier" aria-label="Tiers">${aboOpts(a.tier)}</select><input type="date" data-abo="${a.id}:end" value="${esc(a.end||"")}" aria-label="Date de fin"><input type="text" data-abo="${a.id}:note" value="${esc(a.note||"")}" placeholder="Note…" aria-label="Note"><button data-abodel="${a.id}" title="Supprimer" aria-label="Supprimer">✕</button></div>`).join("");
+  return `<section id="abo"><h2>Suivi des abonnements</h2><div class="ab-s0"><span>${L.length} suivi(s)</span>${soon?`<b class="abw">${soon} se termine(nt) sous 60 j</b>`:""}</div>${list}<details class="ab-m"${OPENM?" open":""}><summary>Gérer les abonnements (${L.length})</summary>${form}${rows}</details></section>`;
+};
+document.addEventListener("toggle",e=>{if(e.target.classList&&e.target.classList.contains("ab-m"))OPENM=e.target.open},true);
+
+function pair(){
+  const a=document.getElementById("abo"),p=document.getElementById("pqd");
+  if(!a||!p||a.parentNode!==p.parentNode||a.closest(".dpair"))return;
+  const par=a.parentNode,w=document.createElement("div");
+  w.className="dpairw";w.innerHTML='<div class="dpair"></div>';w.dataset.dz="abo";
+  const fl=[a,p].map(n=>n.style.flex).find(f=>/^[1-9]/.test(f||""));
+  par.insertBefore(w,a);w.firstChild.append(a,p);
+  [a,p].forEach(n=>{n.style.flex="";n.style.minHeight="";n.style.overflow="";n.removeAttribute("data-dz")});
+  w.style.flex=fl||"0 0 auto";if(fl){w.style.minHeight="0";w.style.overflow="auto"}
+  requestAnimationFrame(()=>dispatchEvent(new Event("resize")));
+}
+const od=draw;
+window.draw=draw=function(){od.apply(this,arguments);if(T==="dash")pair()};
+if(T==="dash")draw();
+})();
+</script>
+
+ </body>
 </html>
