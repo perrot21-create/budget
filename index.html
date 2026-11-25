@@ -4002,6 +4002,38 @@ if(T==="dash")draw();
   margin:0 0 10px !important;
   border-bottom:1px solid var(--line);
 }
+ /* ===== Budget annuel : lecture rapide ===== */
+
+/* 1. Mois neutres : plus de couleur par mois ni par trimestre */
+html #bt#bt#bt [data-mm]{--mcol:color-mix(in srgb,var(--mute) 45%,transparent)}
+html #bt#bt#bt .qb{background:var(--mute)}
+html #bt#bt#bt tbody td.qs:not(.m-cur){box-shadow:inset 2px 0 0 color-mix(in srgb,var(--mute) 45%,transparent)!important}
+html #bt#bt#bt tbody td.mq:not(:hover):not(.hc){background-image:none!important}
+html #bt#bt#bt thead th:not(.grp):not(.ga){background-color:var(--surface)!important;background-image:none!important}
+html #bt#bt#bt thead th.ga.sh{background-color:var(--surface)!important;background-image:none!important}
+html #bt#bt#bt thead th .mst{background:var(--surface)}
+html #bt#bt#bt td.ga input{background:transparent!important}
+
+/* 2. Fonds de lignes neutres, avec un zébrage gris très léger */
+html #bt#bt#bt tbody tr:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:var(--surface)!important}
+html #bt#bt#bt tbody tr.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.tz0:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--mute) 7%,var(--surface))!important}
+html #bt#bt#bt tbody tr.hdr:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--mute) 13%,var(--surface))!important}
+
+/* 3. Seul le mois en cours est mis en avant (léger voile de la couleur du thème) */
+html #bt#bt#bt tbody td.m-cur:not(.grp):not(:hover):not(.hc){background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent),color-mix(in srgb,var(--accent) 10%,transparent))!important}
+html #bt#bt#bt thead th.m-cur:not(.ga):not(.grp){background-image:linear-gradient(color-mix(in srgb,var(--accent) 12%,transparent),color-mix(in srgb,var(--accent) 12%,transparent))!important}
+html #bt#bt#bt thead th.m-cur .mst{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+
+/* 4. Dépassements : fond rouge clair (Réel, Écart, % réalisé, budget saisi), même pour les mois passés */
+html #bt#bt#bt tbody tr:not(.sec):not(.gsp) td.over:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.k-dep:not(.sec):not(.gsp) td.v.neg:not(.z0),
+html #bt#bt#bt tbody tr:not(.sec):not(.gsp) td:has(input.alr):not(.grp):not(.grp0){
+  background-color:color-mix(in srgb,var(--neg) 16%,var(--surface))!important;
+}
+html #bt#bt#bt tbody td.over,
+html #bt#bt#bt tbody tr.k-dep td.v.neg:not(.z0),
+html #bt#bt#bt tbody td:has(input.alr){opacity:1}
 </style>
 </body>
 </html>
