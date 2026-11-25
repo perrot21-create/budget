@@ -4055,7 +4055,31 @@ html #bt#bt#bt.lr tbody tr:is(.tsol,.tcum):not(.gsp) td:is(.g,.ri).neg:not(.grp)
 html #bt#bt#bt.lr{--fc-rc:var(--ink);--fc-dc:var(--ink);--fc-ds:var(--ink)}
 html #bt#bt#bt.lr tbody tr.cb td.nm{box-shadow:inset 3px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
 html #bt#bt#bt.lr tbody tr.hdr.cb td.nm{box-shadow:inset 4px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
-html #bt#bt#bt.lr tbody td.nm .cd{display:none}</style>
+html #bt#bt#bt.lr tbody td.nm .cd{display:none}
+ 
+/* ===== Lecture rapide : une couleur = un sens ===== */
+
+/* Libellés des lignes de synthèse : couleur de texte normale (plus de bleu, rouge ou vert) */
+html #bt#bt#bt.lr tbody tr:is(.trev,.tdep,.tsol,.tcum) td.nm{color:var(--ink)}
+
+/* Total revenus / Total dépenses : le prévu est en bleu, l'écart suit le sens (vert favorable, rouge défavorable) */
+html #bt#bt#bt.lr tbody tr:is(.trev,.tdep) td.g{color:var(--bl)}
+html #bt#bt#bt.lr tbody tr:is(.trev,.tdep) td.v:not(.ri).pos{color:var(--pos)}
+html #bt#bt#bt.lr tbody tr:is(.trev,.tdep) td.v:not(.ri).neg{color:var(--neg)}
+
+/* Solde du mois : un solde prévu positif est en bleu (prévu), pas en vert */
+html #bt#bt#bt.lr tbody tr.tsol td.g.pos:not(.nm){color:var(--bl)}
+
+/* Classement par tiers : montants en couleur normale, ligne de titre grise (plus de violet) */
+html #bt#bt#bt.lr tbody tr:is(.tz0,.tz1) td{color:var(--ink)}
+html #bt#bt#bt.lr tbody tr.sec.k-syn.tier td{background:color-mix(in srgb,var(--mute) 20%,var(--surface))!important;color:var(--ink)!important}
+
+/* Barres de progression : rouge uniquement en cas de dépassement */
+html #bt#bt#bt.lr tbody .pb.ov i{background:var(--neg)}
+
+/* Colonne verticale (Revenus / Dépenses / Synthèse) et en-tête « Cumul annuel » : gris neutre */
+html #bt#bt#bt.lr tbody td.grp{background-color:color-mix(in srgb,var(--mute) 20%,var(--surface))!important}
+html #bt#bt#bt.lr thead th.ga[colspan]{background:color-mix(in srgb,var(--mute) 20%,var(--surface))!important;color:var(--ink)!important}</style>
  <script>
 /* lecture_rapide : bouton « Lecture rapide » du Budget annuel (activé par défaut) */
 (()=>{
