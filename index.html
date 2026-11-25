@@ -1308,6 +1308,7 @@ function applyUI(){
  let css="";(S.acc||[]).forEach((x,i)=>{const v=a[i];if(!v)return;const s=`.t${i}.t${i}.t${i}.t${i}`;css+=`${s}{--ac:${v};--ac1:${umix(v,16,"var(--surface)")};--ac2:${umix(v,7,"var(--surface)")};--acf:${uon(v)}}`});
  let el=document.getElementById("uisty");if(!el){el=document.createElement("style");el.id="uisty";document.head.appendChild(el)}
  if(el.textContent!==css)el.textContent=css;
+ if(S.ink){const t=uiClean(S.ui);t.c.dark.inp=hx(S.ink);S.ui=uiClean(t);S.ink="";save()
 }
 function uiW(fn){uiHist();const u=uiClean(S.ui);fn(u);S.ui=uiClean(u);save();applyUI()}
 const uiSetC=(k,v)=>uiW(u=>{const m=uiEff();if(v)u.c[m][k]=v;else delete u.c[m][k]});
