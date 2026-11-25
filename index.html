@@ -3263,9 +3263,10 @@ function inner(){
   <div class="sv-c"><div class="sv-l"><span class="sub">Revenus</span><b class="pos">${eur2(c.g.r)}</b></div><div class="sv-l"><span class="sub">Dépenses</span><b class="neg">${eur2(c.g.d)}</b></div><div class="sv-l"><span class="sub">Solde</span><b class="${cls(c.g.r-c.g.d,"net")}">${eur2(r2(c.g.r-c.g.d))}</b></div></div></div>`;
   const hasR=rowsOf(c,"rev").length,hasD=rowsOf(c,"dep").length;
   const tabs=(hasR||!hasD?tableHtml(c,"rev","Revenus"):"")+(hasD||!hasR?tableHtml(c,"dep","Dépenses"):"");
-  const ar=S.acc.map((a,i)=>{const o=c.ops.filter(t=>t.acc===a.id),p=c.pops.filter(t=>t.acc===a.id);if(!o.length&&!p.length)return"";const v=val(agg(o),k);
-    return `<tr><td><i class="cd t${i}" style="background:var(--ac)"></i>${esc(a.name)}</td><td class="r">${o.length}</td><td class="r ${cls(v,k)}">${eur2(v)}</td>${c.cmp?`<td class="r">${eur2(val(agg(p),k))}</td>`:""}</tr>`}).join("");
-  const acc=ar?`<section><div class="sv-h2"><h2>Par compte</h2></div><div class="tw2"><table class="lt" aria-label="Par compte"><thead><tr><th>Compte</th><th class="r">Op.</th><th class="r">Période</th>${c.cmp?`<th class="r">Comparaison</th>`:""}</tr></thead><tbody>${ar}</tbody></table></div></section>`:"";
+    const pcT=(x,T)=>T>0?(Math.round(x/T*1000)/10).toString().replace(".",",")+" %":"–";
+  const ar=S.acc.map((a,i)=>{const o=c.ops.filter(t=>t.acc===a.id),p=c.pops.filter(t=>t.acc===a.id);if(!o.length&&!p.length)return"";const g=agg(o),v=val(g,k);
+    return `<tr><td><i class="cd t${i}" style="background:var(--ac)"></i>${esc(a.name)}</td><td class="r">${o.length}</td><td class="r ${cls(v,k)}">${eur2(v)}</td>${c.cmp?`<td class="r">${eur2(val(agg(p),k))}</td>`:""}<td class="r">${pcT(g.d,c.g.d)}</td><td class="r">${pcT(g.r,c.g.r)}</td></tr>`}).join("");
+  const acc=ar?`<section><div class="sv-h2"><h2>Par compte</h2></div><div class="tw2"><table class="lt" aria-label="Par compte"><thead><tr><th>Compte</th><th class="r">Op.</th><th class="r">Période</th>${c.cmp?`<th class="r">Comparaison</th>`:""}<th class="r">% des dépenses</th><th class="r">% des revenus</th></tr></thead><tbody>${ar}</tbody></table></div></section>`:"";
   return panel+kpi+`<div class="sv-2">${tabs}</div>`+acc;
 }
 function rerender(){
