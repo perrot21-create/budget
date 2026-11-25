@@ -2663,6 +2663,12 @@ html #bt#bt thead th.grp{z-index:10;background:var(--surface)!important;border:0
 #bt tbody tr.k-dep.ca0.sl td{background-color:color-mix(in srgb,var(--neg) 2%,var(--surface))!important}
 #bt tbody tr.k-dep.ca1.sl td{background-color:color-mix(in srgb,var(--neg) 6%,var(--surface))!important}
 #bt tbody tr.sl:not(.sec) td.mq{background-image:${g("var(--mcol)",6)}!important}
+/* Sous-catégories (hors Lecture rapide) : cellules Budget / Réel / Écart de chaque mois
+   = même teinte de mois que la ligne catégorie, mais nettement plus claire */
+html #bt#bt:not(.lr) tbody tr.sub:not(.sec):not(.gsp) td.mq:not(.nm):not(.grp):not(.grp0):not(:hover):not(.hc){
+  background-color:var(--surface)!important;
+  background-image:${g("var(--mcol)",4)}!important;
+}
 /* flèches, mini-courbes */
 .bpcl{display:block;margin:0 auto;padding:4px 10px;font-size:var(--fs-sm);font-weight:600;white-space:nowrap;max-width:calc(100% - 12px)}
 #bt thead tr:first-child th.nm{text-align:center;vertical-align:middle}
