@@ -1220,8 +1220,8 @@ document.addEventListener("pointerdown",e=>{const z=e.target.closest(".rz");if(!
   z.addEventListener("pointermove",mv);z.addEventListener("pointerup",up)});
 /* ---------- Réglages : apparence personnalisable ---------- */
 const UDEF={
- light:{bg:"#f3f5f8",surface:"#ffffff",ink:"#1f2937",mute:"#5b6678",line:"#dfe5ec",accent:"#25757e",pos:"#22745a",neg:"#b44f3b",bl:"#2d5f8f",inp:"#2d5f8f",reel:"#6c4fa1",frc:"#22745a",frs:"#5b6678",fdc:"#b44f3b",fds:"#b44f3b",rev:"#cde8dd",dep:"#f3d6c8",syn:"#cde0e6",ptc:"#8fc2ca",srev:"#b9d9c6",sdep:"#f0c7a8",ssyn:"#b5cfe3",stier:"#d9c8e6",vsep:"#25757e"},
- dark:{bg:"#10161d",surface:"#1a222c",ink:"#e8edf2",mute:"#93a0b0",line:"#2b3644",accent:"#5bb5bf",pos:"#5ec8a0",neg:"#f09a85",bl:"#7fb3e0",inp:"#7fb3e0",reel:"#b8a3ee",frc:"#5ec8a0",frs:"#93a0b0",fdc:"#f09a85",fds:"#f09a85",rev:"#25493f",dep:"#5e3b2f",syn:"#2c4c58",ptc:"#5fb0bb",srev:"#2d5a4a",sdep:"#6a4a36",ssyn:"#2d5370",stier:"#514272",vsep:"#5bb5bf"}};
+ light:{bg:"#f3f5f8",surface:"#ffffff",ink:"#1f2937",mute:"#5b6678",line:"#dfe5ec",accent:"#25757e",pos:"#22745a",neg:"#b44f3b",bl:"#2d5f8f",reel:"#6c4fa1",frc:"#22745a",frs:"#5b6678",fdc:"#b44f3b",fds:"#b44f3b",rev:"#cde8dd",dep:"#f3d6c8",syn:"#cde0e6",ptc:"#8fc2ca",srev:"#b9d9c6",sdep:"#f0c7a8",ssyn:"#b5cfe3",stier:"#d9c8e6",vsep:"#25757e"},
+ dark:{bg:"#10161d",surface:"#1a222c",ink:"#e8edf2",mute:"#93a0b0",line:"#2b3644",accent:"#5bb5bf",pos:"#5ec8a0",neg:"#f09a85",bl:"#7fb3e0",reel:"#b8a3ee",frc:"#5ec8a0",frs:"#93a0b0",fdc:"#f09a85",fds:"#f09a85",rev:"#25493f",dep:"#5e3b2f",syn:"#2c4c58",ptc:"#5fb0bb",srev:"#2d5a4a",sdep:"#6a4a36",ssyn:"#2d5370",stier:"#514272",vsep:"#5bb5bf"}};
 const UAC={light:["#1f6f78","#4a56b0","#96590a","#a1417a","#475569"],dark:["#5bb5bf","#8e9bf0","#e0a94a","#e07fb6","#94a3b8"]};
 const UCOL=[
  ["Page et cartes",[["bg","Fond de la page"],["surface","Cartes et tableaux"],["ink","Texte"],["mute","Texte secondaire"],["line","Traits et bordures"],["accent","Couleur principale (onglet actif, boutons)"]]],
@@ -1290,7 +1290,7 @@ function uiClean(u){
 function applyUI(){
  const r=document.documentElement,st=r.style,u=uiClean(S.ui),eff=uiEff(),c=u.c[eff],a=u.a[eff];
  const set=(n,v)=>{v?st.setProperty(n,v):st.removeProperty(n)};
-["bg","surface","ink","mute","line","accent","pos","neg","bl","reel","ptc","vsep","inp"].forEach(k=>set("--"+k,c[k]));
+ ["bg","surface","ink","mute","line","accent","pos","neg","bl","reel","ptc","vsep"].forEach(k=>set("--"+k,c[k]));
  set("--onacc",c.accent&&uon(c.accent));
  [["frc","--fc-rc"],["frs","--fc-rs"],["fdc","--fc-dc"],["fds","--fc-ds"]].forEach(([k,n])=>set(n,c[k]));
  [["rev","rev"],["dep","dep"]].forEach(([k,p])=>{const v=c[k];set(`--${p}-pa`,v);set(`--${p}-bg2`,v&&umix(v,55,"var(--surface)"));set(`--${p}-bg`,v&&umix(v,25,"var(--surface)"));set(`--${p}-sep`,v&&umix(v,80,"var(--ink)"))});
@@ -1308,16 +1308,12 @@ function applyUI(){
  let css="";(S.acc||[]).forEach((x,i)=>{const v=a[i];if(!v)return;const s=`.t${i}.t${i}.t${i}.t${i}`;css+=`${s}{--ac:${v};--ac1:${umix(v,16,"var(--surface)")};--ac2:${umix(v,7,"var(--surface)")};--acf:${uon(v)}}`});
  let el=document.getElementById("uisty");if(!el){el=document.createElement("style");el.id="uisty";document.head.appendChild(el)}
  if(el.textContent!==css)el.textContent=css;
- if(S.ink){const t=uiClean(S.ui);t.c.dark.inp=hx(S.ink);S.ui=uiClean(t);S.ink="";save()
 }
 function uiW(fn){uiHist();const u=uiClean(S.ui);fn(u);S.ui=uiClean(u);save();applyUI()}
 const uiSetC=(k,v)=>uiW(u=>{const m=uiEff();if(v)u.c[m][k]=v;else delete u.c[m][k]});
 const uiSetFc=(id,v)=>{const[cid,sid]=id.split(":"),c=S.cats.find(x=>x.id===cid);if(!c)return;const o=sid?c.subs.find(x=>x.id===sid):c;if(!o)return;const h=hx(v);if(h)o.fc=h;else delete o.fc;save()};
 const uiSetA=(i,v)=>uiW(u=>{const m=uiEff();if(v)u.a[m][i]=v;else delete u.a[m][i]});
-function uiPreset(id){const p=UPRE.find(x=>x.id===id);if(!p)return;
- uiW(u=>{const k={light:u.c.light.inp,dark:u.c.dark.inp};
-  u.c={light:Object.assign({},p.c.light),dark:Object.assign({},p.c.dark)};
-  if(k.light)u.c.light.inp=k.light;if(k.dark)u.c.dark.inp=k.dark})}
+function uiPreset(id){const p=UPRE.find(x=>x.id===id);if(!p)return;uiW(u=>{u.c={light:Object.assign({},p.c.light),dark:Object.assign({},p.c.dark)}})}
 const uiExp=()=>JSON.stringify({app:"comptes-budget-theme",version:1,theme:S.theme||"",ink:S.ink||"",ui:uiClean(S.ui)});
 function uiImp(txt){uiHist();let o;try{o=JSON.parse(txt)}catch(e){return false}
  if(!o||o.app!=="comptes-budget-theme"||typeof o.ui!=="object"||!o.ui)return false;
@@ -1343,7 +1339,7 @@ function drawSet(){
  const fci=(id,lab,def,cur,ind)=>`<div class="crow"><label><input type="color" data-cfc="${id}" value="${hx(cur)||def}" aria-label="Couleur de police : ${esc(lab)}"><span>${ind?"→ ":""}${esc(lab)}</span></label><button data-cfcr="${id}" title="Revenir à la couleur générale" aria-label="Revenir à la couleur générale : ${esc(lab)}"${hx(cur)?"":" disabled"}>↺</button></div>`;
   const fcl=[["rev","Revenus","frc","frs"],["dep","Dépenses","fdc","fds"]].map(([kd,t,kc,ks])=>`<h3>${t}</h3><div class="cgrid">${S.cats.filter(x=>x.kind===kd).map(x=>fci(x.id,x.name,c[kc]||D[kc],x.fc,0)+x.subs.map(s2=>fci(x.id+":"+s2.id,s2.name,c[ks]||D[ks],s2.fc,1)).join("")).join("")}</div>`).join("");
   const acc=S.acc.map((x,i)=>`<div class="crow"><label><input type="color" data-ua="${i}" value="${a[i]||UAC[eff][i%5]}" aria-label="Couleur du compte ${esc(x.name)}"><span>${esc(x.name)}</span></label><button data-uar="${i}" title="Rétablir la couleur d’origine" aria-label="Rétablir : ${esc(x.name)}"${a[i]?"":" disabled"}>↺</button></div>`).join("");
- const same=p=>{const q=uiClean({c:p.c}).c[eff],ka=Object.keys(q),kb=Object.keys(c).filter(k=>k!=="inp");return ka.length===kb.length&&ka.every(k=>q[k]===c[k])};
+ const same=p=>{const q=uiClean({c:p.c}).c[eff],ka=Object.keys(q),kb=Object.keys(c);return ka.length===kb.length&&ka.every(k=>q[k]===c[k])};
  const pres=UPRE.map(p=>{const col=k=>(p.c[eff]&&p.c[eff][k])||D[k];return `<button data-upre="${p.id}"${same(p)?' class="on" aria-pressed="true"':' aria-pressed="false"'}><span class="sw" aria-hidden="true">${["bg","surface","accent","pos","neg"].map(k=>`<i style="background:${col(k)}"></i>`).join("")}</span>${esc(p.n)}</button>`}).join("");
  const mode=(v,l)=>`<label class="chip"><input type="radio" name="umode" value="${v}"${th===v?" checked":""}>${l}</label>`;
  const sl=(k,l,min,max,step,val,unit)=>`<div class="frow"><span id="ul-${k}">${l}</span><input type="range" data-us="${k}" min="${min}" max="${max}" step="${step}" value="${val}" aria-labelledby="ul-${k}"><span class="sv" id="sv-${k}">${val}${unit}</span></div>`;
@@ -1437,7 +1433,7 @@ document.addEventListener("click",async e=>{const g=s=>e.target.closest(s);let x
  else if(x=g("[data-uall]")){if(await ask("Rétablir tous les réglages d’apparence (couleurs, police, tailles, arrondis, espacement) ? Vos comptes et opérations ne sont pas touchés.","Rétablir")){uiHist();S.ui={};S.ink="";save();applyInk();drawSet()}}});
 try{matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{applyUI();if(T==="set"&&!S.theme)drawSet()})}catch(_){}
 const THM=["","light","dark"],THL={"":"Thème automatique",light:"Thème clair",dark:"Thème sombre"},THI={"":"◐\uFE0E",light:"☀\uFE0E",dark:"☾\uFE0E"};
-const applyInk=()=>{applyUI();const r=document.documentElement;const th=S.theme||"";th?r.setAttribute("data-theme",th):r.removeAttribute("data-theme");const b=document.getElementById("thm");if(b){const t=THL[th]+" (cliquer pour changer)";b.textContent=THI[th];b.title=t;b.setAttribute("aria-label",t)}};
+const applyInk=()=>{applyUI();const r=document.documentElement;r.style.setProperty("--inp",S.ink||"");const th=S.theme||"";th?r.setAttribute("data-theme",th):r.removeAttribute("data-theme");const b=document.getElementById("thm");if(b){const t=THL[th]+" (cliquer pour changer)";b.textContent=THI[th];b.title=t;b.setAttribute("aria-label",t)}};
 function ask(msg,ok){return new Promise(res=>{const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
  o.innerHTML=`<div class="mb" role="alertdialog" aria-modal="true" aria-describedby="mdlmsg"><p id="mdlmsg">${esc(msg)}</p><div><button data-r="0">Annuler</button><button class="${/^(Supprimer|Remplacer|Effacer|Charger)/.test(ok||"")?"danger":"primary"}" data-r="1">${esc(ok||"Confirmer")}</button></div></div>`;
  const end=v=>{o.remove();res(v);if(prev&&prev.focus&&document.contains(prev))prev.focus()};
