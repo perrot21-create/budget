@@ -4141,7 +4141,7 @@ document.addEventListener("click",e=>{
 if(typeof draw!=="function"||!document.getElementById("tabs"))return;
 
 const E=()=>S.ech||(S.ech=[]);
-let EDIT=null;
+let EDIT=null,PRE=null;
 const ym=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
 const parseAmt=s=>parseFloat(String(s).replace(/\s/g,"").replace(",","."));
 const idx=(start,n0)=>{const n=n0||new Date();return(n.getFullYear()-+start.slice(0,4))*12+n.getMonth()-(+start.slice(5,7)-1)};
@@ -4177,12 +4177,13 @@ function status(e){
 
 function render(){
   const app=document.getElementById("app"),ed=EDIT&&E().find(x=>x.id===EDIT);if(EDIT&&!ed)EDIT=null;
-  const e=ed||{tier:"",cat:"",sub:"",acc:typeof AI!=="undefined"?AI:S.acc[0].id,v:"",start:today().slice(0,8)+"01",n:12,note:""};
+  const pr=!ed&&PRE,e=ed||(pr?{tier:pr.tier,cat:pr.cat,sub:pr.sub,acc:pr.acc,v:pr.v,start:pr.start,n:12,note:pr.note}:{tier:"",cat:"",sub:"",acc:typeof AI!=="undefined"?AI:S.acc[0].id,v:"",start:today().slice(0,8)+"01",n:12,note:""});
   const L=[...E()].sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   const rows=L.map(x=>{
     const c=S.cats.find(k=>k.id===x.cat),q=c&&c.subs.find(k=>k.id===x.sub),t=S.tiers.find(k=>k.id===x.tier),a=S.acc.find(k=>k.id===x.acc),rev=c&&c.kind==="rev";
     return`<tr><td>${t?esc(t.name):"—"}${x.note?`<small class="sub" style="display:block">${esc(x.note)}</small>`:""}</td><td>${c?dot(c.id)+esc(c.name)+(q?" → "+esc(q.name):""):"<span class='warn'>Catégorie supprimée</span>"}</td><td>${a?esc(a.name):"—"}</td><td class="r ${rev?"pos":"neg"}">${rev?"+":"−"}${eur2(x.v)}</td><td>${dfr(x.start)}</td><td>${x.n>0?(x.done||[]).length+" / "+x.n+" mois":"Sans fin"}</td><td>${status(x)}</td><td class="x"><button data-ecedit="${x.id}" aria-label="Modifier" title="Modifier">✎</button> <button data-ecdel="${x.id}" aria-label="Supprimer" title="Supprimer">✕</button></td></tr>`}).join("");
   app.innerHTML=`<div id="ecw"><section><h2>${ed?"Modifier l’échéance":"Nouvelle échéance"}</h2>
+  ${pr?`<p class="sub">À partir de l’écriture du ${dfr(pr.date)} : ce mois est déjà compté, la prochaine écriture sera créée le 1er du mois suivant. Choisissez la durée, puis cliquez sur Ajouter.</p>`:""}
   <form id="ecf" class="abf" autocomplete="off">
   <label>Tiers<select id="ec_t">${tierOpts(e.tier)}</select></label>
   <label>Catégorie<select id="ec_c" required>${catOpts(e.cat)}</select></label>
@@ -4193,7 +4194,7 @@ function render(){
   <label>Durée (mois)<input type="number" id="ec_n" min="1" max="600" value="${e.n>0?e.n:12}"${e.n===0?" disabled":""}></label>
   <label class="chip" style="height:40px"><input type="checkbox" id="ec_inf"${e.n===0?" checked":""}>Sans fin</label>
   <label>Note<input id="ec_o" maxlength="60" placeholder="Facultatif" value="${esc(e.note||"")}"></label>
-  <button class="primary">${ed?"Enregistrer":"Ajouter"}</button>${ed?`<button type="button" data-eccancel="1">Annuler</button>`:""}
+  <button class="primary">${ed?"Enregistrer":"Ajouter"}</button>${ed||pr?`<button type="button" data-eccancel="1">Annuler</button>`:""}
   </form>
   <p class="sub">Chaque 1er du mois, une écriture non pointée est créée automatiquement à l’ouverture de la page. Si vous n’ouvrez pas la page pendant plusieurs mois, les écritures manquantes sont rattrapées, chacune datée du 1er de son mois. Modifier ou supprimer une échéance ne touche pas aux écritures déjà créées.</p></section>
   <section><h2>Mes échéances <span class="sub">(${L.length})</span></h2>${L.length?`<div class="tw2"><table class="lt" aria-label="Échéances"><thead><tr><th>Tiers</th><th>Catégorie</th><th>Compte</th><th class="r">Montant</th><th>Début</th><th>Avancement</th><th>Statut</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="empty">Aucune échéance pour l’instant.</p>`}</section></div>`;
@@ -4208,7 +4209,7 @@ if(nav&&!nav.querySelector('[data-tab="ech"]')){
 const od=draw;
 window.draw=draw=function(){
   gen();od.apply(this,arguments);
-  if(T!=="ech")return;
+  if(T!=="ech"){PRE=null;return}
   render();document.title="Échéances — Mes comptes et budget";
   document.querySelector("main").classList.add("narrow");
 };
@@ -4232,20 +4233,35 @@ document.addEventListener("submit",async e=>{
   const sn=snap(),ex=EDIT&&E().find(x=>x.id===EDIT);
   if(ex){Object.assign(ex,o);EDIT=null}
   else{
-    const k=idx(o.start)+1,nb=o.n>0?Math.min(o.n,k):k;
+    const sk=PRE&&PRE.skip&&PRE.skip>=o.start.slice(0,7)?PRE.skip:"",k=idx(o.start)+1,nb=(o.n>0?Math.min(o.n,k):k)-(sk?1:0);
     if(nb>1&&!await ask("La date de début est dans le passé : "+nb+" écritures (une par mois, datées du 1er) vont être créées. Continuer ?","Créer"))return;
-    E().push({id:uid(),done:[],...o});
+    E().push({id:uid(),done:sk?[sk]:[],...o});PRE=null;
   }
   save();draw();toast(ex?"Échéance modifiée":"Échéance ajoutée",undoTo(sn));
 });
 document.addEventListener("click",async e=>{
   if(!inEc(e))return;let x;
-  if(x=e.target.closest("[data-ecedit]")){EDIT=x.dataset.ecedit;render();document.getElementById("ecf").scrollIntoView({block:"center"})}
-  else if(e.target.closest("[data-eccancel]")){EDIT=null;render()}
+  if(x=e.target.closest("[data-ecedit]")){EDIT=x.dataset.ecedit;PRE=null;render();document.getElementById("ecf").scrollIntoView({block:"center"})}
+  else if(e.target.closest("[data-eccancel]")){EDIT=null;PRE=null;render()}
   else if(x=e.target.closest("[data-ecdel]")){
     if(!await ask("Supprimer cette échéance ? Les écritures déjà créées sont conservées.","Supprimer"))return;
     const sn=snap();S.ech=E().filter(z=>z.id!==x.dataset.ecdel);save();render();toast("Échéance supprimée",undoTo(sn));
   }
+});
+
+/* Bouton ⟳ « Créer une échéance » sur chaque écriture de l'onglet Comptes */
+if(typeof rowsHtml==="function"){
+  const orh=rowsHtml;
+  rowsHtml=function(){
+    return orh.apply(this,arguments).replace(/<button data-del="tx:([^"]+)"/g,'<button data-ecnew="$1" aria-label="Créer une échéance à partir de cette écriture" title="Créer une échéance à partir de cette écriture">⟳</button><button data-del="tx:$1"');
+  };
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-ecnew]");if(!b)return;
+  const t=S.tx.find(z=>z.id===b.dataset.ecnew);if(!t)return;
+  if(!t.cat){toast("Choisissez d’abord une catégorie pour cette écriture");return}
+  PRE={tier:t.tier||"",cat:t.cat,sub:t.sub||"",acc:t.acc,v:Math.abs(t.v),start:t.date.slice(0,7)+"-01",note:t.note||"",date:t.date,skip:t.date.slice(0,7)};
+  EDIT=null;T="ech";draw();
 });
 
 draw();
