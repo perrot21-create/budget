@@ -4133,13 +4133,14 @@ document.addEventListener("click",e=>{
   
 </script>
  <script> 
- /* echeances.js : onglet « Échéances ». Écritures récurrentes créées le 1er de chaque mois.
+/* echeances.js : onglet « Échéances ». Écritures récurrentes créées le 1er de chaque mois.
    À coller dans un bloc <script> tout à la fin de la page (après les autres modules).
    Données : S.ech (incluses dans la sauvegarde et le fichier partagé). */
 (()=>{
 "use strict";
 if(typeof draw!=="function"||!document.getElementById("tabs"))return;
 
+{const s=document.createElement("style");s.textContent="#ecw .lt th:nth-child(5),#ecw .lt td:nth-child(5){padding-left:56px}";document.head.appendChild(s)}
 const E=()=>S.ech||(S.ech=[]);
 let EDIT=null,PRE=null;
 const ym=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
