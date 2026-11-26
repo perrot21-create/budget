@@ -4132,5 +4132,123 @@ document.addEventListener("click",e=>{
 })();
   
 </script>
+ /* echeances.js : onglet « Échéances ». Écritures récurrentes créées le 1er de chaque mois.
+   À coller dans un bloc <script> tout à la fin de la page (après les autres modules).
+   Données : S.ech (incluses dans la sauvegarde et le fichier partagé). */
+(()=>{
+"use strict";
+if(typeof draw!=="function"||!document.getElementById("tabs"))return;
+
+const E=()=>S.ech||(S.ech=[]);
+let EDIT=null;
+const ym=(y,m)=>y+"-"+String(m+1).padStart(2,"0");
+const parseAmt=s=>parseFloat(String(s).replace(/\s/g,"").replace(",","."));
+const idx=(start,n0)=>{const n=n0||new Date();return(n.getFullYear()-+start.slice(0,4))*12+n.getMonth()-(+start.slice(5,7)-1)};
+
+/* Création des écritures manquantes : une par échéance et par mois, datée du 1er, du mois de début jusqu'au mois en cours */
+function gen(){
+  let made=0;
+  E().forEach(e=>{
+    if(!e.start||!(e.v>0)||!S.cats.some(c=>c.id===e.cat))return;
+    const sy=+e.start.slice(0,4),sm=+e.start.slice(5,7)-1,last=idx(e.start);
+    e.done=e.done||[];
+    for(let i=0;i<=last;i++){
+      if(e.n>0&&i>=e.n)break;
+      const k=ym(sy+Math.floor((sm+i)/12),(sm+i)%12);
+      if(e.done.includes(k))continue;
+      S.tx.push({id:uid(),acc:S.acc.some(a=>a.id===e.acc)?e.acc:S.acc[0].id,date:k+"-01",tier:e.tier||"",cat:e.cat,sub:e.sub||"",pay:"",chq:"",note:e.note||"Échéance",v:kindOf(e.cat)==="rev"?e.v:-e.v,p:false,ech:e.id});
+      e.done.push(k);made++;
+    }
+  });
+  if(made){save();setTimeout(()=>toast(made+" écriture(s) d’échéance créée(s)"),300)}
+}
+
+const tierOpts=s=>`<option value="">Aucun</option>`+[...S.tiers].sort((a,b)=>a.name.localeCompare(b.name,"fr",{sensitivity:"base"})).map(t=>`<option value="${t.id}"${t.id===s?" selected":""}>${esc(t.name)}</option>`).join("");
+const catOpts=s=>`<option value="">Choisir…</option>`+[["rev","Revenus"],["dep","Dépenses"]].map(([k,l])=>`<optgroup label="${l}">${S.cats.filter(c=>c.kind===k).map(c=>`<option value="${c.id}"${c.id===s?" selected":""}>${esc(c.name)}</option>`).join("")}</optgroup>`).join("");
+const subOpts=(cid,s)=>{const c=S.cats.find(x=>x.id===cid);return`<option value="">Aucune</option>`+(c?c.subs.map(q=>`<option value="${q.id}"${q.id===s?" selected":""}>${esc(q.name)}</option>`).join(""):"")};
+
+function status(e){
+  const i=idx(e.start);
+  if(i<0)return`<span class="sub">Démarre en ${esc(MOIS[+e.start.slice(5,7)-1].toLowerCase())} ${e.start.slice(0,4)}</span>`;
+  if(e.n>0&&i>=e.n)return`<span class="sub">Terminée</span>`;
+  return`<b class="pos">Active</b>`;
+}
+
+function render(){
+  const app=document.getElementById("app"),ed=EDIT&&E().find(x=>x.id===EDIT);if(EDIT&&!ed)EDIT=null;
+  const e=ed||{tier:"",cat:"",sub:"",acc:typeof AI!=="undefined"?AI:S.acc[0].id,v:"",start:today().slice(0,8)+"01",n:12,note:""};
+  const L=[...E()].sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  const rows=L.map(x=>{
+    const c=S.cats.find(k=>k.id===x.cat),q=c&&c.subs.find(k=>k.id===x.sub),t=S.tiers.find(k=>k.id===x.tier),a=S.acc.find(k=>k.id===x.acc),rev=c&&c.kind==="rev";
+    return`<tr><td>${t?esc(t.name):"—"}${x.note?`<small class="sub" style="display:block">${esc(x.note)}</small>`:""}</td><td>${c?dot(c.id)+esc(c.name)+(q?" → "+esc(q.name):""):"<span class='warn'>Catégorie supprimée</span>"}</td><td>${a?esc(a.name):"—"}</td><td class="r ${rev?"pos":"neg"}">${rev?"+":"−"}${eur2(x.v)}</td><td>${dfr(x.start)}</td><td>${x.n>0?(x.done||[]).length+" / "+x.n+" mois":"Sans fin"}</td><td>${status(x)}</td><td class="x"><button data-ecedit="${x.id}" aria-label="Modifier" title="Modifier">✎</button> <button data-ecdel="${x.id}" aria-label="Supprimer" title="Supprimer">✕</button></td></tr>`}).join("");
+  app.innerHTML=`<div id="ecw"><section><h2>${ed?"Modifier l’échéance":"Nouvelle échéance"}</h2>
+  <form id="ecf" class="abf" autocomplete="off">
+  <label>Tiers<select id="ec_t">${tierOpts(e.tier)}</select></label>
+  <label>Catégorie<select id="ec_c" required>${catOpts(e.cat)}</select></label>
+  <label>Sous-catégorie<select id="ec_s">${subOpts(e.cat,e.sub)}</select></label>
+  <label>Compte<select id="ec_a">${S.acc.map(a=>`<option value="${a.id}"${a.id===e.acc?" selected":""}>${esc(a.name)}</option>`).join("")}</select></label>
+  <label>Montant (€)<input id="ec_v" inputmode="decimal" placeholder="0,00" required value="${e.v===""?"":String(e.v).replace(".",",")}"></label>
+  <label>Date de début<input type="date" id="ec_d" required value="${esc(e.start)}"></label>
+  <label>Durée (mois)<input type="number" id="ec_n" min="1" max="600" value="${e.n>0?e.n:12}"${e.n===0?" disabled":""}></label>
+  <label class="chip" style="height:40px"><input type="checkbox" id="ec_inf"${e.n===0?" checked":""}>Sans fin</label>
+  <label>Note<input id="ec_o" maxlength="60" placeholder="Facultatif" value="${esc(e.note||"")}"></label>
+  <button class="primary">${ed?"Enregistrer":"Ajouter"}</button>${ed?`<button type="button" data-eccancel="1">Annuler</button>`:""}
+  </form>
+  <p class="sub">Chaque 1er du mois, une écriture non pointée est créée automatiquement à l’ouverture de la page. Si vous n’ouvrez pas la page pendant plusieurs mois, les écritures manquantes sont rattrapées, chacune datée du 1er de son mois. Modifier ou supprimer une échéance ne touche pas aux écritures déjà créées.</p></section>
+  <section><h2>Mes échéances <span class="sub">(${L.length})</span></h2>${L.length?`<div class="tw2"><table class="lt" aria-label="Échéances"><thead><tr><th>Tiers</th><th>Catégorie</th><th>Compte</th><th class="r">Montant</th><th>Début</th><th>Avancement</th><th>Statut</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="empty">Aucune échéance pour l’instant.</p>`}</section></div>`;
+}
+
+/* Onglet et dessin */
+const nav=document.getElementById("tabs");
+if(nav&&!nav.querySelector('[data-tab="ech"]')){
+  const b=document.createElement("button");b.setAttribute("data-tab","ech");b.textContent="Échéances";
+  nav.insertBefore(b,nav.querySelector('[data-tab="sav"]'));
+}
+const od=draw;
+window.draw=draw=function(){
+  gen();od.apply(this,arguments);
+  if(T!=="ech")return;
+  render();document.title="Échéances — Mes comptes et budget";
+  document.querySelector("main").classList.add("narrow");
+};
+
+/* Événements */
+const inEc=e=>e.target.closest&&e.target.closest("#ecw");
+document.addEventListener("change",e=>{
+  if(!inEc(e))return;const t=e.target;
+  if(t.id==="ec_c")document.getElementById("ec_s").innerHTML=subOpts(t.value,"");
+  else if(t.id==="ec_inf")document.getElementById("ec_n").disabled=t.checked;
+  else if(t.id==="ec_t"&&t.value&&!document.getElementById("ec_c").value){
+    const l=[...S.tx].sort((a,b)=>b.date.localeCompare(a.date)).find(o=>o.tier===t.value&&o.cat);
+    if(l){document.getElementById("ec_c").value=l.cat;document.getElementById("ec_s").innerHTML=subOpts(l.cat,l.sub)}
+  }
+});
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="ecf")return;
+  const g=i=>document.getElementById(i),v=Math.round(parseAmt(g("ec_v").value)*100)/100;
+  if(!(v>0)||!g("ec_c").value||!g("ec_d").value){toast("Renseignez la catégorie, un montant supérieur à 0 et la date de début");return}
+  const o={tier:g("ec_t").value,cat:g("ec_c").value,sub:g("ec_s").value,acc:g("ec_a").value,v,start:g("ec_d").value,n:g("ec_inf").checked?0:Math.max(1,Math.round(+g("ec_n").value)||1),note:g("ec_o").value.trim()};
+  const sn=snap(),ex=EDIT&&E().find(x=>x.id===EDIT);
+  if(ex){Object.assign(ex,o);EDIT=null}
+  else{
+    const k=idx(o.start)+1,nb=o.n>0?Math.min(o.n,k):k;
+    if(nb>1&&!await ask("La date de début est dans le passé : "+nb+" écritures (une par mois, datées du 1er) vont être créées. Continuer ?","Créer"))return;
+    E().push({id:uid(),done:[],...o});
+  }
+  save();draw();toast(ex?"Échéance modifiée":"Échéance ajoutée",undoTo(sn));
+});
+document.addEventListener("click",async e=>{
+  if(!inEc(e))return;let x;
+  if(x=e.target.closest("[data-ecedit]")){EDIT=x.dataset.ecedit;render();document.getElementById("ecf").scrollIntoView({block:"center"})}
+  else if(e.target.closest("[data-eccancel]")){EDIT=null;render()}
+  else if(x=e.target.closest("[data-ecdel]")){
+    if(!await ask("Supprimer cette échéance ? Les écritures déjà créées sont conservées.","Supprimer"))return;
+    const sn=snap();S.ech=E().filter(z=>z.id!==x.dataset.ecdel);save();render();toast("Échéance supprimée",undoTo(sn));
+  }
+});
+
+draw();
+})();
+</script>
 </body>
 </html>
