@@ -2325,7 +2325,7 @@ window.draw=draw=function(){if(T!==PT&&T==="bud")CA=!!tset("bud","ca",false);con
   Object.keys(m).forEach(k=>{if(tset("dash","s_"+k,true)===false)document.querySelectorAll("#app "+m[k]).forEach(e=>e.style.display="none")});
   const n=tset("dash","n",8);document.querySelectorAll(".dlast tbody tr").forEach((r,i)=>{if(i>=n)r.style.display="none"})}
  if(T==="bud"&&ent){const d=document.querySelector("#bch details");if(d)d.open=!tset("bud","fold",false)}
- if(T==="act"){const g=document.querySelector('#acw [aria-labelledby="ax_lp"]');if(g){g.innerHTML=[1,2,3].map(i=>tset("act","h"+i,[5,10,20][i-1])).map((v,i)=>`<button type="button" data-ax-pct="${v}" aria-pressed="${i===1}">+${v} %</button>`).join("");const q=document.getElementById("ax_q");if(q)q.dispatchEvent(new Event("input",{bubbles:true}))}}};
+ if(T==="act"){const g=document.querySelector('#acw [aria-labelledby="ax_lp"]');if(g){g.innerHTML=[1,2,3].map(i=>tset("act","h"+i,[2,5,10][i-1])).map((v,i)=>`<button type="button" data-ax-pct="${v}" aria-pressed="${i===1}">+${v} %</button>`).join("");const q=document.getElementById("ax_q");if(q)q.dispatchEvent(new Event("input",{bubbles:true}))}}};
 const fx=(t,k,v)=>{if(t==="acc"&&k==="fp")F.p=v;if(t==="acc"&&k==="fn")F.n=v;if(t==="pre"&&k==="hd")PQH=v;if(t==="bud"&&k==="ca")CA=v;if(t==="sav"&&k==="auto")sySet({mode:v?"auto":"manual"})};
 
 /* Largeur de page : ne modifie plus l'espacement des colonnes des comptes */
