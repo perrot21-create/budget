@@ -4571,5 +4571,95 @@ html #bt#bt#bt tbody tr.cb:not(.sub) td.nm{padding-left:10px}
 html #bt#bt#bt tbody tr.sub.cb td.nm{padding-left:6px}
 html #bt#bt#bt tbody tr.hdr.cb td.nm{padding-left:11px}
 </style>
+ <script>
+/* supprimer_ecritures.js : bouton « Supprimer toutes les écritures » (Réglages > Général), protégé par mot de passe.
+   Le mot de passe est créé à la première utilisation ; seule son empreinte (SHA-256 + sel) est stockée dans S.supPw,
+   donc incluse dans la sauvegarde et le fichier partagé. */
+(()=>{
+"use strict";
+if(typeof drawSet!=="function")return;
+
+const hexOf=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+async function H(p,s){
+  const t=s+"|"+p;
+  if(window.crypto&&crypto.subtle){try{return hexOf(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)))}catch(e){}}
+  let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;return"f"+h.toString(16);
+}
+
+/* Fenêtre de saisie de mots de passe : renvoie un tableau de valeurs, ou null si annulé */
+function pwDlg(title,labels,ok){
+  return new Promise(res=>{
+    const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+    o.innerHTML=`<div class="mb" role="dialog" aria-modal="true" aria-label="${esc(title)}"><p><b>${esc(title)}</b></p>
+    ${labels.map((l,i)=>`<label class="sub" style="display:block;margin-bottom:8px">${esc(l)}<input type="password" data-pwi="${i}" autocomplete="off" style="width:100%;margin-top:3px"></label>`).join("")}
+    <p class="warn" id="pwerr" role="alert" style="margin:0 0 8px"></p>
+    <div><button data-r="0">Annuler</button><button class="danger" data-r="1">${esc(ok||"Valider")}</button></div></div>`;
+    const end=v=>{o.remove();res(v);if(prev&&prev.focus&&document.contains(prev))prev.focus()},
+          go=()=>end([...o.querySelectorAll("[data-pwi]")].map(i=>i.value));
+    o.onclick=e=>{const b=e.target.closest("[data-r]");if(b)b.dataset.r==="1"?go():end(null);else if(e.target===o)end(null)};
+    o.onkeydown=e=>{if(e.key==="Escape")end(null);else if(e.key==="Enter"){e.preventDefault();go()}};
+    document.body.appendChild(o);o.querySelector("input").focus();
+  });
+}
+
+/* Création du mot de passe (première utilisation) */
+async function createPw(){
+  for(;;){
+    const v=await pwDlg("Créer un mot de passe de suppression",["Nouveau mot de passe (4 caractères minimum)","Confirmer le mot de passe"],"Enregistrer");
+    if(!v)return false;
+    if(v[0].length<4){toast("Mot de passe trop court (4 caractères minimum)");continue}
+    if(v[0]!==v[1]){toast("Les deux mots de passe sont différents");continue}
+    const s=uid()+uid();S.supPw={s,h:await H(v[0],s)};save();return true;
+  }
+}
+/* Vérification : 3 essais */
+async function checkPw(title){
+  for(let i=0;i<3;i++){
+    const v=await pwDlg(title+(i?" (essai "+(i+1)+"/3)":""),["Mot de passe"],"Valider");
+    if(!v)return false;
+    if(await H(v[0],S.supPw.s)===S.supPw.h)return true;
+    toast("Mot de passe incorrect");
+  }
+  return false;
+}
+
+async function wipe(){
+  if(!(S.supPw&&S.supPw.h)){
+    if(!await ask("Aucun mot de passe n’est encore défini. Il sera demandé à chaque suppression de toutes les écritures. Le créer maintenant ?","Créer"))return;
+    if(!await createPw())return;
+    toast("Mot de passe enregistré");
+  }
+  const n=S.tx.length;
+  if(!n){toast("Il n’y a aucune écriture à supprimer");return}
+  if(!await ask("Supprimer définitivement les "+n+" écriture(s) de tous les comptes ? Vos comptes, catégories, tiers, budgets et prêts entre proches ne sont pas touchés.","Supprimer"))return;
+  if(!await checkPw("Saisissez le mot de passe pour confirmer la suppression de "+n+" écriture(s)"))return;
+  const sn=snap();
+  S.tx=[];save();draw();
+  toast(n+" écriture(s) supprimée(s)",undoTo(sn));
+}
+async function changePw(){
+  if(!(S.supPw&&S.supPw.h)){if(await createPw())toast("Mot de passe enregistré");return}
+  if(!await checkPw("Saisissez le mot de passe actuel"))return;
+  if(await createPw())toast("Mot de passe modifié");
+}
+
+/* Bloc ajouté dans Réglages > Général */
+const od=drawSet;
+drawSet=function(){
+  const r=od.apply(this,arguments),b=document.querySelector("[data-uall]");
+  if(b&&!document.getElementById("supz")){
+    b.insertAdjacentHTML("afterend",`<div id="supz"><h3>Zone sensible</h3>
+    <p class="sub">Supprime toutes les écritures de tous les comptes. Un mot de passe est demandé pour valider. Vous pourrez annuler pendant quelques secondes juste après.</p>
+    <div class="pvbar"><button class="danger" data-supall="1">Supprimer toutes les écritures</button><button data-suppw="1">${S.supPw&&S.supPw.h?"Changer le mot de passe":"Définir le mot de passe"}</button></div></div>`);
+  }
+  return r;
+};
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-supall]"))wipe();
+  else if(e.target.closest("[data-suppw]"))changePw();
+});
+if(typeof T!=="undefined"&&T==="set")drawSet();
+})();
+</script>
 </body>
 </html>
