@@ -1837,7 +1837,7 @@ function render(){
   $("app").innerHTML=html();setTop();
   $("ax_set").hidden=!SETO;$("ax_setb").setAttribute("aria-expanded",String(SETO));tierRows();
   $("ax_sort").value=SORT;
-  var L=A().last;J=false;MAN=false;PCT=window.tset?tset("act","h2",10):10;
+  var L=A().last;J=false;MAN=false;PCT=window.tset?tset("act","h2",5):5;
   if(L){$("ax_q").value=L.q?ns(L.q):"";$("ax_pa").value=L.pa?ns(L.pa):"";MAN=!!L.man;if(L.pct>0)PCT=L.pct;if(MAN)$("ax_pv").value=L.pv?ns(L.pv):"";J=!!L.j}
   $("ax_oui").setAttribute("aria-pressed",String(J));$("ax_non").setAttribute("aria-pressed",String(!J));
   majTotal();hist();
