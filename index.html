@@ -1766,7 +1766,7 @@ function calc(){
 }
 function majTotal(){
   var t=pn("ax_q")*pn("ax_pa");$("ax_tot").value=t?t.toFixed(2).replace(".",","):"";
-  if(!MAN){var d=pvOf(pn("ax_pa"),PCT);$("ax_pv").value=d?d.toFixed(2).replace(".",","):""}
+  if(!MAN){var d=pvOf(pn("ax_pa"),PCT);$("ax_pv").value=d?d.toFixed(dec()).replace(".",","):""}
   calc();
 }
 function setJ(v){J=v;$("ax_oui").setAttribute("aria-pressed",String(v));$("ax_non").setAttribute("aria-pressed",String(!v));calc()}
