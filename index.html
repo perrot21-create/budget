@@ -1759,7 +1759,7 @@ function calc(){
   var ok=r.tot>0&&r.vb>0,c=ok?cl(r.g):"";
   $("ax_tx").textContent=ok?pct(r.taux):"–";
   $("ax_g").textContent=ok?(r.g>0?"+":"")+eur2(r.g):"–";
-  $("ax_be").textContent=r.be!==null?eur2(Math.ceil(r.be*100)/100):"–";
+  $("ax_be").textContent=r.be!==null?pe(Math.ceil(r.be*Math.pow(10,dec()))/Math.pow(10,dec())):"–";
   $("ax_bg").className="axb "+c;$("ax_bt").className="axb "+c;
   document.querySelectorAll("#acw .axs [data-ax-pct]").forEach(function(b){b.setAttribute("aria-pressed",String(!MAN&&PCT===+b.getAttribute("data-ax-pct")))});
   scen(o);
