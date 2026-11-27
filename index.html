@@ -4368,5 +4368,80 @@ html #bt#bt tbody tr.k-dep.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){b
 html #bt#bt tbody tr.k-rev.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
 html #bt#bt tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 13%,var(--surface))!important}
 </style>
+ <script>
+/* Style de la colonne verticale (Revenus / Dépenses / Synthèse) du Budget annuel */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function"||typeof window.drawBudTab!=="function"||typeof drawSet!=="function")return;
+
+const LBL=[["","Couleurs actuelles"],["1","Ton sur ton"],["2","Liseré coloré"],["3","Aubergine et or"],["4","Pastels du sens"]];
+const SW={"":["#9b78d6","#6a42b0","#d9a21b"],"1":["#e6dcf5","#cdbbeb","#f3e3a6"],"2":["#2b7a5a","#b23a58","#d9a21b"],"3":["#7a52c0","#4a2a85","#d9a21b"],"4":["#d3ebdf","#f0d3dc","#f3e3a6"]};
+const S3=v=>[v,v,v];
+const ST={
+ "1":{l:{b:["#e6dcf5","#cdbbeb","#f3e3a6"],t:["#4a2a85","#3a1f70","#6b4a00"]},
+      d:{b:["#3a2c55","#4a3a70","#5c4b14"],t:["#e6dcf5","#e6dcf5","#f6e49a"]}},
+ "2":{l:{b:S3("var(--surface)"),t:S3("var(--ink)"),e:["#2b7a5a","#b23a58","#d9a21b"]},
+      d:{b:S3("var(--surface)"),t:S3("var(--ink)"),e:["#6fd3a8","#f2a0b0","#f2c94c"]}},
+ "3":{l:{b:["#7a52c0","#4a2a85","#d9a21b"],t:["#ffffff","#ffffff","#3b2a00"]},
+      d:{b:["#6b4fb5","#4a3470","#c9a227"],t:["#ffffff","#ffffff","#1a1327"]}},
+ "4":{l:{b:["#d3ebdf","#f0d3dc","#f3e3a6"],t:["#1f5a41","#8a2b45","#6b4a00"]},
+      d:{b:["#264f43","#5a2f3e","#5c4b14"],t:["#cfe8dc","#f1cdd6","#f6e49a"]}}
+};
+const K=["r","d","s"];
+const vars=m=>K.map((k,i)=>`--gb-${k}:${m.b[i]};--gt-${k}:${m.t[i]};--ge-${k}:${m.e?m.e[i]:"transparent"}`).join(";");
+let css="";
+Object.keys(ST).forEach(k=>{
+  css+=`#bt.gs${k}{${vars(ST[k].l)}}`;
+  css+=`:root[data-theme="dark"] #bt.gs${k}{${vars(ST[k].d)}}`;
+  css+=`@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt.gs${k}{${vars(ST[k].d)}}}`;
+});
+K.forEach(k=>{
+  css+=`html #bt#bt#bt#bt.gsx tbody td.gk-${k}{background-color:var(--gb-${k})!important;background-image:none!important;box-shadow:inset -4px 0 0 var(--ge-${k})!important}`;
+  css+=`html #bt#bt#bt#bt.gsx td.gk-${k} .gt{color:var(--gt-${k})!important}`;
+});
+const st=document.createElement("style");st.id="gstyle-css";st.textContent=css;document.head.appendChild(st);
+
+const GS=()=>["1","2","3","4"].includes(S.gstyle)?S.gstyle:"";
+function apply(){
+  const w=document.getElementById("bt");
+  if(w){["1","2","3","4"].forEach(k=>w.classList.remove("gs"+k));w.classList.remove("gsx");const v=GS();if(v)w.classList.add("gsx","gs"+v)}
+  const s=document.getElementById("gsel");if(s)s.value=GS();
+  document.querySelectorAll('input[name="gstyle"]').forEach(r=>{r.checked=r.value===GS()});
+}
+
+/* Budget annuel : application après chaque dessin + liste dans la barre d'outils */
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);apply();return r};
+const oT=window.drawBudTab;
+window.drawBudTab=function(){
+  const r=oT.apply(this,arguments),d=document.querySelector(".bpc")||document.querySelector("#app>.ctl");
+  if(d&&!d.querySelector("#gsel")){
+    const s=document.createElement("select");
+    s.id="gsel";s.setAttribute("aria-label","Style de la colonne verticale");
+    s.title="Style de la colonne verticale (Revenus / Dépenses / Synthèse)";
+    s.innerHTML=LBL.map(([v,l])=>`<option value="${v}">Colonne : ${l.toLowerCase()}</option>`).join("");
+    d.appendChild(s);
+  }
+  apply();return r;
+};
+
+/* Réglages > Budget annuel : même choix, avec aperçu des couleurs */
+const oS=drawSet;
+drawSet=function(){
+  const r=oS.apply(this,arguments),h2=document.querySelector(".setr h2");
+  if(h2&&h2.textContent.trim()==="Budget annuel"&&!document.getElementById("gsrad")){
+    const html=`<h3>Style de la colonne verticale (Revenus / Dépenses / Synthèse)</h3><div class="modes" id="gsrad" role="radiogroup" aria-label="Style de la colonne verticale">${LBL.map(([v,l])=>`<label class="chip"><input type="radio" name="gstyle" value="${v}"${GS()===v?" checked":""}><span class="sw" aria-hidden="true">${SW[v].map(c=>`<i style="background:${c};width:16px;height:16px"></i>`).join("")}</span>${l}</label>`).join("")}</div><p class="sub">Le résultat se voit dans l’onglet Budget annuel. Le même choix est disponible dans sa barre d’outils.</p>`;
+    const h=[...document.querySelectorAll(".setr h3")].find(x=>/^Apparence de cet onglet/.test(x.textContent));
+    if(h)h.insertAdjacentHTML("beforebegin",html);else h2.closest("section").insertAdjacentHTML("beforeend",html);
+  }
+  return r;
+};
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="gsel"||t.name==="gstyle"){S.gstyle=t.value;save();apply()}
+});
+})();
+</script>
 </body>
 </html>
