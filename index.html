@@ -1610,7 +1610,11 @@ function res(o,c){
   }
   return{tot:tot,fa:fa,ta:ta,t:ta,ca:ca,vb:vb,fv:fv,net:net,g:g,taux:ca?g/ca*100:0,be:be}
 }
-function pvOf(pa,p){return Math.round(pa*(1+p/100)*100)/100}
+/* Nombre de décimales saisies dans « Prix d'achat brut » (2 au minimum) */
+function dec(){var s=String($("ax_pa").value).replace(/\s/g,"").replace(",","."),i=s.indexOf(".");return i<0?2:Math.min(8,Math.max(2,s.length-i-1))}
+/* Prix affiché avec ce même nombre de décimales */
+function pe(v){var d=dec();return new Intl.NumberFormat("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}).format(v)+"\u00a0€"}
+function pvOf(pa,p){var k=Math.pow(10,dec());return Math.round(pa*(1+p/100)*k)/k}
 function cur(){return{q:pn("ax_q"),pa:pn("ax_pa"),pv:pn("ax_pv"),j:J,man:MAN,pct:PCT}}
 function pct(t){return(t>0?"+":"")+t.toFixed(2).replace(".",",")+" %"}
 function cl(n){return n>0?"pos":n<0?"neg":""}
