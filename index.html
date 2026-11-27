@@ -4268,5 +4268,47 @@ document.addEventListener("click",e=>{
 draw();
 })();
 </script>
+ <script>
+/* Couleur de saisie : un réglage pour le mode clair, un pour le mode sombre */
+(()=>{
+const dflt=m=>m==="dark"?"#7fb3e0":"#1d4ed8";
+const mig=()=>{if(S.inkL===undefined&&S.inkD===undefined){S.inkL=S.inkD=hx(S.ink)||""}};
+const get=m=>{mig();return hx(m==="dark"?S.inkD:S.inkL)};
+const set=(m,v)=>{mig();if(m==="dark")S.inkD=v;else S.inkL=v};
+const sync=()=>{S.ink=get(uiEff())};
+
+/* applique la bonne couleur selon le mode actif */
+const pa=applyUI;
+applyUI=function(){sync();pa.apply(this,arguments);document.documentElement.style.setProperty("--inp",S.ink||"")};
+
+/* sélecteurs (Réglages et Budget annuel) */
+document.addEventListener("input",e=>{
+  const id=e.target.id;if(id!=="tcol"&&id!=="tcolL"&&id!=="tcolD")return;
+  set(id==="tcolL"?"light":id==="tcolD"?"dark":uiEff(),e.target.value);
+  sync();save();applyInk();
+},true);
+
+/* boutons ↺ */
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-tcr],[data-tcrl],[data-tcrd]");if(!b)return;
+  const m=b.hasAttribute("data-tcrl")?"light":b.hasAttribute("data-tcrd")?"dark":uiEff();
+  set(m,"");sync();save();applyInk();
+  if(!b.hasAttribute("data-tcr")){const c=document.getElementById(m==="dark"?"tcolD":"tcolL");if(c)c.value=dflt(m)}
+},true);
+
+/* Réglages > Général > Couleurs > Montants : deux lignes à la place d'une */
+const pd=drawSet;
+drawSet=function(){
+  pd.apply(this,arguments);
+  const c=document.getElementById("tcol");if(!c)return;
+  const row=c.closest(".crow");if(!row)return;
+  row.outerHTML=[["light","clair","L"],["dark","sombre","D"]].map(([m,l,s])=>
+    `<div class="crow"><label><input type="color" id="tcol${s}" value="${get(m)||dflt(m)}" aria-label="Couleur de saisie, mode ${l}"><span>Couleur de saisie (mode ${l})</span></label><button data-tcr${s.toLowerCase()} title="Rétablir la couleur d’origine" aria-label="Rétablir : couleur de saisie, mode ${l}">↺</button></div>`
+  ).join("");
+};
+
+applyInk();
+})();
+</script>
 </body>
 </html>
