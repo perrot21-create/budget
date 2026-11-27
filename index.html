@@ -4320,5 +4320,12 @@ UPRE.push({id:"violetor",n:"Violet et or",c:{
 if(typeof T!=="undefined"&&T==="set")drawSet();
 })();
 </script>
-</body>
+ <style>
+/* Épaisseur du cadre des blocs du Budget annuel (3 px à l'origine) */
+html #bt#bt{--fw:1px}
+html #bt#bt .fr-t{--ft:inset 0 var(--fw) 0 var(--fc)}
+html #bt#bt .fr-b{--fb:inset 0 calc(var(--fw) * -1) 0 var(--fc)}
+html #bt#bt .fr-r{--fr:inset calc(var(--fw) * -1) 0 0 var(--fc)}
+html #bt#bt .fr-l{--fl:inset var(--fw) 0 0 var(--fc)}
+</style></body>
 </html>
