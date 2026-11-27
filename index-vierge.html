@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html> 
 <html lang="fr"> 
 <head>
@@ -1611,7 +1610,11 @@ function res(o,c){
   }
   return{tot:tot,fa:fa,ta:ta,t:ta,ca:ca,vb:vb,fv:fv,net:net,g:g,taux:ca?g/ca*100:0,be:be}
 }
-function pvOf(pa,p){return Math.round(pa*(1+p/100)*100)/100}
+/* Nombre de décimales saisies dans « Prix d'achat brut » (2 au minimum) */
+function dec(){var s=String($("ax_pa").value).replace(/\s/g,"").replace(",","."),i=s.indexOf(".");return i<0?2:Math.min(8,Math.max(2,s.length-i-1))}
+/* Prix affiché avec ce même nombre de décimales */
+function pe(v){var d=dec();return new Intl.NumberFormat("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d}).format(v)+"\u00a0€"}
+function pvOf(pa,p){var k=Math.pow(10,dec());return Math.round(pa*(1+p/100)*k)/k}
 function cur(){return{q:pn("ax_q"),pa:pn("ax_pa"),pv:pn("ax_pv"),j:J,man:MAN,pct:PCT}}
 function pct(t){return(t>0?"+":"")+t.toFixed(2).replace(".",",")+" %"}
 function cl(n){return n>0?"pos":n<0?"neg":""}
@@ -1715,7 +1718,7 @@ function html(){
   +'<p class="axn" id="ax_na" hidden></p></section>'
   +'<section><h2>Revente</h2><div class="axg">'
   +'<label class="axf"><span>Prix de vente simulé par action (€)</span><input class="axin" id="ax_pv" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>'
-  +'<div class="axf"><span id="ax_lp">Hausse sur le prix d’achat</span><div class="axs" role="group" aria-labelledby="ax_lp"><button type="button" data-ax-pct="5" aria-pressed="false">+5 %</button><button type="button" data-ax-pct="10" aria-pressed="true">+10 %</button><button type="button" data-ax-pct="20" aria-pressed="false">+20 %</button></div></div>'
+  +'<div class="axf"><span id="ax_lp">Hausse sur le prix d’achat</span><div class="axs" role="group" aria-labelledby="ax_lp"><button type="button" data-ax-pct="2" aria-pressed="false">+2 %</button><button type="button" data-ax-pct="5" aria-pressed="true">+5 %</button><button type="button" data-ax-pct="10" aria-pressed="false">+10 %</button></div></div>'
   +'<div class="axf"><span id="ax_lj">Revente le jour même (pas de TTF)</span><div class="axs" role="group" aria-labelledby="ax_lj"><button type="button" id="ax_oui" aria-pressed="false">Oui</button><button type="button" id="ax_non" aria-pressed="true">Non</button></div></div></div>'
   +'<dl class="axd"><div class="axr"><dt>Total de vente brut</dt><dd id="ax_vb">–</dd></div><div class="axr"><dt>Frais de vente<span class="axtr" id="ax_fvt"></span></dt><dd id="ax_fv">–</dd></div><div class="axr tt"><dt>Net encaissé</dt><dd id="ax_net">–</dd></div></dl>'
   +'<p class="axn" id="ax_nv" hidden></p>'
@@ -1735,9 +1738,9 @@ function html(){
 function scen(o){
   var sc=$("ax_sc");
   if(!(o.q>0&&o.pa>0)){sc.innerHTML='<tr><td colspan="4" class="sub">Renseignez le nombre d’actions et le prix d’achat pour voir les scénarios.</td></tr>';return}
-  sc.innerHTML=[1,2,3].map(function(i){var p=window.tset?tset("act","h"+i,[5,10,20][i-1]):[5,10,20][i-1];
+  sc.innerHTML=[1,2,3].map(function(i){var p=window.tset?tset("act","h"+i,[2,5,10][i-1]):[2,5,10][i-1];
     var pv=pvOf(o.pa,p),x=res({q:o.q,pa:o.pa,pv:pv,j:o.j}),c=cl(x.g);
-    return'<tr><td><button type="button" class="tg" data-ax-pct="'+p+'" title="Utiliser ce prix de vente">+'+p+' %</button></td><td class="r">'+eur2(pv)+'</td><td class="r '+c+'">'+(x.g>0?"+":"")+eur2(x.g)+'</td><td class="r '+c+'">'+pct(x.taux)+'</td></tr>'
+    return'<tr><td><button type="button" class="tg" data-ax-pct="'+p+'" title="Utiliser ce prix de vente">+'+p+' %</button></td><td class="r">'+pe(pv)+'</td><td class="r '+c+'">'+(x.g>0?"+":"")+eur2(x.g)+'</td><td class="r '+c+'">'+pct(x.taux)+'</td></tr>'
   }).join("");
 }
 function calc(){
@@ -1756,14 +1759,14 @@ function calc(){
   var ok=r.tot>0&&r.vb>0,c=ok?cl(r.g):"";
   $("ax_tx").textContent=ok?pct(r.taux):"–";
   $("ax_g").textContent=ok?(r.g>0?"+":"")+eur2(r.g):"–";
-  $("ax_be").textContent=r.be!==null?eur2(Math.ceil(r.be*100)/100):"–";
+  $("ax_be").textContent=r.be!==null?pe(Math.ceil(r.be*Math.pow(10,dec()))/Math.pow(10,dec())):"–";
   $("ax_bg").className="axb "+c;$("ax_bt").className="axb "+c;
   document.querySelectorAll("#acw .axs [data-ax-pct]").forEach(function(b){b.setAttribute("aria-pressed",String(!MAN&&PCT===+b.getAttribute("data-ax-pct")))});
   scen(o);
 }
 function majTotal(){
   var t=pn("ax_q")*pn("ax_pa");$("ax_tot").value=t?t.toFixed(2).replace(".",","):"";
-  if(!MAN){var d=pvOf(pn("ax_pa"),PCT);$("ax_pv").value=d?d.toFixed(2).replace(".",","):""}
+  if(!MAN){var d=pvOf(pn("ax_pa"),PCT);$("ax_pv").value=d?d.toFixed(dec()).replace(".",","):""}
   calc();
 }
 function setJ(v){J=v;$("ax_oui").setAttribute("aria-pressed",String(v));$("ax_non").setAttribute("aria-pressed",String(!v));calc()}
@@ -1838,7 +1841,7 @@ function render(){
   $("app").innerHTML=html();setTop();
   $("ax_set").hidden=!SETO;$("ax_setb").setAttribute("aria-expanded",String(SETO));tierRows();
   $("ax_sort").value=SORT;
-  var L=A().last;J=false;MAN=false;PCT=window.tset?tset("act","h2",10):10;
+  var L=A().last;J=false;MAN=false;PCT=window.tset?tset("act","h2",5):5;
   if(L){$("ax_q").value=L.q?ns(L.q):"";$("ax_pa").value=L.pa?ns(L.pa):"";MAN=!!L.man;if(L.pct>0)PCT=L.pct;if(MAN)$("ax_pv").value=L.pv?ns(L.pv):"";J=!!L.j}
   $("ax_oui").setAttribute("aria-pressed",String(J));$("ax_non").setAttribute("aria-pressed",String(!J));
   majTotal();hist();
@@ -2218,7 +2221,7 @@ const BEH={
  dash:{c:[["s_alr","Alertes de dépassement",true],["s_cpt","Mes comptes",true],["s_rng","Anneaux de dépenses",true],["s_lst","Dernières opérations",true],["s_cum","Solde cumulé budgétaire",true],["s_abo","Suivi des abonnements",true]],n:[["n","Nombre de dernières opérations (3 à 8)",3,8,8,""]]},
  acc:{c:[["fp","Afficher les opérations pointées par défaut",false],["fn","Afficher les non pointées par défaut",true]]},
  bud:{c:[["ca","Ouvrir Réel et Écart du cumul annuel par défaut",false],["fold","Graphiques repliés par défaut",false]]},
- act:{n:[["max","Nombre maximal d’opérations conservées",10,100,30,""],["h1","Hausse proposée n°1",1,100,5," %"],["h2","Hausse proposée n°2 (par défaut)",1,100,10," %"],["h3","Hausse proposée n°3",1,100,20," %"]]},
+ act:{n:[["max","Nombre maximal d’opérations conservées",10,100,30,""],["h1","Hausse proposée n°1",1,100,2," %"],["h2","Hausse proposée n°2 (par défaut)",1,100,5," %"],["h3","Hausse proposée n°3",1,100,10," %"]]},
  pre:{n:[["due","Alerte « échéance proche » (jours)",1,60,7," j"]],c:[["hd","Masquer les comptes soldés par défaut",true]]}};
 const PC=["#3b82f6","#a855f7","#f59e0b","#14b8a6"];
 let RS="gen",PT=null,CG0;
@@ -2326,7 +2329,7 @@ window.draw=draw=function(){if(T!==PT&&T==="bud")CA=!!tset("bud","ca",false);con
   Object.keys(m).forEach(k=>{if(tset("dash","s_"+k,true)===false)document.querySelectorAll("#app "+m[k]).forEach(e=>e.style.display="none")});
   const n=tset("dash","n",8);document.querySelectorAll(".dlast tbody tr").forEach((r,i)=>{if(i>=n)r.style.display="none"})}
  if(T==="bud"&&ent){const d=document.querySelector("#bch details");if(d)d.open=!tset("bud","fold",false)}
- if(T==="act"){const g=document.querySelector('#acw [aria-labelledby="ax_lp"]');if(g){g.innerHTML=[1,2,3].map(i=>tset("act","h"+i,[5,10,20][i-1])).map((v,i)=>`<button type="button" data-ax-pct="${v}" aria-pressed="${i===1}">+${v} %</button>`).join("");const q=document.getElementById("ax_q");if(q)q.dispatchEvent(new Event("input",{bubbles:true}))}}};
+ if(T==="act"){const g=document.querySelector('#acw [aria-labelledby="ax_lp"]');if(g){g.innerHTML=[1,2,3].map(i=>tset("act","h"+i,[2,5,10][i-1])).map((v,i)=>`<button type="button" data-ax-pct="${v}" aria-pressed="${i===1}">+${v} %</button>`).join("");const q=document.getElementById("ax_q");if(q)q.dispatchEvent(new Event("input",{bubbles:true}))}}};
 const fx=(t,k,v)=>{if(t==="acc"&&k==="fp")F.p=v;if(t==="acc"&&k==="fn")F.n=v;if(t==="pre"&&k==="hd")PQH=v;if(t==="bud"&&k==="ca")CA=v;if(t==="sav"&&k==="auto")sySet({mode:v?"auto":"manual"})};
 
 /* Largeur de page : ne modifie plus l'espacement des colonnes des comptes */
@@ -3303,8 +3306,50 @@ function showOps(title,sets){
   o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}};
   document.body.appendChild(o);o.querySelector("button").focus();
 }
+/* Fenêtre 1 : sous-catégories d'une catégorie (regroupement par catégorie) */
+function openSubs(key,c){
+  const id=key.slice(4),type=key.slice(0,3),cat=S.cats.find(x=>x.id===id),nm=nameOf("cat",id);
+  const g=c.G.get(key),p=c.PG.get(key),M=new Map();
+  const add=(ops,w)=>(ops||[]).forEach(t=>{
+    const k=t.sub||"";let r=M.get(k);
+    if(!r){r={id:k,v:0,n:0,pv:0,o:[],po:[]};M.set(k,r)}
+    const v=type==="rev"?t.v:-t.v;
+    if(w==="c"){r.v+=v;r.n++;r.o.push(t)}else{r.pv+=v;r.po.push(t)}
+  });
+  add(g&&g.ops,"c");if(c.cmp)add(p&&p.ops,"p");
+  const sn=sid=>sid===""?"Sans sous-catégorie":((cat&&cat.subs.find(x=>x.id===sid))||{name:"Sous-catégorie supprimée"}).name;
+  const R=[...M.values()].map(r=>({...r,v:r2(r.v),pv:r2(r.pv)})).filter(r=>r.v!==0||r.pv!==0).sort((a,b)=>b.v-a.v||b.pv-a.pv);
+  const tot=r2(R.reduce((q,r)=>q+r.v,0)),ptot=r2(R.reduce((q,r)=>q+r.pv,0)),sum=R.reduce((q,r)=>q+Math.max(0,r.v),0)||1,cl=type==="rev"?"pos":"neg";
+  const good=d=>type==="dep"?d<0:d>0;
+  const body=R.map(r=>{
+    const d=r2(r.v-r.pv),pc=r.pv?Math.round(d/Math.abs(r.pv)*100):null;
+    return `<tr class="sv-r" data-sub="${esc(r.id)}" tabindex="0" title="Voir les opérations"><td>${esc(sn(r.id))}</td><td class="r">${r.n}</td><td class="r ${cl}">${eur2(r.v)}</td><td class="r">${r.v>0?Math.round(r.v/sum*100)+" %":"–"}</td>${c.cmp?`<td class="r">${eur2(r.pv)}</td><td class="r ${d?good(d)?"pos":"neg":""}">${d?sgn(d)+eur2(Math.abs(d))+(pc===null?"":" ("+sgn(pc)+Math.abs(pc)+" %)"):"="}</td>`:""}</tr>`}).join("");
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Sous-catégories ${esc(nm)}"><div class="mh"><h2>${dot(id)}${esc(nm)}</h2><button data-r="0" aria-label="Fermer">✕</button></div>
+  <p class="sub">${dfr(c.a)} → ${dfr(c.e)} · Total : <b>${eur2(tot)}</b>${c.cmp?" (comparaison : "+eur2(ptot)+")":""} · Cliquez sur une sous-catégorie pour voir ses opérations.</p>
+  ${R.length?`<div class="tw2"><table class="lt" aria-label="Sous-catégories"><thead><tr><th>Sous-catégorie</th><th class="r">Op.</th><th class="r">Période</th><th class="r">Part</th>${c.cmp?`<th class="r">Comparaison</th><th class="r">Écart</th>`:""}</tr></thead><tbody>${body}</tbody></table></div>`:`<p class="empty">Aucune opération.</p>`}
+  <div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  const open=tr=>{
+    const r=M.get(tr.dataset.sub);if(!r)return;
+    const sets=[[`Période : ${dfr(c.a)} → ${dfr(c.e)}`,r.o]];
+    if(c.cmp)sets.push([`Comparaison : ${dfr(c.ca)} → ${dfr(c.ce)}`,r.po]);
+    showOps(nm+" › "+sn(r.id),sets);
+  };
+  o.onclick=e=>{
+    if(e.target===o||e.target.closest("[data-r]")){end();return}
+    const tr=e.target.closest("tr[data-sub]");if(tr)open(tr);
+  };
+  o.onkeydown=e=>{
+    if(e.key==="Escape"){e.stopPropagation();end()}
+    else if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("tr[data-sub]")){e.preventDefault();open(e.target)}
+  };
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
+
 function openRow(key){
   const c=calc(),g=c.G.get(key),p=c.PG.get(key),by=c.s.by,id=key.slice(4),nm=nameOf(by,id);
+  if(by==="cat"&&id!=="_"){openSubs(key,c);return}
   const sets=[[`Période : ${dfr(c.a)} → ${dfr(c.e)}`,g?g.ops:[]]];
   if(c.cmp)sets.push([`Comparaison : ${dfr(c.ca)} → ${dfr(c.ce)}`,p?p.ops:[]]);
   showOps(nm,sets);
@@ -4269,5 +4314,262 @@ document.addEventListener("click",e=>{
 draw();
 })();
 </script>
+ <script>
+/* Couleur de saisie : un réglage pour le mode clair, un pour le mode sombre */
+(()=>{
+const dflt=m=>m==="dark"?"#7fb3e0":"#1d4ed8";
+const mig=()=>{if(S.inkL===undefined&&S.inkD===undefined){S.inkL=S.inkD=hx(S.ink)||""}};
+const get=m=>{mig();return hx(m==="dark"?S.inkD:S.inkL)};
+const set=(m,v)=>{mig();if(m==="dark")S.inkD=v;else S.inkL=v};
+const sync=()=>{S.ink=get(uiEff())};
+
+/* applique la bonne couleur selon le mode actif */
+const pa=applyUI;
+applyUI=function(){sync();pa.apply(this,arguments);document.documentElement.style.setProperty("--inp",S.ink||"")};
+
+/* sélecteurs (Réglages et Budget annuel) */
+document.addEventListener("input",e=>{
+  const id=e.target.id;if(id!=="tcol"&&id!=="tcolL"&&id!=="tcolD")return;
+  set(id==="tcolL"?"light":id==="tcolD"?"dark":uiEff(),e.target.value);
+  sync();save();applyInk();
+},true);
+
+/* boutons ↺ */
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-tcr],[data-tcrl],[data-tcrd]");if(!b)return;
+  const m=b.hasAttribute("data-tcrl")?"light":b.hasAttribute("data-tcrd")?"dark":uiEff();
+  set(m,"");sync();save();applyInk();
+  if(!b.hasAttribute("data-tcr")){const c=document.getElementById(m==="dark"?"tcolD":"tcolL");if(c)c.value=dflt(m)}
+},true);
+
+/* Réglages > Général > Couleurs > Montants : deux lignes à la place d'une */
+const pd=drawSet;
+drawSet=function(){
+  pd.apply(this,arguments);
+  const c=document.getElementById("tcol");if(!c)return;
+  const row=c.closest(".crow");if(!row)return;
+  row.outerHTML=[["light","clair","L"],["dark","sombre","D"]].map(([m,l,s])=>
+    `<div class="crow"><label><input type="color" id="tcol${s}" value="${get(m)||dflt(m)}" aria-label="Couleur de saisie, mode ${l}"><span>Couleur de saisie (mode ${l})</span></label><button data-tcr${s.toLowerCase()} title="Rétablir la couleur d’origine" aria-label="Rétablir : couleur de saisie, mode ${l}">↺</button></div>`
+  ).join("");
+};
+
+applyInk();
+})();
+</script>
+ <script>
+/* Thème prêt à l'emploi : Violet et or */
+(()=>{
+if(typeof UPRE==="undefined"||UPRE.some(p=>p.id==="violetor"))return;
+UPRE.push({id:"violetor",n:"Violet et or",c:{
+ light:{bg:"#f7f2fc",surface:"#fffdf7",ink:"#2a2038",mute:"#6b6080",line:"#e4daf0",accent:"#5b34a0",pos:"#2f7a50",neg:"#b3412f",bl:"#4b3a9e",reel:"#9a6400",rev:"#f6e49a",dep:"#dccdf0",syn:"#ece3f8",ptc:"#cbb8ef",srev:"#f6e49a",sdep:"#dccdf0",ssyn:"#ece3f8",stier:"#f0d96e",vsep:"#5b34a0"},
+ dark:{bg:"#1a1327",surface:"#251b37",ink:"#f3ecfa",mute:"#b3a6c8",line:"#3d2f55",accent:"#f2c94c",pos:"#6fd3a0",neg:"#f5a08c",bl:"#b8a3ee",reel:"#f2c94c",rev:"#5c4b14",dep:"#4a3470",syn:"#3a2c55",ptc:"#a8923a",srev:"#5c4b14",sdep:"#4a3470",ssyn:"#3a2c55",stier:"#6d5a1a",vsep:"#f2c94c"}}});
+if(typeof T!=="undefined"&&T==="set")drawSet();
+})();
+</script>
+ <style>
+/* Épaisseur du cadre des blocs du Budget annuel (3 px à l'origine) */
+html #bt#bt{--fw:1px}
+html #bt#bt .fr-t{--ft:inset 0 var(--fw) 0 var(--fc)}
+html #bt#bt .fr-b{--fb:inset 0 calc(var(--fw) * -1) 0 var(--fc)}
+html #bt#bt .fr-r{--fr:inset calc(var(--fw) * -1) 0 0 var(--fc)}
+html #bt#bt .fr-l{--fl:inset var(--fw) 0 0 var(--fc)}
+</style>
+ <style>
+/* Budget annuel : violet et or, sans arc-en-ciel */
+
+/* Les deux teintes de base */
+#bt{--vp:#7a52c0;--vg:#d9a21b;--vgd:#a8740a}
+:root[data-theme="dark"] #bt{--vp:#b8a3ee;--vg:#f2c94c;--vgd:#f2c94c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt{--vp:#b8a3ee;--vg:#f2c94c;--vgd:#f2c94c}}
+
+/* Mois : un sur deux violet, un sur deux or (en-têtes et colonnes) */
+html #bt#bt .mc0,html #bt#bt .mc2,html #bt#bt .mc4,html #bt#bt .mc6,html #bt#bt .mc8,html #bt#bt .mc10{--mcol:var(--vp)}
+html #bt#bt .mc1,html #bt#bt .mc3,html #bt#bt .mc5,html #bt#bt .mc7,html #bt#bt .mc9,html #bt#bt .mc11{--mcol:var(--vg)}
+
+/* Trimestres : T1 et T3 violet, T2 et T4 or */
+html #bt#bt .q0,html #bt#bt .q2{--qc:var(--vp)}
+html #bt#bt .q1,html #bt#bt .q3{--qc:var(--vgd)}
+
+/* Colonne verticale : violet pour Revenus et Dépenses, or pour Synthèse */
+html #bt#bt td.gk-r{--gc:#9b78d6}
+html #bt#bt td.gk-d{--gc:#6a42b0}
+html #bt#bt td.gk-s{--gc:#d9a21b}
+:root[data-theme="dark"] #bt#bt td.gk-r{--gc:#8f74d8}
+:root[data-theme="dark"] #bt#bt td.gk-d{--gc:#6b4fb5}
+:root[data-theme="dark"] #bt#bt td.gk-s{--gc:#c9a227}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) #bt#bt td.gk-r{--gc:#8f74d8}
+:root:not([data-theme="light"]) #bt#bt td.gk-d{--gc:#6b4fb5}
+:root:not([data-theme="light"]) #bt#bt td.gk-s{--gc:#c9a227}}
+
+/* Cellules : crème doré, puis lavande une ligne (catégorie) sur deux */
+html #bt#bt tbody tr.k-rev.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 6%,var(--surface))!important}
+html #bt#bt tbody tr.k-rev.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 8%,var(--surface))!important}
+
+/* Sous-catégories : même principe, un cran plus soutenu */
+html #bt#bt tbody tr.k-rev.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 11%,var(--surface))!important}
+html #bt#bt tbody tr.k-rev.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 13%,var(--surface))!important}
+</style>
+ <script>
+/* Style de la colonne verticale (Revenus / Dépenses / Synthèse) du Budget annuel */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function"||typeof window.drawBudTab!=="function"||typeof drawSet!=="function")return;
+
+const LBL=[["","Couleurs actuelles"],["1","Ton sur ton"],["2","Liseré coloré"],["3","Aubergine et or"],["4","Pastels du sens"]];
+const SW={"":["#9b78d6","#6a42b0","#d9a21b"],"1":["#e6dcf5","#cdbbeb","#f3e3a6"],"2":["#2b7a5a","#b23a58","#d9a21b"],"3":["#7a52c0","#4a2a85","#d9a21b"],"4":["#d3ebdf","#f0d3dc","#f3e3a6"]};
+const S3=v=>[v,v,v];
+const ST={
+ "1":{l:{b:["#e6dcf5","#cdbbeb","#f3e3a6"],t:["#4a2a85","#3a1f70","#6b4a00"]},
+      d:{b:["#3a2c55","#4a3a70","#5c4b14"],t:["#e6dcf5","#e6dcf5","#f6e49a"]}},
+ "2":{l:{b:S3("var(--surface)"),t:S3("var(--ink)"),e:["#2b7a5a","#b23a58","#d9a21b"]},
+      d:{b:S3("var(--surface)"),t:S3("var(--ink)"),e:["#6fd3a8","#f2a0b0","#f2c94c"]}},
+ "3":{l:{b:["#7a52c0","#4a2a85","#d9a21b"],t:["#ffffff","#ffffff","#3b2a00"]},
+      d:{b:["#6b4fb5","#4a3470","#c9a227"],t:["#ffffff","#ffffff","#1a1327"]}},
+ "4":{l:{b:["#d3ebdf","#f0d3dc","#f3e3a6"],t:["#1f5a41","#8a2b45","#6b4a00"]},
+      d:{b:["#264f43","#5a2f3e","#5c4b14"],t:["#cfe8dc","#f1cdd6","#f6e49a"]}}
+};
+const K=["r","d","s"];
+const vars=m=>K.map((k,i)=>`--gb-${k}:${m.b[i]};--gt-${k}:${m.t[i]};--ge-${k}:${m.e?m.e[i]:"transparent"}`).join(";");
+let css="";
+Object.keys(ST).forEach(k=>{
+  css+=`#bt.gs${k}{${vars(ST[k].l)}}`;
+  css+=`:root[data-theme="dark"] #bt.gs${k}{${vars(ST[k].d)}}`;
+  css+=`@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt.gs${k}{${vars(ST[k].d)}}}`;
+});
+K.forEach(k=>{
+  css+=`html #bt#bt#bt#bt.gsx tbody td.gk-${k}{background-color:var(--gb-${k})!important;background-image:none!important;box-shadow:inset -4px 0 0 var(--ge-${k})!important}`;
+  css+=`html #bt#bt#bt#bt.gsx td.gk-${k} .gt{color:var(--gt-${k})!important}`;
+});
+const st=document.createElement("style");st.id="gstyle-css";st.textContent=css;document.head.appendChild(st);
+
+const GS=()=>["1","2","3","4"].includes(S.gstyle)?S.gstyle:"";
+function apply(){
+  const w=document.getElementById("bt");
+  if(w){["1","2","3","4"].forEach(k=>w.classList.remove("gs"+k));w.classList.remove("gsx");const v=GS();if(v)w.classList.add("gsx","gs"+v)}
+  const s=document.getElementById("gsel");if(s)s.value=GS();
+  document.querySelectorAll('input[name="gstyle"]').forEach(r=>{r.checked=r.value===GS()});
+}
+
+/* Budget annuel : application après chaque dessin + liste dans la barre d'outils */
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);apply();return r};
+const oT=window.drawBudTab;
+window.drawBudTab=function(){
+  const r=oT.apply(this,arguments),d=document.querySelector(".bpc")||document.querySelector("#app>.ctl");
+  if(d&&!d.querySelector("#gsel")){
+    const s=document.createElement("select");
+    s.id="gsel";s.setAttribute("aria-label","Style de la colonne verticale");
+    s.title="Style de la colonne verticale (Revenus / Dépenses / Synthèse)";
+    s.innerHTML=LBL.map(([v,l])=>`<option value="${v}">Colonne : ${l.toLowerCase()}</option>`).join("");
+    d.appendChild(s);
+  }
+  apply();return r;
+};
+
+/* Réglages > Budget annuel : même choix, avec aperçu des couleurs */
+const oS=drawSet;
+drawSet=function(){
+  const r=oS.apply(this,arguments),h2=document.querySelector(".setr h2");
+  if(h2&&h2.textContent.trim()==="Budget annuel"&&!document.getElementById("gsrad")){
+    const html=`<h3>Style de la colonne verticale (Revenus / Dépenses / Synthèse)</h3><div class="modes" id="gsrad" role="radiogroup" aria-label="Style de la colonne verticale">${LBL.map(([v,l])=>`<label class="chip"><input type="radio" name="gstyle" value="${v}"${GS()===v?" checked":""}><span class="sw" aria-hidden="true">${SW[v].map(c=>`<i style="background:${c};width:16px;height:16px"></i>`).join("")}</span>${l}</label>`).join("")}</div><p class="sub">Le résultat se voit dans l’onglet Budget annuel. Le même choix est disponible dans sa barre d’outils.</p>`;
+    const h=[...document.querySelectorAll(".setr h3")].find(x=>/^Apparence de cet onglet/.test(x.textContent));
+    if(h)h.insertAdjacentHTML("beforebegin",html);else h2.closest("section").insertAdjacentHTML("beforeend",html);
+  }
+  return r;
+};
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="gsel"||t.name==="gstyle"){S.gstyle=t.value;save();apply()}
+});
+})();
+</script>
+ <script>
+/* Liseré coloré : choix de la variante (4 propositions) */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function"||typeof window.drawBudTab!=="function"||typeof drawSet!=="function"||!document.getElementById("gstyle-css"))return;
+
+const VL=[["","Liseré actuel"],["1","1. Liseré à gauche"],["2","2. Texte coloré"],["3","3. Petite barre détachée"],["4","4. Liseré fin avec espace"]];
+const K=["r","d","s"];
+let css=`#bt.gs2{--gx-r:#2b7a5a;--gx-d:#b23a58;--gx-s:#a8740a}
+:root[data-theme="dark"] #bt.gs2{--gx-r:#6fd3a8;--gx-d:#f2a0b0;--gx-s:#f2c94c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt.gs2{--gx-r:#6fd3a8;--gx-d:#f2a0b0;--gx-s:#f2c94c}}
+`;
+const P="html #bt#bt#bt#bt#bt.gsx.gs2";
+K.forEach(k=>{
+  css+=`${P}.gv1 tbody td.gk-${k}{box-shadow:inset 4px 0 0 var(--ge-${k})!important}`;
+  css+=`${P}.gv2 tbody td.gk-${k}{box-shadow:none!important}`;
+  css+=`${P}.gv2 td.gk-${k} .gt{color:var(--gx-${k})!important}`;
+  css+=`${P}.gv3 tbody td.gk-${k},${P}.gv4 tbody td.gk-${k}{box-shadow:none!important}`;
+  css+=`${P}.gv3 tbody td.gk-${k}::after{content:"";position:absolute;left:7px;top:22%;bottom:22%;width:3px;border-radius:2px;background:var(--ge-${k})}`;
+  css+=`${P}.gv4 tbody td.gk-${k}::after{content:"";position:absolute;right:6px;top:6px;bottom:6px;width:2px;border-radius:1px;background:var(--ge-${k})}`;
+});
+const st=document.createElement("style");st.id="gvar-css";st.textContent=css;document.head.appendChild(st);
+
+const GV=()=>["1","2","3","4"].includes(S.gvar)?S.gvar:"";
+const on=()=>S.gstyle==="2";
+function apply(){
+  const w=document.getElementById("bt");
+  if(w){["1","2","3","4"].forEach(k=>w.classList.remove("gv"+k));if(on()&&GV())w.classList.add("gv"+GV())}
+  const s=document.getElementById("gvsel");
+  if(s){s.hidden=!on();s.value=GV()}
+  const g=document.getElementById("gvrad");
+  if(g){g.style.display=on()?"":"none";g.querySelectorAll("input").forEach(r=>{r.checked=r.value===GV()})}
+}
+
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);apply();return r};
+
+const oT=window.drawBudTab;
+window.drawBudTab=function(){
+  const r=oT.apply(this,arguments),g=document.getElementById("gsel");
+  if(g&&!document.getElementById("gvsel")){
+    const s=document.createElement("select");
+    s.id="gvsel";s.setAttribute("aria-label","Variante du liseré coloré");s.title="Variante du liseré coloré";
+    s.innerHTML=VL.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    g.after(s);
+  }
+  apply();return r;
+};
+
+const oS=drawSet;
+drawSet=function(){
+  const r=oS.apply(this,arguments),a=document.getElementById("gsrad");
+  if(a&&!document.getElementById("gvrad")){
+    a.insertAdjacentHTML("afterend",`<div class="modes" id="gvrad" role="radiogroup" aria-label="Variante du liseré coloré">${VL.map(([v,l])=>`<label class="chip"><input type="radio" name="gvar" value="${v}"${GV()===v?" checked":""}>${l}</label>`).join("")}</div>`);
+  }
+  apply();return r;
+};
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="gvsel"||t.name==="gvar"){S.gvar=t.value;save()}
+  if(t.id==="gvsel"||t.name==="gvar"||t.id==="gsel"||t.name==="gstyle")apply();
+});
+})();
+</script>
+ <style>
+/* Liseré de la colonne verticale : 6 px (variante « Liseré à gauche » et liseré d'origine à droite) */
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-r{box-shadow:inset 6px 0 0 var(--ge-r)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-d{box-shadow:inset 6px 0 0 var(--ge-d)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-s{box-shadow:inset 6px 0 0 var(--ge-s)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-r{box-shadow:inset -6px 0 0 var(--ge-r)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-d{box-shadow:inset -6px 0 0 var(--ge-d)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-s{box-shadow:inset -6px 0 0 var(--ge-s)!important}
+
+/* Barres de couleur des catégories, des sous-catégories et des catégories à sous-catégories : 3 px */
+html #bt#bt#bt tbody tr.cb td.nm{box-shadow:inset 3px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
+
+/* Espace à gauche des noms, ajusté pour que le texte reste bien placé */
+html #bt#bt#bt tbody tr.cb:not(.sub) td.nm{padding-left:10px}
+html #bt#bt#bt tbody tr.sub.cb td.nm{padding-left:6px}
+html #bt#bt#bt tbody tr.hdr.cb td.nm{padding-left:11px}
+</style>
 </body>
 </html>
