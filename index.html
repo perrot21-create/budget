@@ -4443,5 +4443,70 @@ document.addEventListener("change",e=>{
 });
 })();
 </script>
+ <script>
+/* Liseré coloré : choix de la variante (4 propositions) */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function"||typeof window.drawBudTab!=="function"||typeof drawSet!=="function"||!document.getElementById("gstyle-css"))return;
+
+const VL=[["","Liseré actuel"],["1","1. Liseré à gauche"],["2","2. Texte coloré"],["3","3. Petite barre détachée"],["4","4. Liseré fin avec espace"]];
+const K=["r","d","s"];
+let css=`#bt.gs2{--gx-r:#2b7a5a;--gx-d:#b23a58;--gx-s:#a8740a}
+:root[data-theme="dark"] #bt.gs2{--gx-r:#6fd3a8;--gx-d:#f2a0b0;--gx-s:#f2c94c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt.gs2{--gx-r:#6fd3a8;--gx-d:#f2a0b0;--gx-s:#f2c94c}}
+`;
+const P="html #bt#bt#bt#bt#bt.gsx.gs2";
+K.forEach(k=>{
+  css+=`${P}.gv1 tbody td.gk-${k}{box-shadow:inset 4px 0 0 var(--ge-${k})!important}`;
+  css+=`${P}.gv2 tbody td.gk-${k}{box-shadow:none!important}`;
+  css+=`${P}.gv2 td.gk-${k} .gt{color:var(--gx-${k})!important}`;
+  css+=`${P}.gv3 tbody td.gk-${k},${P}.gv4 tbody td.gk-${k}{box-shadow:none!important}`;
+  css+=`${P}.gv3 tbody td.gk-${k}::after{content:"";position:absolute;left:7px;top:22%;bottom:22%;width:3px;border-radius:2px;background:var(--ge-${k})}`;
+  css+=`${P}.gv4 tbody td.gk-${k}::after{content:"";position:absolute;right:6px;top:6px;bottom:6px;width:2px;border-radius:1px;background:var(--ge-${k})}`;
+});
+const st=document.createElement("style");st.id="gvar-css";st.textContent=css;document.head.appendChild(st);
+
+const GV=()=>["1","2","3","4"].includes(S.gvar)?S.gvar:"";
+const on=()=>S.gstyle==="2";
+function apply(){
+  const w=document.getElementById("bt");
+  if(w){["1","2","3","4"].forEach(k=>w.classList.remove("gv"+k));if(on()&&GV())w.classList.add("gv"+GV())}
+  const s=document.getElementById("gvsel");
+  if(s){s.hidden=!on();s.value=GV()}
+  const g=document.getElementById("gvrad");
+  if(g){g.style.display=on()?"":"none";g.querySelectorAll("input").forEach(r=>{r.checked=r.value===GV()})}
+}
+
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);apply();return r};
+
+const oT=window.drawBudTab;
+window.drawBudTab=function(){
+  const r=oT.apply(this,arguments),g=document.getElementById("gsel");
+  if(g&&!document.getElementById("gvsel")){
+    const s=document.createElement("select");
+    s.id="gvsel";s.setAttribute("aria-label","Variante du liseré coloré");s.title="Variante du liseré coloré";
+    s.innerHTML=VL.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+    g.after(s);
+  }
+  apply();return r;
+};
+
+const oS=drawSet;
+drawSet=function(){
+  const r=oS.apply(this,arguments),a=document.getElementById("gsrad");
+  if(a&&!document.getElementById("gvrad")){
+    a.insertAdjacentHTML("afterend",`<div class="modes" id="gvrad" role="radiogroup" aria-label="Variante du liseré coloré">${VL.map(([v,l])=>`<label class="chip"><input type="radio" name="gvar" value="${v}"${GV()===v?" checked":""}>${l}</label>`).join("")}</div>`);
+  }
+  apply();return r;
+};
+
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.id==="gvsel"||t.name==="gvar"){S.gvar=t.value;save()}
+  if(t.id==="gvsel"||t.name==="gvar"||t.id==="gsel"||t.name==="gstyle")apply();
+});
+})();
+</script>
 </body>
 </html>
