@@ -4508,5 +4508,22 @@ document.addEventListener("change",e=>{
 });
 })();
 </script>
+ <style>
+/* Liseré de la colonne verticale : 6 px (variante « Liseré à gauche » et liseré d'origine à droite) */
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-r{box-shadow:inset 6px 0 0 var(--ge-r)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-d{box-shadow:inset 6px 0 0 var(--ge-d)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv1 tbody td.gk-s{box-shadow:inset 6px 0 0 var(--ge-s)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-r{box-shadow:inset -6px 0 0 var(--ge-r)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-d{box-shadow:inset -6px 0 0 var(--ge-d)!important}
+html #bt#bt#bt#bt.gsx.gs2 tbody td.gk-s{box-shadow:inset -6px 0 0 var(--ge-s)!important}
+
+/* Barres de couleur des catégories, des sous-catégories et des catégories à sous-catégories : 3 px */
+html #bt#bt#bt tbody tr.cb td.nm{box-shadow:inset 3px 0 0 var(--cc),3px 0 0 rgba(128,128,128,.4)!important}
+
+/* Espace à gauche des noms, ajusté pour que le texte reste bien placé */
+html #bt#bt#bt tbody tr.cb:not(.sub) td.nm{padding-left:10px}
+html #bt#bt#bt tbody tr.sub.cb td.nm{padding-left:6px}
+html #bt#bt#bt tbody tr.hdr.cb td.nm{padding-left:11px}
+</style>
 </body>
 </html>
