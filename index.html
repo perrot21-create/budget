@@ -3302,8 +3302,50 @@ function showOps(title,sets){
   o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}};
   document.body.appendChild(o);o.querySelector("button").focus();
 }
+/* Fenêtre 1 : sous-catégories d'une catégorie (regroupement par catégorie) */
+function openSubs(key,c){
+  const id=key.slice(4),type=key.slice(0,3),cat=S.cats.find(x=>x.id===id),nm=nameOf("cat",id);
+  const g=c.G.get(key),p=c.PG.get(key),M=new Map();
+  const add=(ops,w)=>(ops||[]).forEach(t=>{
+    const k=t.sub||"";let r=M.get(k);
+    if(!r){r={id:k,v:0,n:0,pv:0,o:[],po:[]};M.set(k,r)}
+    const v=type==="rev"?t.v:-t.v;
+    if(w==="c"){r.v+=v;r.n++;r.o.push(t)}else{r.pv+=v;r.po.push(t)}
+  });
+  add(g&&g.ops,"c");if(c.cmp)add(p&&p.ops,"p");
+  const sn=sid=>sid===""?"Sans sous-catégorie":((cat&&cat.subs.find(x=>x.id===sid))||{name:"Sous-catégorie supprimée"}).name;
+  const R=[...M.values()].map(r=>({...r,v:r2(r.v),pv:r2(r.pv)})).filter(r=>r.v!==0||r.pv!==0).sort((a,b)=>b.v-a.v||b.pv-a.pv);
+  const tot=r2(R.reduce((q,r)=>q+r.v,0)),ptot=r2(R.reduce((q,r)=>q+r.pv,0)),sum=R.reduce((q,r)=>q+Math.max(0,r.v),0)||1,cl=type==="rev"?"pos":"neg";
+  const good=d=>type==="dep"?d<0:d>0;
+  const body=R.map(r=>{
+    const d=r2(r.v-r.pv),pc=r.pv?Math.round(d/Math.abs(r.pv)*100):null;
+    return `<tr class="sv-r" data-sub="${esc(r.id)}" tabindex="0" title="Voir les opérations"><td>${esc(sn(r.id))}</td><td class="r">${r.n}</td><td class="r ${cl}">${eur2(r.v)}</td><td class="r">${r.v>0?Math.round(r.v/sum*100)+" %":"–"}</td>${c.cmp?`<td class="r">${eur2(r.pv)}</td><td class="r ${d?good(d)?"pos":"neg":""}">${d?sgn(d)+eur2(Math.abs(d))+(pc===null?"":" ("+sgn(pc)+Math.abs(pc)+" %)"):"="}</td>`:""}</tr>`}).join("");
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb wide" role="dialog" aria-modal="true" aria-label="Sous-catégories ${esc(nm)}"><div class="mh"><h2>${dot(id)}${esc(nm)}</h2><button data-r="0" aria-label="Fermer">✕</button></div>
+  <p class="sub">${dfr(c.a)} → ${dfr(c.e)} · Total : <b>${eur2(tot)}</b>${c.cmp?" (comparaison : "+eur2(ptot)+")":""} · Cliquez sur une sous-catégorie pour voir ses opérations.</p>
+  ${R.length?`<div class="tw2"><table class="lt" aria-label="Sous-catégories"><thead><tr><th>Sous-catégorie</th><th class="r">Op.</th><th class="r">Période</th><th class="r">Part</th>${c.cmp?`<th class="r">Comparaison</th><th class="r">Écart</th>`:""}</tr></thead><tbody>${body}</tbody></table></div>`:`<p class="empty">Aucune opération.</p>`}
+  <div><button class="primary" data-r="0">Fermer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  const open=tr=>{
+    const r=M.get(tr.dataset.sub);if(!r)return;
+    const sets=[[`Période : ${dfr(c.a)} → ${dfr(c.e)}`,r.o]];
+    if(c.cmp)sets.push([`Comparaison : ${dfr(c.ca)} → ${dfr(c.ce)}`,r.po]);
+    showOps(nm+" › "+sn(r.id),sets);
+  };
+  o.onclick=e=>{
+    if(e.target===o||e.target.closest("[data-r]")){end();return}
+    const tr=e.target.closest("tr[data-sub]");if(tr)open(tr);
+  };
+  o.onkeydown=e=>{
+    if(e.key==="Escape"){e.stopPropagation();end()}
+    else if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("tr[data-sub]")){e.preventDefault();open(e.target)}
+  };
+  document.body.appendChild(o);o.querySelector("button").focus();
+}
+
 function openRow(key){
   const c=calc(),g=c.G.get(key),p=c.PG.get(key),by=c.s.by,id=key.slice(4),nm=nameOf(by,id);
+  if(by==="cat"&&id!=="_"){openSubs(key,c);return}
   const sets=[[`Période : ${dfr(c.a)} → ${dfr(c.e)}`,g?g.ops:[]]];
   if(c.cmp)sets.push([`Comparaison : ${dfr(c.ca)} → ${dfr(c.ce)}`,p?p.ops:[]]);
   showOps(nm,sets);
