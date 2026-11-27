@@ -4327,5 +4327,46 @@ html #bt#bt .fr-t{--ft:inset 0 var(--fw) 0 var(--fc)}
 html #bt#bt .fr-b{--fb:inset 0 calc(var(--fw) * -1) 0 var(--fc)}
 html #bt#bt .fr-r{--fr:inset calc(var(--fw) * -1) 0 0 var(--fc)}
 html #bt#bt .fr-l{--fl:inset var(--fw) 0 0 var(--fc)}
-</style></body>
+</style>
+ <style>
+/* Budget annuel : violet et or, sans arc-en-ciel */
+
+/* Les deux teintes de base */
+#bt{--vp:#7a52c0;--vg:#d9a21b;--vgd:#a8740a}
+:root[data-theme="dark"] #bt{--vp:#b8a3ee;--vg:#f2c94c;--vgd:#f2c94c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #bt{--vp:#b8a3ee;--vg:#f2c94c;--vgd:#f2c94c}}
+
+/* Mois : un sur deux violet, un sur deux or (en-têtes et colonnes) */
+html #bt#bt .mc0,html #bt#bt .mc2,html #bt#bt .mc4,html #bt#bt .mc6,html #bt#bt .mc8,html #bt#bt .mc10{--mcol:var(--vp)}
+html #bt#bt .mc1,html #bt#bt .mc3,html #bt#bt .mc5,html #bt#bt .mc7,html #bt#bt .mc9,html #bt#bt .mc11{--mcol:var(--vg)}
+
+/* Trimestres : T1 et T3 violet, T2 et T4 or */
+html #bt#bt .q0,html #bt#bt .q2{--qc:var(--vp)}
+html #bt#bt .q1,html #bt#bt .q3{--qc:var(--vgd)}
+
+/* Colonne verticale : violet pour Revenus et Dépenses, or pour Synthèse */
+html #bt#bt td.gk-r{--gc:#9b78d6}
+html #bt#bt td.gk-d{--gc:#6a42b0}
+html #bt#bt td.gk-s{--gc:#d9a21b}
+:root[data-theme="dark"] #bt#bt td.gk-r{--gc:#8f74d8}
+:root[data-theme="dark"] #bt#bt td.gk-d{--gc:#6b4fb5}
+:root[data-theme="dark"] #bt#bt td.gk-s{--gc:#c9a227}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) #bt#bt td.gk-r{--gc:#8f74d8}
+:root:not([data-theme="light"]) #bt#bt td.gk-d{--gc:#6b4fb5}
+:root:not([data-theme="light"]) #bt#bt td.gk-s{--gc:#c9a227}}
+
+/* Cellules : crème doré, puis lavande une ligne (catégorie) sur deux */
+html #bt#bt tbody tr.k-rev.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 6%,var(--surface))!important}
+html #bt#bt tbody tr.k-rev.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 8%,var(--surface))!important}
+
+/* Sous-catégories : même principe, un cran plus soutenu */
+html #bt#bt tbody tr.k-rev.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 11%,var(--surface))!important}
+html #bt#bt tbody tr.k-rev.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 13%,var(--surface))!important}
+</style>
+</body>
 </html>
