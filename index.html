@@ -4607,5 +4607,51 @@ html #bt#bt#bt tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0
 /* Teinte propre à chaque mois : 9 % / 6 %  →  3 % */
 html #bt#bt#bt tbody tr:not(.sec):not(.gsp) td.mq:not(:hover):not(.hc){background-image:linear-gradient(color-mix(in srgb,var(--mcol) 3%,transparent),color-mix(in srgb,var(--mcol) 3%,transparent))!important}
 </style>
+ <style>
+/* Budget annuel : intensité des fonds catégories / sous-catégories (colonnes Budget, Réel, Écart) */
+#bt.cs1{--pc0:5%;--pc1:6%;--ps0:2%;--ps1:3%}  /* catégories plus foncées */
+#bt.cs2{--pc0:2%;--pc1:3%;--ps0:5%;--ps1:6%}  /* sous-catégories plus foncées */
+
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-rev.ca0:not(.sub):not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-dep.ca0:not(.sub):not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) var(--pc0),var(--surface))!important}
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-rev.ca1:not(.sub):not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-dep.ca1:not(.sub):not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) var(--pc1),var(--surface))!important}
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-rev.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-dep.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) var(--ps0),var(--surface))!important}
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-rev.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt#bt.csx:not(.lr) tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) var(--ps1),var(--surface))!important}
+</style>
+<script>
+/* Option « Fonds » du Budget annuel : actuel / catégories plus foncées / sous-catégories plus foncées */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function"||typeof window.drawBudTab!=="function")return;
+const bp=()=>S.bp||(S.bp={view:"all",dep:0,over:0,gap:0,pin:0});
+const val=()=>["1","2"].includes(bp().cs)?bp().cs:"";
+function apply(){
+  const w=document.getElementById("bt");
+  if(w){w.classList.remove("cs1","cs2","csx");if(val())w.classList.add("csx","cs"+val())}
+  const s=document.getElementById("csel");if(s)s.value=val();
+}
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);apply();return r};
+const oT=window.drawBudTab;
+window.drawBudTab=function(){
+  const r=oT.apply(this,arguments),d=document.querySelector(".bpc")||document.querySelector("#app>.ctl");
+  if(d&&!d.querySelector("#csel")){
+    const s=document.createElement("select");
+    s.id="csel";s.setAttribute("aria-label","Fonds des catégories et sous-catégories");
+    s.title="Fonds des cellules Budget / Réel / Écart";
+    s.innerHTML='<option value="">Fonds : actuel</option><option value="1">Fonds : catégories plus foncées</option><option value="2">Fonds : sous-catégories plus foncées</option>';
+    d.appendChild(s);
+  }
+  apply();return r;
+};
+document.addEventListener("change",e=>{
+  if(e.target.id!=="csel")return;
+  bp().cs=e.target.value;save();apply();
+});
+})();
+</script>
 </body>
 </html>
