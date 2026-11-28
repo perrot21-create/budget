@@ -4997,5 +4997,112 @@ draw();
   margin-top:auto;
 }
 </style>
+ <style>
+/* Tableau de bord, « Statistiques du mois » : même style que les cartes de comptes (données et script inchangés) */
+
+/* En-tête : titre à gauche, « Détail › » à droite sur la même ligne */
+#app #sv2d#sv2d .sv-h2{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+}
+
+/* Trois indicateurs : fond teinté selon le sens, barre de couleur à gauche */
+#app #sv2d#sv2d .sv-c{
+  border:0;
+  border-left:4px solid var(--mute);
+  background:color-mix(in srgb,var(--mute) 10%,var(--surface));
+}
+#app #sv2d#sv2d .sv-c:has(.v.neg){
+  border-left-color:var(--neg);
+  background:color-mix(in srgb,var(--neg) 10%,var(--surface));
+}
+#app #sv2d#sv2d .sv-c:has(.v.pos){
+  border-left-color:var(--pos);
+  background:color-mix(in srgb,var(--pos) 10%,var(--surface));
+}
+#app #sv2d#sv2d .sv-c .sub{
+  color:var(--mute);
+}
+#app #sv2d#sv2d .sv-c .v{
+  font-size:1.4rem;
+  font-weight:800;
+  line-height:1.2;
+}
+#app #sv2d#sv2d .sv-c small{
+  font-size:.75rem;
+  overflow-wrap:anywhere;
+}
+
+/* Espacement entre les grandes sections */
+#app #sv2d#sv2d #sx{
+  gap:18px;
+}
+
+/* Titres « Top 7… » et « Dépenses par compte » */
+#app #sv2d#sv2d #sx h3{
+  margin:0 0 4px;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--line);
+  font-size:var(--fs-lg);
+  font-weight:700;
+  color:var(--ink);
+}
+
+/* Top 7 : trait fin entre catégories, montant en gras, barre plus épaisse */
+#app #sv2d#sv2d #sx .sx-t{
+  gap:0;
+}
+#app #sv2d#sv2d #sx .sx-l{
+  padding:9px 0;
+  border-top:1px solid var(--line);
+}
+#app #sv2d#sv2d #sx .sx-l:first-child{
+  border-top:0;
+}
+#app #sv2d#sv2d #sx .sx-l > span:first-child{
+  font-size:var(--fs-lg);
+}
+#app #sv2d#sv2d #sx .sx-l > b{
+  font-size:var(--fs-lg);
+  font-weight:800;
+}
+#app #sv2d#sv2d #sx .sx-l .pb2{
+  height:8px;
+  margin:6px 0 4px;
+  border-radius:4px;
+}
+#app #sv2d#sv2d #sx .sx-l .pb2 i{
+  border-radius:4px;
+}
+#app #sv2d#sv2d #sx .sx-l .sub{
+  font-size:.75rem;
+  color:var(--mute);
+}
+
+/* Dépenses par compte : barre colorée à gauche, comme les cartes de comptes */
+#app #sv2d#sv2d #sx .sx-c{
+  border-left:4px solid var(--ac);
+  padding:10px 12px;
+}
+#app #sv2d#sv2d #sx .sx-c .sub:first-child{
+  font-size:var(--fs-md);
+  font-weight:600;
+  color:var(--mute);
+}
+#app #sv2d#sv2d #sx .sx-c b{
+  font-size:1.25rem;
+  font-weight:800;
+  margin:2px 0;
+}
+#app #sv2d#sv2d #sx .sx-c .sub:not(:first-child){
+  font-size:.75rem;
+}
+#app #sv2d#sv2d #sx .sx-c .pb2{
+  height:6px;
+  margin-top:6px;
+}
+</style>
 </body>
 </html>
