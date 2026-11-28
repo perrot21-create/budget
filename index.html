@@ -3793,7 +3793,7 @@ function sync(){
 /* ---------- Taille du texte : réduit par paliers de 5 % jusqu'à ce que tout tienne ---------- */
 function scale(){
   const b=parseFloat(BASE)||1;
-  for(let f=1;f>=.699;f-=.05){
+for(let f=1;f>=.449;f-=.05){
     root.style.setProperty("--k",String(Math.round(b*f*100)/100));
     setH();
     if(!over())return true;
