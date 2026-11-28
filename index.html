@@ -5377,5 +5377,52 @@ draw();
   #app .dlast tbody tr td:first-child{box-shadow:none;padding-left:0}
 }
 </style>
+ <style>
+/* Tableau de bord > Solde cumulé budgétaire : cases par année, fond selon le signe, mini-barre */
+
+/* Cases séparées par un petit espace (à la place des traits verticaux) */
+html #app#app:has(.hero) .cbt{border-collapse:separate!important;border-spacing:6px 0!important}
+html #app#app:has(.hero) .cbt th,
+html #app#app:has(.hero) .cbt td{border:0!important}
+
+/* Année (haut de la case) */
+html #app#app:has(.hero) .cbt th{
+  padding:6px 6px 0!important;
+  border-radius:8px 8px 0 0;
+  font-weight:600;
+  background:color-mix(in srgb,var(--mute) 8%,var(--surface))!important;
+}
+/* Montant (bas de la case), mini-barre en dessous */
+html #app#app:has(.hero) .cbt td{
+  position:relative;
+  padding:0 6px 13px!important;
+  border-radius:0 0 8px 8px;
+  background:color-mix(in srgb,var(--mute) 8%,var(--surface))!important;
+}
+
+/* Fond selon le signe */
+html #app#app:has(.hero) .cbt th.sp,
+html #app#app:has(.hero) .cbt td.sp{background:color-mix(in srgb,var(--pos) 10%,var(--surface))!important}
+html #app#app:has(.hero) .cbt th.sn,
+html #app#app:has(.hero) .cbt td.sn{background:color-mix(in srgb,var(--neg) 11%,var(--surface))!important}
+
+/* Mini-barre : fond gris, remplissage proportionnel (variable --w posée par le script) */
+html #app#app:has(.hero) .cbt td::before{
+  content:"";position:absolute;left:12px;right:12px;bottom:5px;height:3px;border-radius:2px;
+  background:color-mix(in srgb,var(--mute) 25%,transparent);
+}
+html #app#app:has(.hero) .cbt td::after{
+  content:"";position:absolute;left:12px;bottom:5px;height:3px;border-radius:2px;
+  width:calc((100% - 24px) * var(--w,0));
+  background:var(--pos);
+}
+html #app#app:has(.hero) .cbt td.sn::after{background:var(--neg)}
+
+/* Année en cours : liseré en haut et année à la couleur du thème */
+html #app#app:has(.hero) .cbt th.scur{
+  color:var(--accent);
+  box-shadow:inset 0 3px 0 var(--accent);
+}
+</style>
 </body>
 </html>
