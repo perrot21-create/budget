@@ -4589,5 +4589,23 @@ html #bt#bt#bt tbody tr.tsol td.nm{box-shadow:inset 3px 0 0 var(--bl),3px 0 0 va
 html #bt#bt#bt tbody tr.gap:not(.tsol):not(.tcum) td.nm{box-shadow:inset 3px 0 0 var(--reel),3px 0 0 var(--syn-sep)!important;padding-left:10px}
 html #bt#bt#bt tbody tr.tcum td.nm{box-shadow:inset 3px 0 0 var(--accent),3px 0 0 var(--syn-sep)!important;padding-left:10px}
 </style>
+ <style>
+/* Budget annuel : fonds des cellules Budget / Réel / Écart beaucoup plus clairs (mêmes teintes or et violet) */
+
+/* Catégories : 6 % / 8 %  →  2 % / 3 % */
+html #bt#bt#bt tbody tr.k-rev.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.k-dep.ca0:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 2%,var(--surface))!important}
+html #bt#bt#bt tbody tr.k-rev.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.k-dep.ca1:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 3%,var(--surface))!important}
+
+/* Sous-catégories : 11 % / 13 %  →  4 % / 5 % */
+html #bt#bt#bt tbody tr.k-rev.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.k-dep.ca0.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vg) 4%,var(--surface))!important}
+html #bt#bt#bt tbody tr.k-rev.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0),
+html #bt#bt#bt tbody tr.k-dep.ca1.sub:not(.sec):not(.gsp) td:not(.grp):not(.grp0){background-color:color-mix(in srgb,var(--vp) 5%,var(--surface))!important}
+
+/* Teinte propre à chaque mois : 9 % / 6 %  →  3 % */
+html #bt#bt#bt tbody tr:not(.sec):not(.gsp) td.mq:not(:hover):not(.hc){background-image:linear-gradient(color-mix(in srgb,var(--mcol) 3%,transparent),color-mix(in srgb,var(--mcol) 3%,transparent))!important}
+</style>
 </body>
 </html>
