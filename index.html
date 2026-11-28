@@ -4666,5 +4666,40 @@ html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-r::after,
 html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-d::after,
 html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-s::after{left:6px!important;right:auto!important}
 </style>
+ <script>
+/* Budget annuel : en vue annuelle (aucun mois ouvert), toutes les colonnes, jusqu'à « % réalisé », tiennent dans la largeur de l'écran */
+(()=>{
+"use strict";
+if(typeof window.drawBud!=="function")return;
+const MIN=72;
+const st=document.createElement("style");
+st.textContent="#bt.fitw{--cp:6px}";
+document.head.appendChild(st);
+function fit(){
+  const w=document.getElementById("bt"),tb=w&&w.querySelector("table");
+  if(!tb)return;
+  w.classList.remove("fitw");
+  if(typeof CM!=="undefined"&&Object.values(CM).some(Boolean))return;   /* un mois ouvert : comportement habituel */
+  const cw=S.colw||{},cols=[...tb.querySelectorAll("col")],avail=w.clientWidth-2;
+  let fixed=0,auto=[];
+  cols.forEach(c=>{
+    const k=c.dataset.c,cur=parseFloat(c.style.width)||0;
+    if(k==="g"||k==="n"||cw[k])fixed+=cur;else auto.push(c);
+  });
+  if(!auto.length)return;
+  const aw=Math.floor((avail-fixed)/auto.length);
+  if(aw<MIN)return;                                   /* écran trop étroit : défilement habituel */
+  auto.forEach(c=>{c.style.width=aw+"px"});
+  tb.style.width=(fixed+aw*auto.length)+"px";
+  w.classList.add("fitw");
+  const inn=w.querySelector(".in");if(inn)inn.style.paddingRight="0";
+  w.scrollLeft=0;
+  const t=w.querySelector("table"),i=w.querySelector(".vs i");if(t&&i)i.style.height=t.offsetHeight+"px";
+}
+const oB=window.drawBud;
+window.drawBud=function(){const r=oB.apply(this,arguments);try{fit()}catch(e){console.error("fit annuel :",e)}return r};
+if(typeof T!=="undefined"&&T==="bud")draw();
+})();
+</script>
 </body>
 </html>
