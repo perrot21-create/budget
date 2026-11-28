@@ -5454,5 +5454,19 @@ drawDash=function(){od.apply(this,arguments);try{deco()}catch(e){console.error("
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
 </script>
+ <style>
+/* Correctif : retour aux hauteurs d'origine pour que le tableau de bord tienne sans défiler */
+
+/* Solde cumulé budgétaire : même hauteur qu'avant, la mini-barre se loge dans la marge du bas */
+html #app#app:has(.hero) .cbt th{padding:5px 6px 0!important}
+html #app#app:has(.hero) .cbt td{padding:0 6px 7px!important}
+html #app#app:has(.hero) .cbt td::before,
+html #app#app:has(.hero) .cbt td::after{bottom:2px;height:2px}
+
+/* Dernières opérations : les pastilles ne dépassent plus la hauteur d'une ligne */
+#app .dlast td.op-p .pl,
+#app .dlast td.op-n .pl,
+#app .dlast td.op-z .pl{padding:0 9px;line-height:1.2}
+</style>
 </body>
 </html>
