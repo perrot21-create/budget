@@ -3640,7 +3640,7 @@ function bloc1(){
     :`<p class="empty">Aucune dépense ce mois-ci.</p>`;
   const accs=S.acc.map((a,i)=>{const v=Math.max(0,acc[a.id]||0);
     return `<div class="sx-c t${i}"><span class="sub">${esc(a.name)}</span><b>${eur2(v)}</b><span class="sub">${Math.round(v/tot*100)} % des dépenses</span><div class="pb2"><i style="width:${(v/tot*100).toFixed(1)}%"></i></div></div>`}).join("");
-  return `<div id="sx"><div><h3>Top 5 des catégories de dépenses</h3><div class="sx-t">${cats}</div></div><div><h3>Dépenses par compte</h3><div class="sx-a">${accs}</div></div></div>`;
+  return `<div id="sx"><div><h3>Top 7 des catégories de dépenses</h3><div class="sx-t">${cats}</div></div><div><h3>Dépenses par compte</h3><div class="sx-a">${accs}</div></div></div>`;
 }
 
 function bloc2(){
