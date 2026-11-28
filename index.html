@@ -5424,5 +5424,35 @@ html #app#app:has(.hero) .cbt th.scur{
   box-shadow:inset 0 3px 0 var(--accent);
 }
 </style>
+<script>
+/* Solde cumulé budgétaire : signe, longueur des barres, année en cours */
+(()=>{
+"use strict";
+if(typeof drawDash!=="function")return;
+
+function deco(){
+  const t=document.querySelector("#app .cbt");if(!t)return;
+  const ths=[...t.querySelectorAll("thead th")].slice(1),
+        tds=[...t.querySelectorAll("tbody td")];
+  const vals=tds.map(td=>{
+    const s=td.textContent.replace(/[\s\u00a0\u202f€]/g,"").replace(/\u2212/g,"-").replace(",",".");
+    return parseFloat(s)||0;
+  });
+  const mx=Math.max(1,...vals.map(Math.abs)),cy=String(new Date().getFullYear());
+  tds.forEach((td,i)=>{
+    const v=vals[i],c=v<0?"sn":"sp";
+    td.classList.add(c);
+    td.style.setProperty("--w",(Math.abs(v)/mx).toFixed(3));
+    if(v<0&&td.textContent.trim().startsWith("-"))td.textContent="\u2212"+td.textContent.trim().slice(1);
+    const th=ths[i];
+    if(th){th.classList.add(c);if(th.textContent.trim()===cy)th.classList.add("scur")}
+  });
+}
+
+const od=drawDash;
+drawDash=function(){od.apply(this,arguments);try{deco()}catch(e){console.error("solde_cumule :",e)}};
+if(typeof T!=="undefined"&&T==="dash")draw();
+})();
+</script>
 </body>
 </html>
