@@ -5241,5 +5241,99 @@ draw();
   border-color:var(--neg);
 }
 </style>
+ <style>
+/* Tableau de bord, « Prêts entre proches » : indicateurs en haut, proches en 2 colonnes avec pointillés (script inchangé) */
+
+/* Le bloc devient une grille : en-tête et indicateurs sur toute la largeur, proches en colonnes */
+#app #pqd#pqd{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:10px;
+  align-content:start;
+}
+#app #pqd#pqd > .lhead,
+#app #pqd#pqd > .pd-k,
+#app #pqd#pqd > p.empty{
+  grid-column:1/-1;
+}
+#app #pqd#pqd > .lhead{
+  margin-bottom:4px;
+}
+
+/* ---------- Trois indicateurs : barre de couleur à gauche ---------- */
+#app #pqd#pqd .pd-k{
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:10px;
+  margin-bottom:2px;
+}
+#app #pqd#pqd .pd-c{
+  padding:10px 14px;
+  border-left:4px solid var(--accent);
+  background:color-mix(in srgb,var(--accent) 8%,var(--surface));
+}
+#app #pqd#pqd .pd-c.p{
+  border-left-color:var(--pos);
+  background:color-mix(in srgb,var(--pos) 12%,var(--surface));
+}
+#app #pqd#pqd .pd-c.n{
+  border-left-color:var(--neg);
+  background:color-mix(in srgb,var(--neg) 10%,var(--surface));
+}
+#app #pqd#pqd .pd-c .sub{
+  color:var(--mute);
+}
+#app #pqd#pqd .pd-c b{
+  font-size:1.5rem;
+  font-weight:800;
+  line-height:1.25;
+}
+
+/* ---------- Proches : petites cartes avec pointillés entre le nom et le montant ---------- */
+#app #pqd#pqd .pd-l{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  padding:10px 14px;
+  border-top:0;
+  border-radius:var(--rc2,12px);
+  border-left:4px solid var(--pos);
+  background:color-mix(in srgb,var(--pos) 7%,var(--surface));
+}
+#app #pqd#pqd .pd-l:has(b.neg){
+  border-left-color:var(--neg);
+  background:color-mix(in srgb,var(--neg) 7%,var(--surface));
+}
+#app #pqd#pqd .pd-l > span:first-child{
+  order:0;
+  flex:none;
+}
+#app #pqd#pqd .pd-l::after{
+  content:"";
+  order:1;
+  flex:1;
+  min-width:12px;
+  border-bottom:1px dotted var(--mute);
+  transform:translateY(-3px);
+}
+#app #pqd#pqd .pd-l > span:last-child{
+  order:2;
+  flex:none;
+  white-space:nowrap;
+}
+#app #pqd#pqd .pd-l > span:first-child b{
+  font-size:var(--fs-lg);
+  font-weight:700;
+}
+#app #pqd#pqd .pd-l .sub{
+  margin-left:4px;
+  font-size:var(--fs-md);
+  color:var(--mute);
+}
+#app #pqd#pqd .pd-l > span:last-child b{
+  font-size:1.1rem;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+</style>
 </body>
 </html>
