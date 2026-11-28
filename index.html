@@ -4940,5 +4940,62 @@ draw();
   background:color-mix(in srgb,var(--ac) 22%,transparent);
 }
 </style>
+ <style>
+/* Tableau de bord, bloc du haut : même style que les cartes de comptes (taille et structure inchangées) */
+#app .hero .hcard{
+  display:flex;
+  flex-direction:column;
+  border-left:5px solid var(--accent);
+}
+
+/* ---------- Solde total du jour ---------- */
+/* Titre en haut, solde au centre, détails en bas */
+#app .hero .hcard.hmain .hbig{
+  margin:auto 0;
+  font-size:2.5rem;
+  line-height:1.1;
+  font-weight:800;
+}
+
+/* Prévu en fin de mois : libellé à gauche, pointillés, montant à droite */
+#app .hero .hcard.hmain p.sub{
+  margin:0;
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+}
+#app .hero .hcard.hmain p.sub::after{
+  content:"";
+  order:1;
+  flex:1;
+  border-bottom:1px dotted var(--mute);
+  transform:translateY(-3px);
+}
+#app .hero .hcard.hmain p.sub b{
+  order:2;
+}
+
+/* Opérations non pointées : pastille à la couleur du thème */
+#app .hero .hcard.hmain p.sub + p.sub{
+  display:block;
+  align-self:flex-start;
+  margin-top:10px;
+  padding:3px 12px;
+  border-radius:999px;
+  font-size:var(--fs-sm);
+  font-weight:600;
+  color:var(--ink);
+  background:color-mix(in srgb,var(--accent) 18%,transparent);
+}
+#app .hero .hcard.hmain p.sub + p.sub::after{
+  content:none;
+}
+
+/* ---------- Reste à dépenser (bloc d'à côté) ---------- */
+/* Titre en haut, le reste du contenu descend en bas du bloc */
+#app .hero .hcard:not(.hmain) .hbig{
+  margin-top:auto;
+}
+</style>
 </body>
 </html>
