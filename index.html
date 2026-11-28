@@ -4571,5 +4571,23 @@ html #bt#bt#bt tbody tr.cb:not(.sub) td.nm{padding-left:10px}
 html #bt#bt#bt tbody tr.sub.cb td.nm{padding-left:6px}
 html #bt#bt#bt tbody tr.hdr.cb td.nm{padding-left:11px}
 </style>
+ <style>
+/* Budget annuel : le carré à gauche de « Classement par tiers » prend la couleur de la ligne,
+   il ne forme plus un carré séparé sous « Synthèse » */
+html #bt#bt#bt tbody tr.sec.k-syn.tier td.grp0{background:var(--sec-tier)!important;background-image:none!important}
+html #bt#bt#bt tbody tr.tz0 td.grp0{background:color-mix(in srgb,var(--syn-pa) 45%,var(--surface))!important}
+html #bt#bt#bt tbody tr.tz1 td.grp0{background:color-mix(in srgb,var(--syn-pa) 20%,var(--surface))!important}
+/* idem en « Lecture rapide » */
+html #bt#bt#bt.lr tbody tr.sec.k-syn.tier td.grp0{background:color-mix(in srgb,var(--mute) 20%,var(--surface))!important}
+html #bt#bt#bt.lr tbody tr.tz0 td.grp0{background:color-mix(in srgb,var(--mute) 7%,var(--surface))!important}
+html #bt#bt#bt.lr tbody tr.tz1 td.grp0{background:var(--surface)!important}
+
+/* Synthèse : petite barre de couleur de 3 px devant les libellés, comme pour les catégories */
+html #bt#bt#bt tbody tr.trev td.nm{box-shadow:inset 3px 0 0 var(--pos),3px 0 0 var(--syn-sep)!important;padding-left:10px}
+html #bt#bt#bt tbody tr.tdep td.nm{box-shadow:inset 3px 0 0 var(--neg),3px 0 0 var(--syn-sep)!important;padding-left:10px}
+html #bt#bt#bt tbody tr.tsol td.nm{box-shadow:inset 3px 0 0 var(--bl),3px 0 0 var(--syn-sep)!important;padding-left:10px}
+html #bt#bt#bt tbody tr.gap:not(.tsol):not(.tcum) td.nm{box-shadow:inset 3px 0 0 var(--reel),3px 0 0 var(--syn-sep)!important;padding-left:10px}
+html #bt#bt#bt tbody tr.tcum td.nm{box-shadow:inset 3px 0 0 var(--accent),3px 0 0 var(--syn-sep)!important;padding-left:10px}
+</style>
 </body>
 </html>
