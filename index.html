@@ -3631,7 +3631,7 @@ function bloc1(){
   const rea={},acc={};
   S.tx.forEach(t=>{if(t.date.slice(0,7)!==ym||!t.cat||kindOf(t.cat)!=="dep")return;
     rea[t.cat]=(rea[t.cat]||0)-t.v;acc[t.acc]=(acc[t.acc]||0)-t.v});
-  const top=Object.keys(rea).map(id=>({id,r:rea[id],b:bud[id]||0})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r).slice(0,5);
+  const top=Object.keys(rea).map(id=>({id,r:rea[id],b:bud[id]||0})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r).slice(0,7);
   const tot=Object.values(acc).reduce((s,v)=>s+Math.max(0,v),0)||1;
   const cats=top.length?top.map(x=>{
     const c=S.cats.find(z=>z.id===x.id),pct=x.b>0?Math.min(100,x.r/x.b*100):0,ov=x.b>0&&x.r>x.b;
