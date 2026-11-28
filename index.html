@@ -4653,5 +4653,18 @@ document.addEventListener("change",e=>{
 });
 })();
 </script>
+ <style>
+/* Budget annuel, colonne « Liseré coloré » : le liseré est toujours à gauche, dans la cellule */
+
+/* Liseré actuel (sans variante) : de la droite vers la gauche */
+html #bt#bt#bt#bt#bt#bt.gsx.gs2:not(.gv1):not(.gv2):not(.gv3):not(.gv4) tbody td.gk-r{box-shadow:inset 6px 0 0 var(--ge-r)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2:not(.gv1):not(.gv2):not(.gv3):not(.gv4) tbody td.gk-d{box-shadow:inset 6px 0 0 var(--ge-d)!important}
+html #bt#bt#bt#bt#bt#bt.gsx.gs2:not(.gv1):not(.gv2):not(.gv3):not(.gv4) tbody td.gk-s{box-shadow:inset 6px 0 0 var(--ge-s)!important}
+
+/* Variante 4 (« Liseré fin avec espace ») : barre ramenée à gauche */
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-r::after,
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-d::after,
+html #bt#bt#bt#bt#bt#bt.gsx.gs2.gv4 tbody td.gk-s::after{left:6px!important;right:auto!important}
+</style>
 </body>
 </html>
