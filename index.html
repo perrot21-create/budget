@@ -5335,5 +5335,47 @@ draw();
   font-variant-numeric:tabular-nums;
 }
 </style>
+<style>
+/* Tableau de bord > Dernières opérations : lecture plus rapide (structure inchangée) */
+
+/* Lignes : fond neutre, barre de couleur du compte à gauche */
+#app .dlast tbody tr td{background:var(--surface)}
+#app .dlast tbody tr:hover td{background:color-mix(in srgb,var(--ac,var(--accent)) 8%,var(--surface))}
+#app .dlast tbody tr td:first-child{box-shadow:inset 4px 0 0 var(--ac);padding-left:12px}
+
+/* En-têtes plus discrets */
+#app .dlast thead th{font-size:var(--fs-sm);font-weight:600;color:var(--mute);border-bottom:1px solid var(--line)}
+
+/* Montant en pastille (la classe est posée par le script plus bas) */
+#app .dlast td.op-p .pl,#app .dlast td.op-n .pl,#app .dlast td.op-z .pl{
+  display:inline-block;padding:1px 9px;line-height:1.4;border-radius:999px;font-weight:600;font-variant-numeric:tabular-nums}
+#app .dlast td.op-p .pl{background:color-mix(in srgb,var(--pos) 14%,var(--surface));color:var(--pos)}
+#app .dlast td.op-n .pl{background:color-mix(in srgb,var(--neg) 14%,var(--surface));color:var(--neg)}
+#app .dlast td.op-z .pl{background:color-mix(in srgb,var(--mute) 14%,var(--surface));color:var(--mute)}
+
+/* Pointée : rond plein (pointée) ou cercle vide (non pointée) */
+#app .dlast td[data-c="k"]{text-align:center}
+#app .dlast td[data-c="k"] span[aria-hidden]{font-size:0}
+#app .dlast td[data-c="k"] span[aria-hidden]::before{
+  content:"";display:inline-block;width:11px;height:11px;border-radius:50%;box-sizing:border-box;vertical-align:middle}
+#app .dlast td[data-c="k"][title="Pointée"] span[aria-hidden]::before{background:var(--pos)}
+#app .dlast td[data-c="k"][title="Non pointée"] span[aria-hidden]::before{border:1.5px solid var(--mute)}
+
+/* Hiérarchie du texte (écran large) : le tiers ressort, le reste s'efface */
+@media(min-width:761px){
+  #app .dlast td[data-c="d"],
+  #app .dlast td[data-c="ac"],
+  #app .dlast td[data-c="c"]{color:var(--mute)}
+  #app .dlast td[data-c="t"]{color:var(--ink);font-weight:600}
+  /* Non pointée : date et tiers en plus foncé pour repérer ce qui reste à pointer */
+  #app .dlast tbody tr:has(td[data-c="k"][title="Non pointée"]) td[data-c="d"]{color:var(--ink)}
+}
+
+/* Mobile : la barre de couleur passe sur toute la ligne */
+@media(max-width:760px){
+  #app .dlast tbody tr{box-shadow:inset 4px 0 0 var(--ac);padding-left:14px}
+  #app .dlast tbody tr td:first-child{box-shadow:none;padding-left:0}
+}
+</style>
 </body>
 </html>
