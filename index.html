@@ -5562,5 +5562,67 @@ if(typeof T!=="undefined"&&T==="set")drawSet();
   border-radius:2px;
 }
 </style>
+ <style>
+/* Statistiques du mois : Top 7 à gauche, Dépenses par compte à droite */
+#app #sv2d#sv2d #sx{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:20px;
+  align-items:stretch;
+  margin-top:12px;
+}
+#app #sv2d#sv2d #sx > div{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+/* Top 7 : les 7 lignes se répartissent sur toute la hauteur de la colonne */
+#app #sv2d#sv2d #sx .sx-t{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+#app #sv2d#sv2d #sx .sx-l{
+  padding:5px 0;
+}
+#app #sv2d#sv2d #sx .sx-l .pb2{
+  height:4px;
+  margin:4px 0 2px;
+  border-radius:2px;
+}
+#app #sv2d#sv2d #sx .sx-l .pb2 i{
+  border-radius:2px;
+}
+
+/* Dépenses par compte : grille 2 × 2, cartes qui remplissent la hauteur */
+#app #sv2d#sv2d #sx .sx-a{
+  flex:1;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+#app #sv2d#sv2d #sx .sx-c{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:10px 12px;
+}
+#app #sv2d#sv2d #sx .sx-c b{
+  font-size:1.2rem;
+  margin:0;
+}
+#app #sv2d#sv2d #sx .sx-c .pb2{
+  margin-top:4px;
+}
+
+/* Écran étroit : retour à une seule colonne */
+@media(max-width:900px){
+  #app #sv2d#sv2d #sx{grid-template-columns:1fr}
+  #app #sv2d#sv2d #sx .sx-a{grid-template-rows:none}
+}
+</style>
 </body>
 </html>
