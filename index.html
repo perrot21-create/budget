@@ -5519,5 +5519,37 @@ drawDash=function(){od.apply(this,arguments);try{deco()}catch(e){console.error("
 if(typeof T!=="undefined"&&T==="dash")draw();
 })();
 </script>
+ <script>
+/* Thème prêt à l'emploi : Crème et violet (+ thème enregistré avec Georgia) */
+(()=>{
+if(typeof UPRE==="undefined"||UPRE.some(p=>p.id==="cremeviolet"))return;
+const C={
+ light:{bg:"#faf6ee",surface:"#fffdf7",ink:"#2a2038",mute:"#6b6080",line:"#e8e0ee",accent:"#5b34a0",pos:"#2f7a50",neg:"#b3412f",bl:"#4b3a9e",reel:"#9a6400",
+  rev:"#e3f0e6",dep:"#f3e4dc",syn:"#ece3f8",ptc:"#d9cdee",srev:"#d7ead9",sdep:"#f1d9cd",ssyn:"#e2d8f2",stier:"#efe4c0",vsep:"#5b34a0"},
+ dark:{bg:"#1a1327",surface:"#251b37",ink:"#f3ecfa",mute:"#b3a6c8",line:"#3d2f55",accent:"#f2c94c",pos:"#6fd3a0",neg:"#f5a08c",bl:"#b8a3ee",reel:"#f2c94c",
+  rev:"#2a4a3c",dep:"#4a3340",syn:"#3a2c55",ptc:"#8a74c4",srev:"#2d5442",sdep:"#5a3b45",ssyn:"#43346a",stier:"#5a4a1c",vsep:"#f2c94c"}};
+UPRE.push({id:"cremeviolet",n:"Crème et violet",c:C});
+
+/* Thème complet dans « Mes thèmes » : couleurs + Georgia + cartes arrondies à 14 px */
+S.themes=S.themes||[];
+if(!S.themes.some(t=>t.id==="t_cremeviolet")){
+  S.themes.push({id:"t_cremeviolet",name:"Crème et violet",theme:"",ink:"",ui:{c:C,ff:"georgia",rc:14}});
+  save();
+}
+
+/* Barres de catégories du tableau de bord : toutes violettes avec ce thème seulement */
+const st=document.createElement("style");
+st.textContent='html[data-cv] #sx .sx-l .pb2:not(.ov) i{background:var(--accent)!important}';
+document.head.appendChild(st);
+const pa=applyUI;
+applyUI=function(){
+  pa.apply(this,arguments);
+  const c=uiClean(S.ui).c[uiEff()];
+  document.documentElement.toggleAttribute("data-cv",c.ptc==="#d9cdee"||c.ptc==="#8a74c4");
+};
+applyInk();
+if(typeof T!=="undefined"&&T==="set")drawSet();
+})();
+</script>
 </body>
 </html>
