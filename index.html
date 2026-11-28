@@ -2525,7 +2525,7 @@ function fit(){
   const top=a.getBoundingClientRect().top+scrollY;
   a.style.height=Math.floor(innerHeight-top-16)+"px";r.classList.add("accfix");
   /* si une colonne ne peut vraiment pas tenir, on revient à la page normale */
-  if([...a.querySelectorAll(":scope > .dcol")].some(c=>c.scrollHeight>c.clientHeight+2)){dashUnwrap(a);r.classList.remove("accfix")}
+  
  }else if(T==="acc"){
   if(!matchMedia("(min-width:761px)").matches||!w)return;
   const top=w.getBoundingClientRect().top+scrollY,h=innerHeight-top-60;
