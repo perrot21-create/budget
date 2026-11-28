@@ -4701,5 +4701,89 @@ window.drawBud=function(){const r=oB.apply(this,arguments);try{fit()}catch(e){co
 if(typeof T!=="undefined"&&T==="bud")draw();
 })();
 </script>
+ <style>
+/* Bouton « Gérer » du bloc « Mes comptes » (Tableau de bord) */
+#app .lhead > #mgb{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:4px 14px;min-height:34px;font-size:var(--fs-md);font-weight:600;border-radius:var(--rb,8px);box-shadow:none}
+#app .lhead > #mgb:hover,#app .lhead > #mgb[aria-expanded="true"]{border-color:var(--accent);color:var(--accent);background:var(--surface);text-decoration:none;box-shadow:none}
+#mgm{min-width:210px;padding:6px}
+#mgm button{display:block;width:100%;text-align:left;padding:8px 12px;border-radius:6px}
+#mgm button:hover:not(:disabled){background:var(--bg);box-shadow:none}
+#mgm .mgh{padding:8px 12px 2px;font-size:var(--fs-sm);font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+#mgm hr{border:0;border-top:1px solid var(--line);margin:6px 0 0}
+</style>
+<script>
+/* Tableau de bord > Mes comptes : bouton « Gérer » (nouveau compte / modifier un compte) */
+(()=>{
+"use strict";
+if(typeof drawDash!=="function")return;
+const MAX=5;
+const close=()=>{const m=document.getElementById("mgm");if(m)m.remove();const b=document.getElementById("mgb");if(b)b.setAttribute("aria-expanded","false")};
+
+function inject(){
+  const app=document.getElementById("app");if(!app)return;
+  const sec=[...app.querySelectorAll("section")].find(s=>s.querySelector(":scope > .dgrid"));
+  const h=sec&&sec.querySelector(":scope > h2");
+  if(!h||document.getElementById("mgb"))return;
+  h.outerHTML='<div class="lhead"><h2>Mes comptes</h2><button type="button" id="mgb" aria-haspopup="true" aria-expanded="false">Gérer ▾</button></div>';
+}
+const od=drawDash;
+drawDash=function(){close();od.apply(this,arguments);try{inject()}catch(e){console.error("Gérer les comptes :",e)}};
+
+function openMenu(btn){
+  close();
+  const m=document.createElement("div");m.id="mgm";m.className="cmenu";m.setAttribute("role","menu");
+  const full=S.acc.length>=MAX;
+  m.innerHTML=`<button type="button" role="menuitem" data-mg="new"${full?` disabled title="${MAX} comptes maximum"`:""}>＋ Nouveau compte</button><hr><div class="mgh">Modifier un compte</div>`
+    +S.acc.map((a,i)=>`<button type="button" role="menuitem" data-mg="edit:${a.id}"><i class="cd t${i}" style="background:var(--ac)"></i>${esc(a.name)}</button>`).join("");
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect();
+  m.style.top=(r.bottom+6)+"px";m.style.left="auto";m.style.right=Math.max(8,innerWidth-r.right)+"px";
+  btn.setAttribute("aria-expanded","true");
+  const f=m.querySelector("button:not(:disabled)");if(f)f.focus();
+}
+
+async function newAcc(){
+  if(S.acc.length>=MAX){toast(MAX+" comptes maximum");return}
+  const n=await askText("Nom du nouveau compte :","Compte "+(S.acc.length+1),"Créer");
+  if(!n)return;
+  const sn=snap();S.acc.push({id:uid(),name:n});save();draw();
+  toast("Compte « "+n+" » créé",undoTo(sn));
+}
+
+function editAcc(id){
+  const i=S.acc.findIndex(a=>a.id===id);if(i<0)return;
+  const a=S.acc[i],eff=uiEff(),cur=((uiClean(S.ui).a[eff]||{})[i]||UAC[eff][i%5]).toLowerCase();
+  const prev=document.activeElement,o=document.createElement("div");o.className="mdl";
+  o.innerHTML=`<div class="mb" role="dialog" aria-modal="true" aria-label="Modifier le compte"><p><b>Modifier le compte</b></p>
+  <label class="sub" style="display:block;margin-bottom:12px">Nom<input type="text" id="mgn" maxlength="40" value="${esc(a.name)}" style="width:100%"></label>
+  <label class="sub" style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><input type="color" id="mgc" value="${cur}" style="width:40px;height:32px;padding:2px"><span>Couleur du compte (mode ${eff==="dark"?"sombre":"clair"})</span></label>
+  <div><button type="button" data-r="0">Annuler</button><button type="button" class="primary" data-r="1">Enregistrer</button></div></div>`;
+  const end=()=>{o.remove();if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  const go=()=>{
+    const v=o.querySelector("#mgn").value.trim();
+    if(!v){toast("Le nom ne peut pas être vide");return}
+    const c=o.querySelector("#mgc").value.toLowerCase(),sn=snap();
+    a.name=v;
+    if(c!==cur)uiSetA(i,c);
+    save();end();draw();toast("Compte modifié",undoTo(sn));
+  };
+  o.onclick=e=>{if(e.target===o)end();else{const b=e.target.closest("[data-r]");if(b)b.dataset.r==="1"?go():end()}};
+  o.onkeydown=e=>{if(e.key==="Escape"){e.stopPropagation();end()}else if(e.key==="Enter"&&e.target.id==="mgn"){e.preventDefault();go()}};
+  document.body.appendChild(o);
+  const n=o.querySelector("#mgn");n.focus();n.select();
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("#mgb");
+  if(b){document.getElementById("mgm")?close():openMenu(b);return}
+  const it=e.target.closest&&e.target.closest("#mgm [data-mg]");
+  if(it){const v=it.dataset.mg;close();v==="new"?newAcc():editAcc(v.slice(5));return}
+  if(!e.target.closest("#mgm"))close();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+addEventListener("resize",close);
+if(typeof T!=="undefined"&&T==="dash")draw();
+})();
+</script>
 </body>
 </html>
