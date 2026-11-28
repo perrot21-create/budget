@@ -5468,5 +5468,56 @@ html #app#app:has(.hero) .cbt td::after{bottom:2px;height:2px}
 #app .dlast td.op-n .pl,
 #app .dlast td.op-z .pl{padding:0 9px;line-height:1.2}
 </style>
+ <style>
+/* Correctif 2 : Dernières opérations, aucun changement de largeur ni de hauteur */
+#app .dlast tbody tr td:first-child{padding-left:6px}
+@media(min-width:761px){
+  #app .dlast td[data-c="t"]{font-weight:400;color:var(--ink)}
+}
+
+/* Pointée : rond dessiné par le span lui-même, 11 px de haut */
+#app .dlast td[data-c="k"] span[aria-hidden]::before{content:none}
+#app .dlast td[data-c="k"] span[aria-hidden]{
+  display:block;width:11px;height:11px;margin:0 auto;border-radius:50%;
+  box-sizing:border-box;font-size:0;line-height:0}
+#app .dlast td[data-c="k"][title="Pointée"] span[aria-hidden]{background:var(--pos)}
+#app .dlast td[data-c="k"][title="Non pointée"] span[aria-hidden]{border:1.5px solid var(--mute)}
+
+/* Montant : le fond déborde par une ombre, donc aucune largeur ajoutée */
+#app .dlast td.op-p .pl,#app .dlast td.op-n .pl,#app .dlast td.op-z .pl{
+  display:inline;padding:0;line-height:inherit;border-radius:4px;
+  background:var(--pb);box-shadow:0 0 0 3px var(--pb)}
+#app .dlast td.op-p .pl{--pb:color-mix(in srgb,var(--pos) 14%,var(--surface));color:var(--pos)}
+#app .dlast td.op-n .pl{--pb:color-mix(in srgb,var(--neg) 14%,var(--surface));color:var(--neg)}
+#app .dlast td.op-z .pl{--pb:color-mix(in srgb,var(--mute) 14%,var(--surface));color:var(--mute)}
+</style>
+
+<script>
+/* Dernières opérations : classe du montant (+, −, virement) et séparateur de catégorie */
+(()=>{
+"use strict";
+if(typeof drawDash!=="function")return;
+const NEUTRE=/transfert/i;   /* catégories traitées comme neutres (virements entre comptes) */
+
+function deco(){
+  document.querySelectorAll("#app .dlast tbody tr").forEach(tr=>{
+    const a=tr.querySelector('td[data-c="a"]'),c=tr.querySelector('td[data-c="c"]');
+    if(a&&!a.querySelector(".pl")){
+      const txt=a.textContent.trim(),neutre=c&&NEUTRE.test(c.textContent);
+      a.classList.add(neutre?"op-z":txt.startsWith("+")?"op-p":"op-n");
+      const s=document.createElement("span");s.className="pl";s.textContent=txt;
+      a.textContent="";a.appendChild(s);
+    }
+    if(c)c.childNodes.forEach(n=>{
+      if(n.nodeType===3&&n.nodeValue.includes(" → "))n.nodeValue=n.nodeValue.replace(" → "," · ");
+    });
+  });
+}
+
+const od=drawDash;
+drawDash=function(){od.apply(this,arguments);try{deco()}catch(e){console.error("dernieres_operations :",e)}};
+if(typeof T!=="undefined"&&T==="dash")draw();
+})();
+</script>
 </body>
 </html>
